@@ -104,3 +104,4 @@ local/
 desktop/**/node_modules/
 desktop/**/dist/
 desktop/**/release/
+apps/backend-inventory-service/.env.example
