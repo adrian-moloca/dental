@@ -1,0 +1,236 @@
+{
+  "dashboard": {
+    "title": "Backend Enterprise Service - Production Metrics",
+    "tags": ["backend", "enterprise", "production"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "HTTP Request Rate (req/s)",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "sum(rate(enterprise_service_http_requests_total[5m])) by (method, status_code)",
+            "legendFormat": "{{method}} - {{status_code}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "reqps", "label": "Requests/sec" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "HTTP Request Latency (p95, p99)",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(enterprise_service_http_request_duration_seconds_bucket[5m])) by (le, route))",
+            "legendFormat": "p95 - {{route}}"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(enterprise_service_http_request_duration_seconds_bucket[5m])) by (le, route))",
+            "legendFormat": "p99 - {{route}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Duration" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Error Rate (%)",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "sum(rate(enterprise_service_http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(enterprise_service_http_requests_total[5m])) * 100",
+            "legendFormat": "5xx Error Rate"
+          },
+          {
+            "expr": "sum(rate(enterprise_service_http_requests_total{status_code=~\"4..\"}[5m])) / sum(rate(enterprise_service_http_requests_total[5m])) * 100",
+            "legendFormat": "4xx Error Rate"
+          }
+        ],
+        "yaxes": [
+          { "format": "percent", "label": "Error %" },
+          { "format": "short" }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": { "params": [5], "type": "gt" },
+              "query": { "params": ["A", "5m", "now"] }
+            }
+          ],
+          "frequency": "60s",
+          "name": "High Error Rate Alert"
+        }
+      },
+      {
+        "id": 4,
+        "title": "In-Flight Requests",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "enterprise_service_http_requests_in_flight",
+            "legendFormat": "{{method}}"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{job=\"backend-enterprise-service\"}",
+            "legendFormat": "RSS Memory"
+          },
+          {
+            "expr": "nodejs_heap_size_total_bytes{job=\"backend-enterprise-service\"}",
+            "legendFormat": "Heap Total"
+          },
+          {
+            "expr": "nodejs_heap_size_used_bytes{job=\"backend-enterprise-service\"}",
+            "legendFormat": "Heap Used"
+          }
+        ],
+        "yaxes": [
+          { "format": "bytes", "label": "Memory" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"backend-enterprise-service\"}[5m])",
+            "legendFormat": "CPU Usage"
+          }
+        ],
+        "yaxes": [
+          { "format": "percentunit", "label": "CPU %" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Database Operations (ops/s)",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "sum(rate(enterprise_service_db_operations_total[5m])) by (operation, collection)",
+            "legendFormat": "{{operation}} - {{collection}}"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Database Operation Latency (p95)",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(enterprise_service_db_operation_duration_seconds_bucket[5m])) by (le, collection))",
+            "legendFormat": "p95 - {{collection}}"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Duration" },
+          { "format": "short" }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Event Loop Lag",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "enterprise_service_event_loop_lag_seconds",
+            "legendFormat": "Event Loop Lag"
+          }
+        ],
+        "yaxes": [
+          { "format": "s", "label": "Lag" },
+          { "format": "short" }
+        ],
+        "alert": {
+          "conditions": [
+            {
+              "evaluator": { "params": [0.1], "type": "gt" },
+              "query": { "params": ["A", "5m", "now"] }
+            }
+          ],
+          "frequency": "60s",
+          "name": "High Event Loop Lag Alert"
+        }
+      },
+      {
+        "id": 10,
+        "title": "Business Metrics",
+        "type": "stat",
+        "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "enterprise_service_organizations_total",
+            "legendFormat": "Organizations"
+          },
+          {
+            "expr": "enterprise_service_clinics_total",
+            "legendFormat": "Clinics"
+          },
+          {
+            "expr": "enterprise_service_assignments_total",
+            "legendFormat": "Assignments"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Garbage Collection (GC) Duration",
+        "type": "graph",
+        "gridPos": { "x": 0, "y": 40, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "rate(nodejs_gc_duration_seconds_sum{job=\"backend-enterprise-service\"}[5m])",
+            "legendFormat": "GC Duration"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Active Handles & Requests",
+        "type": "graph",
+        "gridPos": { "x": 12, "y": 40, "w": 12, "h": 8 },
+        "targets": [
+          {
+            "expr": "nodejs_active_handles{job=\"backend-enterprise-service\"}",
+            "legendFormat": "Active Handles"
+          },
+          {
+            "expr": "nodejs_active_requests{job=\"backend-enterprise-service\"}",
+            "legendFormat": "Active Requests"
+          }
+        ]
+      }
+    ]
+  }
+}

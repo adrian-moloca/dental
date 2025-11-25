@@ -1,0 +1,33 @@
+# Environment files - NEVER commit these
+.env
+.env.local
+.env.*.local
+
+# Log directories
+logs/
+*.log
+
+# Volume data directories (if using local bind mounts)
+volumes/
+data/
+
+# Backup files
+*.sql
+*.dump
+*.tar.gz
+*.zip
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files
+tmp/
+temp/

@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: backend-enterprise-service
+  namespace: dentalos
+  labels:
+    app: backend-enterprise-service
+spec:
+  minAvailable: 2  # Always keep at least 2 pods running
+  selector:
+    matchLabels:
+      app: backend-enterprise-service
+  unhealthyPodEvictionPolicy: AlwaysAllow

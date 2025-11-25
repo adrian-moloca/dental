@@ -1,0 +1,26 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.toScope = exports.hasAnyScope = exports.hasAllScopes = exports.hasScopeForResource = exports.hasScope = exports.extractScopes = exports.hasFullAccess = exports.getResourcePermissions = exports.canAccessResource = exports.hasAnyPermission = exports.hasAllPermissions = exports.hasPermission = exports.isClinicalStaff = exports.isClinicAdmin = exports.isOrgAdmin = exports.isSuperAdmin = exports.hasAllRoles = exports.hasAnyRole = exports.hasRole = void 0;
+var role_checker_1 = require("./role-checker");
+Object.defineProperty(exports, "hasRole", { enumerable: true, get: function () { return role_checker_1.hasRole; } });
+Object.defineProperty(exports, "hasAnyRole", { enumerable: true, get: function () { return role_checker_1.hasAnyRole; } });
+Object.defineProperty(exports, "hasAllRoles", { enumerable: true, get: function () { return role_checker_1.hasAllRoles; } });
+Object.defineProperty(exports, "isSuperAdmin", { enumerable: true, get: function () { return role_checker_1.isSuperAdmin; } });
+Object.defineProperty(exports, "isOrgAdmin", { enumerable: true, get: function () { return role_checker_1.isOrgAdmin; } });
+Object.defineProperty(exports, "isClinicAdmin", { enumerable: true, get: function () { return role_checker_1.isClinicAdmin; } });
+Object.defineProperty(exports, "isClinicalStaff", { enumerable: true, get: function () { return role_checker_1.isClinicalStaff; } });
+var permission_checker_1 = require("./permission-checker");
+Object.defineProperty(exports, "hasPermission", { enumerable: true, get: function () { return permission_checker_1.hasPermission; } });
+Object.defineProperty(exports, "hasAllPermissions", { enumerable: true, get: function () { return permission_checker_1.hasAllPermissions; } });
+Object.defineProperty(exports, "hasAnyPermission", { enumerable: true, get: function () { return permission_checker_1.hasAnyPermission; } });
+Object.defineProperty(exports, "canAccessResource", { enumerable: true, get: function () { return permission_checker_1.canAccessResource; } });
+Object.defineProperty(exports, "getResourcePermissions", { enumerable: true, get: function () { return permission_checker_1.getResourcePermissions; } });
+Object.defineProperty(exports, "hasFullAccess", { enumerable: true, get: function () { return permission_checker_1.hasFullAccess; } });
+var scope_checker_1 = require("./scope-checker");
+Object.defineProperty(exports, "extractScopes", { enumerable: true, get: function () { return scope_checker_1.extractScopes; } });
+Object.defineProperty(exports, "hasScope", { enumerable: true, get: function () { return scope_checker_1.hasScope; } });
+Object.defineProperty(exports, "hasScopeForResource", { enumerable: true, get: function () { return scope_checker_1.hasScopeForResource; } });
+Object.defineProperty(exports, "hasAllScopes", { enumerable: true, get: function () { return scope_checker_1.hasAllScopes; } });
+Object.defineProperty(exports, "hasAnyScope", { enumerable: true, get: function () { return scope_checker_1.hasAnyScope; } });
+Object.defineProperty(exports, "toScope", { enumerable: true, get: function () { return scope_checker_1.toScope; } });
+//# sourceMappingURL=index.js.map

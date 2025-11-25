@@ -1,0 +1,333 @@
+HMR STATUS INDICATOR - VISUAL GUIDE
+===================================
+
+COMPONENT LOCATION IN SCREEN
+============================
+
+    ┌─────────────────────────────────┐
+    │                                 │
+    │   Web Clinic Portal             │
+    │   (Main Content Area)           │
+    │                                 │
+    │                                 │
+    │                                 │
+    │                                 │
+    └─────────────────────────────────┘
+                            ┌─────────────────────┐
+                            │  HMR Status Panel   │
+                            │  (Bottom Right)     │
+                            │  Fixed Position     │
+                            └─────────────────────┘
+
+
+EXPANDED VIEW (FULL PANEL)
+==========================
+
+    ┌────────────────────────────────────┐
+    │ ◉ Connected              [Hide ×]   │
+    ├────────────────────────────────────┤
+    │                                    │
+    │ Last Reload:  5s ago               │
+    │ Build Time:   14:32:15             │
+    │ Mode:         development          │
+    │                                    │
+    ├────────────────────────────────────┤
+    │ Recent Reloads:                    │
+    │ ● HMR         5s ago               │
+    │ ○ HMR         10s ago              │
+    ├────────────────────────────────────┤
+    │ [Hard Reload]                      │
+    │ [Clear Storage]                    │
+    ├────────────────────────────────────┤
+    │ Cache: /tmp/vite-cache             │
+    └────────────────────────────────────┘
+
+
+COLLAPSED VIEW (PILL BUTTON)
+============================
+
+    ┌──────────┐
+    │ ◉ Dev    │  (Green when connected)
+    └──────────┘
+
+    On hover:
+    ┌─────────────────┐
+    │ ◉ Dev (connected)│
+    └─────────────────┘
+
+
+STATUS STATES WITH COLORS
+==========================
+
+Connected:
+    ┌──────────────────────┐
+    │ ◉ Connected          │
+    │ (Gradient: Green)    │
+    └──────────────────────┘
+
+Updating:
+    ┌──────────────────────┐
+    │ ◉⟳ Updating          │
+    │ (Gradient: Blue)     │
+    └──────────────────────┘
+
+Connecting:
+    ┌──────────────────────┐
+    │ ◉ Connecting         │
+    │ (Gradient: Yellow)   │
+    └──────────────────────┘
+
+Disconnected:
+    ┌──────────────────────┐
+    │ ◉ Disconnected       │
+    │ (Gradient: Red)      │
+    └──────────────────────┘
+
+
+ANIMATION STATES
+================
+
+Connected (Idle):
+    ◉ (subtle pulse)
+
+Updating (Active):
+    ◉ with ping halo
+    ◉⟳
+
+Connecting (Retry):
+    ◉ (pulse animation)
+    Attempting...
+
+
+TIME FORMAT EXAMPLES
+====================
+
+0-59 seconds ago:
+    "45s ago"
+    "2s ago"
+    "32s ago"
+
+1-59 minutes ago:
+    "5m ago"
+    "42m ago"
+    "1m ago"
+
+1+ hours ago:
+    "2h ago"
+    "8h ago"
+    "12h ago"
+
+
+INFORMATION PANEL LAYOUT
+========================
+
+Header:
+┌─────────────────────────────┐
+│ ◉ Connected       [×]        │ Status + Close
+└─────────────────────────────┘
+
+Stats Box:
+┌─────────────────────────────┐
+│ Last Reload:    5s ago      │ Relative time
+│ Build Time:     14:32:15    │ Exact timestamp
+│ Mode:           development │ Environment
+└─────────────────────────────┘
+
+History Box (Optional):
+┌─────────────────────────────┐
+│ Recent Reloads:             │
+│ ● HMR       5s ago          │ Most recent
+│ ○ HMR      10s ago          │ Older events
+└─────────────────────────────┘
+
+Actions Box:
+┌─────────────────────────────┐
+│ [Hard Reload]               │ Full page reload
+│ [Clear Storage]             │ Clear + reload
+└─────────────────────────────┘
+
+Footer:
+Cache: /tmp/vite-cache          Cache info
+
+
+STATE TRANSITION DIAGRAM
+========================
+
+                    ┌────────────────┐
+                    │   Connecting   │
+                    │   (Yellow)     │
+                    └────────┬───────┘
+                             │
+                 ┌───────────┼───────────┐
+                 │           │           │
+                 v           v           v
+        ┌──────────────┐  Success  ┌─────────────┐
+        │ Disconnected │◄─────────►│  Connected  │
+        │   (Red)      │           │   (Green)   │
+        └──────────────┘           └──────┬──────┘
+                                          │
+                                          │ Edit & Save
+                                          v
+                                   ┌───────────┐
+                                   │ Updating  │
+                                   │ (Blue)    │
+                                   └─────┬─────┘
+                                         │
+                                   Reload Complete
+                                         │
+                                         v
+                                  Back to Connected
+
+
+USER INTERACTIONS
+=================
+
+1. Hide/Show Toggle:
+   Expanded [×] ─→ Collapsed [Dev]
+   Collapsed [Dev] ─→ Expanded
+
+2. Hard Reload:
+   Click [Hard Reload] → Full page reload (Ctrl+Shift+R)
+
+3. Clear Storage:
+   Click [Clear Storage] → Clear localStorage/sessionStorage + reload
+
+
+CONNECTION RETRY LOGIC
+======================
+
+Disconnect occurs
+        │
+        v
+    Retry Attempt 1 (after 2s)
+        │
+    ┌───┴───┐
+    │       │
+    │   Success → Connected
+    │       │
+    │       v
+    │   Retry Attempt 2 (after 2s)
+    │       │
+    │   ┌───┴───┐
+    │   │       │
+    │   │   Success → Connected
+    │   │       │
+    │   │       v
+    │   │   Retry Attempt 3 (after 2s)
+    │   │       │
+    │   │   ┌───┴───┐
+    │   │   │       │
+    │   │   │   Success → Connected
+    │   │   │       │
+    │   │   │   Max Retries Reached
+    │   │   │   Show: Disconnected
+    │   │   │   (Manual reload required)
+    │   │   │
+    └───┴───┴───┘
+        │
+        v
+    Disconnected State
+    (Static indicator, no animation)
+
+
+HMR EVENT FLOW
+==============
+
+File Change Detected
+        │
+        v
+   Vite HMR Server
+        │
+        v
+   [vite:beforeUpdate] Event
+        │
+        v
+   Component: setHmrStatus('updating')
+   Component: Add to reload history
+   UI: Blue gradient appears, ping animation
+        │
+        v
+   Hot Module Replacement Applied
+        │
+        v
+   [vite:afterUpdate] Event
+        │
+        v
+   Component: setHmrStatus('connected')
+   Component: setLastReloadTime(Date.now())
+   UI: Green gradient, timestamp updates
+        │
+        v
+   Ready for next update
+
+
+RESPONSIVE BEHAVIOR
+===================
+
+Normal State:
+    HMR Status indicator visible in bottom-right
+
+Mobile/Small Screen:
+    Panel scales appropriately
+    Remains visible and accessible
+    Touch-friendly buttons
+
+Hide State:
+    Compact [Dev] button shows
+    Takes minimal space
+    Always accessible via click
+
+
+ERROR HANDLING
+==============
+
+Scenario 1: HMR Unavailable
+    → Disconnected state
+    → No animation
+    → Manual reload option
+
+Scenario 2: Connection Lost
+    → Yellow "Connecting" state
+    → Automatic retry (up to 3x)
+    → 2-second retry interval
+    → Feedback on retry attempts
+
+Scenario 3: Build Time Unknown
+    → Shows "Unknown" instead of time
+    → Component continues functioning
+    → No errors thrown
+
+Scenario 4: Production Mode
+    → Component returns null
+    → Zero DOM overhead
+    → Zero impact on bundle
+
+
+COLOR SCHEME PALETTE
+====================
+
+Connected State:
+    Gradient: Green (#0b7a45) → Emerald (#059669)
+    Dot: #4ade80
+    Text: #86efac
+
+Updating State:
+    Gradient: Blue (#0369a1) → Cyan (#0891b2)
+    Dot: #06b6d4
+    Text: #22d3ee
+
+Connecting State:
+    Gradient: Yellow (#b45309) → Orange (#ea580c)
+    Dot: #fbbf24
+    Text: #fcd34d
+
+Disconnected State:
+    Gradient: Red (#991b1b) → Rose (#be185d)
+    Dot: #ef4444
+    Text: #fca5a5
+
+Background (All States):
+    Base: rgba(255, 255, 255, 0.1)
+    Panels: rgba(255, 255, 255, 0.05)
+    Border: rgba(255, 255, 255, 0.1)
+    Backdrop Blur: 16px

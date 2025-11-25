@@ -1,0 +1,139 @@
+version: "3.9"
+
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_PKG: "@dentalos/backend-auth"
+        SERVICE_DIR: apps/backend-auth
+        START_CMD: "node dist/main.js"
+    env_file: env/auth.env
+    ports:
+      - "3301:3301"
+    restart: unless-stopped
+
+  patient:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_PKG: "@dentalos/backend-patient-service"
+        SERVICE_DIR: apps/backend-patient-service
+        START_CMD: "node dist/main.js"
+    env_file: env/patient.env
+    ports:
+      - "3304:3304"
+    restart: unless-stopped
+    depends_on:
+      - auth
+
+  scheduling:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_PKG: "@dentalos/backend-scheduling"
+        SERVICE_DIR: apps/backend-scheduling
+        START_CMD: "node dist/apps/backend-scheduling/src/main.js"
+    env_file: env/scheduling.env
+    ports:
+      - "3302:3302"
+    restart: unless-stopped
+    depends_on:
+      - auth
+
+  enterprise:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_PKG: "@dentalos/backend-enterprise-service"
+        SERVICE_DIR: apps/backend-enterprise-service
+        START_CMD: "node dist/apps/backend-enterprise-service/src/main.js"
+    env_file: env/enterprise.env
+    ports:
+      - "3317:3317"
+    restart: unless-stopped
+    depends_on:
+      - auth
+
+  billing:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_PKG: "@dentalos/backend-billing-service"
+        SERVICE_DIR: apps/backend-billing-service
+        START_CMD: "node dist/main.js"
+    env_file: env/billing.env
+    ports:
+      - "3310:3310"
+    restart: unless-stopped
+    depends_on:
+      - auth
+
+  inventory:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_PKG: "@dentalos/backend-inventory-service"
+        SERVICE_DIR: apps/backend-inventory-service
+        START_CMD: "node dist/apps/backend-inventory-service/src/main.js"
+    env_file: env/inventory.env
+    ports:
+      - "3308:3308"
+    restart: unless-stopped
+    depends_on:
+      - auth
+
+  clinical:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_PKG: "@dentalos/backend-clinical"
+        SERVICE_DIR: apps/backend-clinical
+        START_CMD: "node dist/apps/backend-clinical/src/main.js"
+    env_file: env/clinical.env
+    ports:
+      - "3305:3305"
+    restart: unless-stopped
+    depends_on:
+      - auth
+
+  provider-schedule:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_PKG: "@dentalos/backend-provider-schedule"
+        SERVICE_DIR: apps/backend-provider-schedule
+        START_CMD: "node dist/main.js"
+    env_file: env/provider-schedule.env
+    ports:
+      - "3303:3303"
+    restart: unless-stopped
+    depends_on:
+      - auth
+
+  subscription:
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_PKG: "@dentalos/backend-subscription-service"
+        SERVICE_DIR: apps/backend-subscription-service
+        START_CMD: "node dist/main.js"
+    env_file: env/subscription.env
+    ports:
+      - "3311:3311"
+    restart: unless-stopped
+    depends_on:
+      - auth
+
+networks:
+  default:
+    name: dentalos-net

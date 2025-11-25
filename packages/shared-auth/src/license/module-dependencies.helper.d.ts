@@ -1,0 +1,10 @@
+import { ModuleCode } from '../jwt/jwt-payload.types';
+export declare function getModuleDependencies(moduleCode: ModuleCode): ModuleCode[];
+export declare function getAllModuleDependencies(moduleCode: ModuleCode): ModuleCode[];
+export declare function hasModuleDependencies(moduleCode: ModuleCode): boolean;
+export declare function getMissingDependencies(moduleCode: ModuleCode, enabledModules: readonly ModuleCode[]): ModuleCode[];
+export declare function getAllMissingDependencies(moduleCode: ModuleCode, enabledModules: readonly ModuleCode[]): ModuleCode[];
+export declare function areDependenciesSatisfied(moduleCode: ModuleCode, enabledModules: readonly ModuleCode[]): boolean;
+export declare function getDependencyErrorMessage(moduleCode: ModuleCode, missingDeps: ModuleCode[]): string;
+export declare function validateModuleDependencies(moduleCodes: readonly ModuleCode[], enabledModules: readonly ModuleCode[]): Map<ModuleCode, ModuleCode[]>;
+export declare function dependsOn(moduleCode: ModuleCode, dependencyCode: ModuleCode, includeTransitive?: boolean): boolean;

@@ -1,0 +1,321 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Default Dark Theme */
+  --bg: #0b1224;
+  --surface: rgba(15, 23, 42, 0.95);
+  --surface-hover: rgba(255, 255, 255, 0.05);
+  --surface-strong: #0f172a;
+  --border: rgba(255, 255, 255, 0.12);
+  --muted: #9fb0c7;
+  --foreground: #e6edf5;
+  --text: #e6edf5;
+  --brand: #0d8ae8;
+  --brand-strong: #0b6fc0;
+  --accent: #ff9f52;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  color: var(--text);
+  background-color: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Light Theme */
+:root.light,
+[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: rgba(248, 250, 252, 0.95);
+  --surface-hover: rgba(0, 0, 0, 0.03);
+  --surface-strong: #f8fafc;
+  --border: rgba(0, 0, 0, 0.12);
+  --muted: #64748b;
+  --foreground: #0f172a;
+  --text: #0f172a;
+  --brand: #0d8ae8;
+  --brand-strong: #056db9;
+  --accent: #ff7f17;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme transitions */
+* {
+  transition-property: background-color, border-color, color;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* Disable transitions for interactions */
+*:hover,
+*:focus,
+*:active {
+  transition-duration: 0.15s;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.fc .fc-toolbar-title {
+  color: #fff;
+  font-weight: 700;
+}
+.fc .fc-button {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  color: #e2e8f0;
+}
+.fc .fc-button-primary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+.fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
+  border-color: rgba(255, 255, 255, 0.05);
+}
+.fc .fc-timegrid-slot {
+  height: 2.5rem;
+}
+.fc .fc-resource {
+  color: #e2e8f0;
+}
+.fc-event.fc-status-confirmed {
+  background: rgba(16, 185, 129, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.6);
+  color: #e2e8f0;
+}
+.fc-event.fc-status-cancelled {
+  background: rgba(251, 146, 60, 0.2);
+  border: 1px solid rgba(251, 146, 60, 0.6);
+  color: #e2e8f0;
+}
+.fc-event.fc-status-default {
+  background: rgba(99, 102, 241, 0.25);
+  border: 1px solid rgba(99, 102, 241, 0.6);
+  color: #e2e8f0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.glass-panel {
+  background: linear-gradient(135deg, rgba(16, 25, 47, 0.9), rgba(20, 33, 64, 0.9));
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(7, 15, 36, 0.24);
+  backdrop-filter: blur(6px);
+}
+
+.surface-card {
+  background: #0f172a;
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 20px rgba(12, 16, 39, 0.18);
+}
+
+/* Smooth animations and transitions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(52, 136, 255, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(52, 136, 255, 0.5); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.4s ease-out forwards;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Enhanced calendar styling */
+.fc {
+  font-family: 'Inter', sans-serif;
+}
+
+.fc-event {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fc-event:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.fc-timegrid-slot:hover {
+  background: rgba(52, 136, 255, 0.05);
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(12, 16, 39, 0.3), 0 0 0 1px rgba(52, 136, 255, 0.2);
+}
+
+/* Loading shimmer effect */
+@keyframes shimmer {
+  0% { background-position: -1000px 0; }
+  100% { background-position: 1000px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+  border-radius: 8px;
+}
+
+/* Status indicators with pulse */
+.status-indicator {
+  position: relative;
+  display: inline-block;
+}
+
+.status-indicator::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: inherit;
+  opacity: 0.3;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 0.3; }
+  50% { transform: scale(1.2); opacity: 0; }
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid rgba(52, 136, 255, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Smooth transitions for interactive elements */
+button, a, input, select, textarea {
+  transition: all 0.2s ease;
+}
+
+/* Enhanced toast/notification positioning */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Backdrop blur for modals */
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+  background: rgba(11, 18, 36, 0.7);
+}
+
+/* Enhanced button press effect */
+button:active {
+  transform: scale(0.98);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #3488ff 0%, #ff9f52 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

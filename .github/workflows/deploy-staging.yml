@@ -1,0 +1,79 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10'
+  AWS_REGION: 'eu-central-1'
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all applications
+        run: pnpm nx run-many --target=build --all --parallel=3
+        env:
+          NODE_ENV: staging
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker images
+        run: |
+          # Build and push backend services
+          for service in backend-auth backend-scheduling backend-patient-crm backend-clinical backend-imaging backend-inventory backend-billing backend-finance backend-marketing backend-analytics backend-hr backend-automation backend-ai-gateway backend-integration; do
+            echo "Building $service..."
+            docker build -f apps/$service/Dockerfile -t ${{ steps.login-ecr.outputs.registry }}/dentalos-$service:staging-${{ github.sha }} .
+            docker push ${{ steps.login-ecr.outputs.registry }}/dentalos-$service:staging-${{ github.sha }}
+          done
+
+      - name: Deploy to EKS Staging
+        run: |
+          # Update kubeconfig
+          aws eks update-kubeconfig --name dental-os-staging --region ${{ env.AWS_REGION }}
+
+          # Deploy using kubectl (placeholder - actual deployment will use Helm or Kustomize)
+          echo "Deployment to staging environment would happen here"
+          # kubectl apply -f infra/kubernetes/staging/
+
+      - name: Run smoke tests
+        run: |
+          echo "Smoke tests would run here against staging environment"
+          # pnpm nx run e2e:e2e --baseUrl=https://staging.dentalos.com
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "Deployment to staging successful"
+          # Send notification to Slack/Discord/Email

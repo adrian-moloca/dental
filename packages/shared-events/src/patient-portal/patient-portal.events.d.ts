@@ -1,0 +1,848 @@
+import type { UUID, OrganizationId, ClinicId, TenantId, ISODateString } from '@dentalos/shared-types';
+import type { EventEnvelope } from '../envelope/event-envelope';
+import type { PatientId, ProviderId, TreatmentPlanId } from '@dentalos/shared-domain';
+export type SessionId = UUID & {
+    readonly __brand: 'SessionId';
+};
+export type AppointmentId = UUID & {
+    readonly __brand: 'AppointmentId';
+};
+export type VisitId = UUID & {
+    readonly __brand: 'VisitId';
+};
+export type ImagingStudyId = UUID & {
+    readonly __brand: 'ImagingStudyId';
+};
+export type InvoiceId = UUID & {
+    readonly __brand: 'InvoiceId';
+};
+export type TransactionId = UUID & {
+    readonly __brand: 'TransactionId';
+};
+export type LoyaltyAccountId = UUID & {
+    readonly __brand: 'LoyaltyAccountId';
+};
+export type OfferId = UUID & {
+    readonly __brand: 'OfferId';
+};
+export type FeedbackId = UUID & {
+    readonly __brand: 'FeedbackId';
+};
+export type NpsScoreId = UUID & {
+    readonly __brand: 'NpsScoreId';
+};
+export type ServiceCode = string & {
+    readonly __brand: 'ServiceCode';
+};
+export type PortalSource = 'WEB' | 'MOBILE';
+export type MobilePlatform = 'WEB' | 'IOS' | 'ANDROID';
+export type MfaMethod = 'SMS' | 'EMAIL' | 'TOTP' | 'BIOMETRIC';
+export type PaymentMethod = 'CARD' | 'ACH' | 'WALLET' | 'CRYPTO' | 'OTHER';
+export type LoyaltyTier = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
+export type ReferralChannel = 'EMAIL' | 'SMS' | 'SOCIAL' | 'LINK' | 'OTHER';
+export type FeedbackCategory = 'SERVICE_QUALITY' | 'STAFF_INTERACTION' | 'FACILITY_CLEANLINESS' | 'WAIT_TIME' | 'TREATMENT_OUTCOME' | 'VALUE_FOR_MONEY' | 'OVERALL_EXPERIENCE' | 'TECHNICAL_ISSUE' | 'OTHER';
+export type NpsCategory = 'PROMOTER' | 'PASSIVE' | 'DETRACTOR';
+export type ConsentType = 'MARKETING' | 'SMS' | 'EMAIL' | 'PHONE' | 'DATA_PROCESSING' | 'DATA_SHARING' | 'ANALYTICS' | 'THIRD_PARTY';
+export type DeviceType = 'DESKTOP' | 'MOBILE' | 'TABLET' | 'UNKNOWN';
+export type PreferenceType = 'NOTIFICATION' | 'COMMUNICATION' | 'PRIVACY' | 'LANGUAGE' | 'TIMEZONE' | 'THEME' | 'ACCESSIBILITY';
+export type CancellationReason = 'SCHEDULE_CONFLICT' | 'ILLNESS' | 'FINANCIAL' | 'NO_LONGER_NEEDED' | 'PROVIDER_CHANGE' | 'OTHER';
+export type RescheduleReason = 'SCHEDULE_CONFLICT' | 'PROVIDER_REQUEST' | 'EMERGENCY' | 'PREFERENCE' | 'OTHER';
+export type PaymentErrorCode = 'INSUFFICIENT_FUNDS' | 'CARD_DECLINED' | 'INVALID_CARD' | 'EXPIRED_CARD' | 'NETWORK_ERROR' | 'FRAUD_DETECTED' | 'PROCESSING_ERROR' | 'UNKNOWN';
+export type DeletionReason = 'PATIENT_REQUEST' | 'GDPR_RIGHT_TO_ERASURE' | 'ACCOUNT_CLOSURE' | 'DUPLICATE_ACCOUNT' | 'DATA_MINIMIZATION' | 'OTHER';
+export declare const PATIENT_REGISTERED: "dental.patient.portal.registered";
+export declare const PATIENT_LOGGED_IN: "dental.patient.portal.logged.in";
+export declare const PATIENT_LOGGED_OUT: "dental.patient.portal.logged.out";
+export declare const PATIENT_MFA_ENABLED: "dental.patient.portal.mfa.enabled";
+export declare const PATIENT_PASSWORD_CHANGED: "dental.patient.portal.password.changed";
+export declare const PATIENT_PROFILE_VIEWED: "dental.patient.portal.profile.viewed";
+export declare const PATIENT_PROFILE_UPDATED: "dental.patient.portal.profile.updated";
+export declare const PATIENT_PREFERENCES_UPDATED: "dental.patient.portal.preferences.updated";
+export declare const PATIENT_APPOINTMENT_VIEWED: "dental.patient.portal.appointment.viewed";
+export declare const PATIENT_APPOINTMENT_BOOKED: "dental.patient.portal.appointment.booked";
+export declare const PATIENT_APPOINTMENT_RESCHEDULED: "dental.patient.portal.appointment.rescheduled";
+export declare const PATIENT_APPOINTMENT_CANCELLED: "dental.patient.portal.appointment.cancelled";
+export declare const PATIENT_CLINICAL_SUMMARY_VIEWED: "dental.patient.portal.clinical.summary.viewed";
+export declare const PATIENT_VISIT_DETAILS_VIEWED: "dental.patient.portal.visit.viewed";
+export declare const PATIENT_TREATMENT_PLAN_VIEWED: "dental.patient.portal.treatment.plan.viewed";
+export declare const PATIENT_IMAGING_LIST_VIEWED: "dental.patient.portal.imaging.list.viewed";
+export declare const PATIENT_IMAGING_STUDY_VIEWED: "dental.patient.portal.imaging.study.viewed";
+export declare const PATIENT_INVOICES_VIEWED: "dental.patient.portal.invoices.viewed";
+export declare const PATIENT_INVOICE_VIEWED: "dental.patient.portal.invoice.viewed";
+export declare const PATIENT_PAYMENT_INITIATED: "dental.patient.portal.payment.initiated";
+export declare const PATIENT_PAYMENT_COMPLETED: "dental.patient.portal.payment.completed";
+export declare const PATIENT_PAYMENT_FAILED: "dental.patient.portal.payment.failed";
+export declare const PATIENT_LOYALTY_VIEWED: "dental.patient.portal.loyalty.viewed";
+export declare const PATIENT_REFERRAL_SHARED: "dental.patient.portal.referral.shared";
+export declare const PATIENT_OFFER_VIEWED: "dental.patient.portal.offer.viewed";
+export declare const PATIENT_OFFER_REDEEMED: "dental.patient.portal.offer.redeemed";
+export declare const PATIENT_FEEDBACK_SUBMITTED: "dental.patient.portal.feedback.submitted";
+export declare const PATIENT_NPS_SUBMITTED: "dental.patient.portal.nps.submitted";
+export declare const PATIENT_DATA_EXPORT_REQUESTED: "dental.patient.portal.gdpr.export.requested";
+export declare const PATIENT_DATA_EXPORT_DOWNLOADED: "dental.patient.portal.gdpr.export.downloaded";
+export declare const PATIENT_DELETION_REQUESTED: "dental.patient.portal.gdpr.deletion.requested";
+export declare const PATIENT_CONSENT_UPDATED: "dental.patient.portal.gdpr.consent.updated";
+export declare const PATIENT_SESSION_STARTED: "dental.patient.portal.session.started";
+export declare const PATIENT_SESSION_ENDED: "dental.patient.portal.session.ended";
+export declare const PATIENT_ERROR_OCCURRED: "dental.patient.portal.error";
+export declare const PATIENT_REGISTERED_VERSION = 1;
+export declare const PATIENT_LOGGED_IN_VERSION = 1;
+export declare const PATIENT_LOGGED_OUT_VERSION = 1;
+export declare const PATIENT_MFA_ENABLED_VERSION = 1;
+export declare const PATIENT_PASSWORD_CHANGED_VERSION = 1;
+export declare const PATIENT_PROFILE_VIEWED_VERSION = 1;
+export declare const PATIENT_PROFILE_UPDATED_VERSION = 1;
+export declare const PATIENT_PREFERENCES_UPDATED_VERSION = 1;
+export declare const PATIENT_APPOINTMENT_VIEWED_VERSION = 1;
+export declare const PATIENT_APPOINTMENT_BOOKED_VERSION = 1;
+export declare const PATIENT_APPOINTMENT_RESCHEDULED_VERSION = 1;
+export declare const PATIENT_APPOINTMENT_CANCELLED_VERSION = 1;
+export declare const PATIENT_CLINICAL_SUMMARY_VIEWED_VERSION = 1;
+export declare const PATIENT_VISIT_DETAILS_VIEWED_VERSION = 1;
+export declare const PATIENT_TREATMENT_PLAN_VIEWED_VERSION = 1;
+export declare const PATIENT_IMAGING_LIST_VIEWED_VERSION = 1;
+export declare const PATIENT_IMAGING_STUDY_VIEWED_VERSION = 1;
+export declare const PATIENT_INVOICES_VIEWED_VERSION = 1;
+export declare const PATIENT_INVOICE_VIEWED_VERSION = 1;
+export declare const PATIENT_PAYMENT_INITIATED_VERSION = 1;
+export declare const PATIENT_PAYMENT_COMPLETED_VERSION = 1;
+export declare const PATIENT_PAYMENT_FAILED_VERSION = 1;
+export declare const PATIENT_LOYALTY_VIEWED_VERSION = 1;
+export declare const PATIENT_REFERRAL_SHARED_VERSION = 1;
+export declare const PATIENT_OFFER_VIEWED_VERSION = 1;
+export declare const PATIENT_OFFER_REDEEMED_VERSION = 1;
+export declare const PATIENT_FEEDBACK_SUBMITTED_VERSION = 1;
+export declare const PATIENT_NPS_SUBMITTED_VERSION = 1;
+export declare const PATIENT_DATA_EXPORT_REQUESTED_VERSION = 1;
+export declare const PATIENT_DATA_EXPORT_DOWNLOADED_VERSION = 1;
+export declare const PATIENT_DELETION_REQUESTED_VERSION = 1;
+export declare const PATIENT_CONSENT_UPDATED_VERSION = 1;
+export declare const PATIENT_SESSION_STARTED_VERSION = 1;
+export declare const PATIENT_SESSION_ENDED_VERSION = 1;
+export declare const PATIENT_ERROR_OCCURRED_VERSION = 1;
+export interface SessionContext {
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    deviceType?: DeviceType;
+    browser?: string;
+    operatingSystem?: string;
+    location?: string;
+}
+export interface PatientRegisteredPayload {
+    patientId: PatientId;
+    email: string;
+    registrationDate: ISODateString;
+    source: PortalSource;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    referralSource?: string;
+    marketingConsent?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientRegisteredEvent = EventEnvelope<PatientRegisteredPayload>;
+export interface PatientLoggedInPayload {
+    patientId: PatientId;
+    loginDate: ISODateString;
+    device?: string;
+    ipAddress?: string;
+    mfaUsed: boolean;
+    mfaMethod?: MfaMethod;
+    sessionId?: SessionId;
+    platform?: MobilePlatform;
+    userAgent?: string;
+    deviceType?: DeviceType;
+    browser?: string;
+    operatingSystem?: string;
+    location?: string;
+    attemptCount?: number;
+    isFirstLogin?: boolean;
+    timeSinceLastLogin?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientLoggedInEvent = EventEnvelope<PatientLoggedInPayload>;
+export interface PatientLoggedOutPayload {
+    patientId: PatientId;
+    logoutDate: ISODateString;
+    sessionDuration?: number;
+    sessionId?: SessionId;
+    logoutType?: 'EXPLICIT' | 'TIMEOUT' | 'FORCED';
+    logoutReason?: string;
+    pagesViewed?: number;
+    actionsPerformed?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientLoggedOutEvent = EventEnvelope<PatientLoggedOutPayload>;
+export interface PatientMfaEnabledPayload {
+    patientId: PatientId;
+    method: MfaMethod;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    policyEnforced?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientMfaEnabledEvent = EventEnvelope<PatientMfaEnabledPayload>;
+export interface PatientPasswordChangedPayload {
+    patientId: PatientId;
+    changedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    wasForced?: boolean;
+    forceReason?: string;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientPasswordChangedEvent = EventEnvelope<PatientPasswordChangedPayload>;
+export interface PatientProfileViewedPayload {
+    patientId: PatientId;
+    viewedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    section?: string;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientProfileViewedEvent = EventEnvelope<PatientProfileViewedPayload>;
+export interface PatientProfileUpdatedPayload {
+    patientId: PatientId;
+    updatedFields: string[];
+    updatedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    fieldCount?: number;
+    profileComplete?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientProfileUpdatedEvent = EventEnvelope<PatientProfileUpdatedPayload>;
+export interface PatientPreferencesUpdatedPayload {
+    patientId: PatientId;
+    preferenceType: PreferenceType;
+    newValue: unknown;
+    previousValue?: unknown;
+    updatedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientPreferencesUpdatedEvent = EventEnvelope<PatientPreferencesUpdatedPayload>;
+export interface PatientAppointmentViewedPayload {
+    patientId: PatientId;
+    appointmentId: AppointmentId;
+    viewedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    daysUntilAppointment?: number;
+    appointmentStatus?: 'UPCOMING' | 'PAST' | 'TODAY';
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientAppointmentViewedEvent = EventEnvelope<PatientAppointmentViewedPayload>;
+export interface PatientAppointmentBookedPayload {
+    patientId: PatientId;
+    appointmentId: AppointmentId;
+    providerId: ProviderId;
+    serviceCode: ServiceCode;
+    appointmentDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    appointmentType?: string;
+    durationMinutes?: number;
+    reason?: string;
+    notes?: string;
+    daysUntilAppointment?: number;
+    isRecurring?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientAppointmentBookedEvent = EventEnvelope<PatientAppointmentBookedPayload>;
+export interface PatientAppointmentRescheduledPayload {
+    patientId: PatientId;
+    appointmentId: AppointmentId;
+    oldDate: ISODateString;
+    newDate: ISODateString;
+    reason?: RescheduleReason;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    newProviderId?: ProviderId;
+    daysDifference?: number;
+    rescheduleCount?: number;
+    notes?: string;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientAppointmentRescheduledEvent = EventEnvelope<PatientAppointmentRescheduledPayload>;
+export interface PatientAppointmentCancelledPayload {
+    patientId: PatientId;
+    appointmentId: AppointmentId;
+    cancelledDate: ISODateString;
+    reason?: CancellationReason;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    appointmentDate?: ISODateString;
+    daysBeforeAppointment?: number;
+    withinPolicy?: boolean;
+    cancellationFee?: number;
+    notes?: string;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientAppointmentCancelledEvent = EventEnvelope<PatientAppointmentCancelledPayload>;
+export interface PatientClinicalSummaryViewedPayload {
+    patientId: PatientId;
+    viewedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    recordCount?: number;
+    hasNewRecords?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientClinicalSummaryViewedEvent = EventEnvelope<PatientClinicalSummaryViewedPayload>;
+export interface PatientVisitDetailsViewedPayload {
+    patientId: PatientId;
+    visitId: VisitId;
+    viewedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    visitDate?: ISODateString;
+    providerId?: ProviderId;
+    daysSinceVisit?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientVisitDetailsViewedEvent = EventEnvelope<PatientVisitDetailsViewedPayload>;
+export interface PatientTreatmentPlanViewedPayload {
+    patientId: PatientId;
+    treatmentPlanId: TreatmentPlanId;
+    viewedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    planStatus?: string;
+    totalCost?: number;
+    procedureCount?: number;
+    isAccepted?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientTreatmentPlanViewedEvent = EventEnvelope<PatientTreatmentPlanViewedPayload>;
+export interface PatientImagingListViewedPayload {
+    patientId: PatientId;
+    viewedDate: ISODateString;
+    studyCount: number;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    hasNewStudies?: boolean;
+    newStudyCount?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientImagingListViewedEvent = EventEnvelope<PatientImagingListViewedPayload>;
+export interface PatientImagingStudyViewedPayload {
+    patientId: PatientId;
+    studyId: ImagingStudyId;
+    viewedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    studyType?: string;
+    studyDate?: ISODateString;
+    daysSinceStudy?: number;
+    hasReport?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientImagingStudyViewedEvent = EventEnvelope<PatientImagingStudyViewedPayload>;
+export interface PatientInvoicesViewedPayload {
+    patientId: PatientId;
+    viewedDate: ISODateString;
+    invoiceCount: number;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    outstandingCount?: number;
+    outstandingBalance?: number;
+    hasOverdue?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientInvoicesViewedEvent = EventEnvelope<PatientInvoicesViewedPayload>;
+export interface PatientInvoiceViewedPayload {
+    patientId: PatientId;
+    invoiceId: InvoiceId;
+    viewedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    amount?: number;
+    invoiceStatus?: string;
+    dueDate?: ISODateString;
+    daysUntilDue?: number;
+    isOverdue?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientInvoiceViewedEvent = EventEnvelope<PatientInvoiceViewedPayload>;
+export interface PatientPaymentInitiatedPayload {
+    patientId: PatientId;
+    invoiceId: InvoiceId;
+    amount: number;
+    paymentMethod: PaymentMethod;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    currency?: string;
+    processor?: string;
+    savePaymentMethod?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientPaymentInitiatedEvent = EventEnvelope<PatientPaymentInitiatedPayload>;
+export interface PatientPaymentCompletedPayload {
+    patientId: PatientId;
+    invoiceId: InvoiceId;
+    amount: number;
+    paymentMethod: PaymentMethod;
+    transactionId: TransactionId;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    currency?: string;
+    processor?: string;
+    processorTransactionId?: string;
+    processingFee?: number;
+    netAmount?: number;
+    confirmationNumber?: string;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientPaymentCompletedEvent = EventEnvelope<PatientPaymentCompletedPayload>;
+export interface PatientPaymentFailedPayload {
+    patientId: PatientId;
+    invoiceId: InvoiceId;
+    amount: number;
+    errorCode: PaymentErrorCode;
+    errorMessage: string;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    paymentMethod?: PaymentMethod;
+    processor?: string;
+    processorErrorCode?: string;
+    attemptNumber?: number;
+    retryAllowed?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientPaymentFailedEvent = EventEnvelope<PatientPaymentFailedPayload>;
+export interface PatientLoyaltyViewedPayload {
+    patientId: PatientId;
+    viewedDate: ISODateString;
+    currentPoints: number;
+    tier: LoyaltyTier;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    loyaltyAccountId?: LoyaltyAccountId;
+    pointsUntilNextTier?: number;
+    availableRewardsCount?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientLoyaltyViewedEvent = EventEnvelope<PatientLoyaltyViewedPayload>;
+export interface PatientReferralSharedPayload {
+    patientId: PatientId;
+    referralCode: string;
+    channel: ReferralChannel;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    recipientCount?: number;
+    rewardType?: string;
+    rewardAmount?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientReferralSharedEvent = EventEnvelope<PatientReferralSharedPayload>;
+export interface PatientOfferViewedPayload {
+    patientId: PatientId;
+    offerId: OfferId;
+    viewedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    offerType?: string;
+    offerValue?: number;
+    expirationDate?: ISODateString;
+    daysUntilExpiration?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientOfferViewedEvent = EventEnvelope<PatientOfferViewedPayload>;
+export interface PatientOfferRedeemedPayload {
+    patientId: PatientId;
+    offerId: OfferId;
+    redeemedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    offerType?: string;
+    offerValue?: number;
+    associatedId?: UUID;
+    daysToRedemption?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientOfferRedeemedEvent = EventEnvelope<PatientOfferRedeemedPayload>;
+export interface PatientFeedbackSubmittedPayload {
+    patientId: PatientId;
+    appointmentId?: AppointmentId;
+    rating: 1 | 2 | 3 | 4 | 5;
+    category: FeedbackCategory;
+    submittedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    feedbackId?: FeedbackId;
+    providerId?: ProviderId;
+    comment?: string;
+    isPublic?: boolean;
+    marketingConsent?: boolean;
+    daysAfterAppointment?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientFeedbackSubmittedEvent = EventEnvelope<PatientFeedbackSubmittedPayload>;
+export interface PatientNpsSubmittedPayload {
+    patientId: PatientId;
+    score: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+    category: NpsCategory;
+    submittedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    npsScoreId?: NpsScoreId;
+    comment?: string;
+    campaignId?: UUID;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientNpsSubmittedEvent = EventEnvelope<PatientNpsSubmittedPayload>;
+export interface PatientDataExportRequestedPayload {
+    patientId: PatientId;
+    requestedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    format?: 'PDF' | 'JSON' | 'CSV' | 'XML';
+    dataCategories?: string[];
+    requestId?: UUID;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientDataExportRequestedEvent = EventEnvelope<PatientDataExportRequestedPayload>;
+export interface PatientDataExportDownloadedPayload {
+    patientId: PatientId;
+    downloadedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    requestId?: UUID;
+    fileSizeBytes?: number;
+    format?: string;
+    daysToDownload?: number;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientDataExportDownloadedEvent = EventEnvelope<PatientDataExportDownloadedPayload>;
+export interface PatientDeletionRequestedPayload {
+    patientId: PatientId;
+    requestedDate: ISODateString;
+    reason: DeletionReason;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    requestId?: UUID;
+    reasonDetails?: string;
+    confirmed?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientDeletionRequestedEvent = EventEnvelope<PatientDeletionRequestedPayload>;
+export interface PatientConsentUpdatedPayload {
+    patientId: PatientId;
+    consentType: ConsentType;
+    granted: boolean;
+    updatedDate: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    previousGranted?: boolean;
+    consentVersion?: string;
+    consentDetails?: Record<string, boolean>;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientConsentUpdatedEvent = EventEnvelope<PatientConsentUpdatedPayload>;
+export interface PatientSessionStartedPayload {
+    patientId: PatientId;
+    sessionId: SessionId;
+    startDate: ISODateString;
+    device?: string;
+    platform: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    deviceType?: DeviceType;
+    browser?: string;
+    operatingSystem?: string;
+    location?: string;
+    referrer?: string;
+    landingPage?: string;
+    isNewDevice?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientSessionStartedEvent = EventEnvelope<PatientSessionStartedPayload>;
+export interface PatientSessionEndedPayload {
+    patientId: PatientId;
+    sessionId: SessionId;
+    endDate: ISODateString;
+    duration: number;
+    pagesViewed: number;
+    device?: string;
+    platform?: MobilePlatform;
+    endType?: 'LOGOUT' | 'TIMEOUT' | 'CLOSED' | 'EXPIRED';
+    actionsPerformed?: number;
+    appointmentsBooked?: number;
+    paymentsMade?: number;
+    lastPage?: string;
+    exitPage?: string;
+    isBounce?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    timestamp: ISODateString;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientSessionEndedEvent = EventEnvelope<PatientSessionEndedPayload>;
+export interface PatientErrorOccurredPayload {
+    patientId: PatientId;
+    errorCode: string;
+    errorMessage: string;
+    endpoint?: string;
+    timestamp: ISODateString;
+    sessionId?: SessionId;
+    device?: string;
+    platform?: MobilePlatform;
+    ipAddress?: string;
+    userAgent?: string;
+    statusCode?: number;
+    stackTrace?: string;
+    requestId?: UUID;
+    userAction?: string;
+    page?: string;
+    component?: string;
+    severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    recoverable?: boolean;
+    tenantId: TenantId;
+    organizationId?: OrganizationId;
+    clinicId?: ClinicId;
+    correlationId?: string;
+    metadata?: Record<string, unknown>;
+}
+export type PatientErrorOccurredEvent = EventEnvelope<PatientErrorOccurredPayload>;

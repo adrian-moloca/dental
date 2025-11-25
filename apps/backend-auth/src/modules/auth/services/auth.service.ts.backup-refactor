@@ -1,0 +1,1966 @@
+/**
+ * Authentication Service
+ *
+ * Handles user registration, login, and token generation.
+ * Implements multi-tenant authentication with comprehensive error handling.
+ *
+ * Security requirements:
+ * - NO password logging (full or partial)
+ * - Generic error messages for authentication failures
+ * - All operations tenant-scoped
+ * - Token generation via shared-auth utilities
+ *
+ * Edge cases handled:
+ * - Email uniqueness within organization (not globally)
+ * - User status validation (only ACTIVE users can login)
+ * - Password verification failures
+ * - Missing users (returns generic error to prevent enumeration)
+ * - Last login timestamp updates
+ * - Token generation failures
+ *
+ * @module modules/auth/services
+ */
+
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { Request } from 'express';
+import { UserRepository } from '../../users/repositories/user.repository';
+import { UserCabinetRepository } from '../../users/repositories/user-cabinet.repository';
+import { PasswordService } from '../../users/services/password.service';
+import { SessionService } from '../../sessions/services/session.service';
+import { SubscriptionClientService } from './subscription-client.service';
+import { CabinetAssignmentService } from '../../users/services/cabinet-assignment.service';
+import { TokenBlacklistService } from '../../tokens/services/token-blacklist.service';
+import { StructuredLogger } from '@dentalos/shared-infra';
+import { PrometheusMetricsService } from '@dentalos/shared-infra';
+import {
+  RegisterDto,
+  LoginDto,
+  LoginSmartDto,
+  LoginSmartResponseDto,
+  SelectOrgDto,
+  SelectCabinetDto,
+  AuthResponseDto,
+  UserDto,
+  SessionDto,
+  CabinetInfoDto,
+  CabinetListResponseDto,
+  CabinetSelectionResponseDto,
+  CabinetSubscriptionDto,
+  SubscriptionStatus,
+  ModuleCode,
+  buildRefreshTokenPayload,
+} from '../dto';
+import { User, UserStatus } from '../../users/entities/user.entity';
+import { Session } from '../../sessions/entities/session.entity';
+import { extractDeviceMetadata } from '../../sessions/utils/device-metadata.util';
+import {
+  AuthenticationError,
+  ConflictError,
+  NotFoundError,
+  ForbiddenError,
+} from '@dentalos/shared-errors';
+import type { UUID, OrganizationId } from '@dentalos/shared-types';
+import type { AppConfig } from '../../../configuration';
+
+/**
+ * Authentication Service
+ * Handles user registration, login, token generation, and session management
+ */
+@Injectable()
+export class AuthService {
+  private readonly logger: StructuredLogger;
+
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly userCabinetRepository: UserCabinetRepository,
+    private readonly passwordService: PasswordService,
+    private readonly jwtService: JwtService,
+    private readonly sessionService: SessionService,
+    private readonly subscriptionClient: SubscriptionClientService,
+    private readonly cabinetAssignmentService: CabinetAssignmentService,
+    private readonly tokenBlacklistService: TokenBlacklistService,
+    private readonly configService: ConfigService<AppConfig, true>,
+    private readonly metricsService: PrometheusMetricsService,
+  ) {
+    this.logger = new StructuredLogger('AuthService');
+  }
+
+  /**
+   * Register a new user
+   *
+   * Steps:
+   * 1. Validate email uniqueness within organization
+   * 2. Hash password securely
+   * 3. Create user in database
+   * 4. Create session in Redis
+   * 5. Generate JWT tokens
+   * 6. Return tokens + user data
+   *
+   * Edge cases:
+   * - Email already exists in organization → ConflictError
+   * - Password hashing failure → propagated from PasswordService
+   * - Database constraint violations → propagated from UserRepository
+   * - Optional clinicId (null if not provided)
+   *
+   * @param dto - Registration data with email, password, names, organizationId, optional clinicId
+   * @param request - HTTP request for device metadata
+   * @returns AuthResponseDto with tokens and user information
+   * @throws {ConflictError} If email already exists in organization
+   * @throws {ValidationError} If data invalid (caught by DTO validation)
+   */
+  async register(dto: RegisterDto, request: Request): Promise<AuthResponseDto> {
+    this.logger.log(`Registration attempt for email: ${this.maskEmail(dto.email)}`);
+
+    // Check if email already exists in organization
+    // SECURITY: Scoped to organizationId to prevent cross-tenant data leakage
+    const existingUser = await this.userRepository.findByEmail(
+      dto.email,
+      dto.organizationId,
+    );
+
+    if (existingUser) {
+      this.logger.warn(
+        `Registration failed: Email already exists in organization ${dto.organizationId}`,
+      );
+      throw new ConflictError(
+        'A user with this email already exists in this organization',
+        {
+          conflictType: 'duplicate',
+          resourceType: 'user',
+        },
+      );
+    }
+
+    // Hash password (SECURITY: Never log password, even partially masked)
+    const passwordHash = await this.passwordService.hashPassword(dto.password);
+
+    // Create user in database
+    // Default role: USER (can be upgraded by admin)
+    // Default status: ACTIVE (immediately usable account)
+    // Email verification: false (requires verification flow)
+    const user = await this.userRepository.create({
+      email: dto.email,
+      passwordHash,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      organizationId: dto.organizationId,
+      clinicId: dto.clinicId,
+      roles: ['USER'], // Default role
+      permissions: [], // No additional permissions by default
+    });
+
+    this.logger.log(`User registered successfully: ${user.id}`);
+
+    // AUTO-ASSIGN CABINET: Attempt to assign user to default cabinet
+    // This is non-blocking - registration succeeds even if cabinet assignment fails
+    try {
+      const assignmentResult = await this.cabinetAssignmentService.autoAssignCabinetOnRegistration(
+        user.id as UUID,
+        user.organizationId,
+      );
+
+      if (assignmentResult.success) {
+        this.logger.log('User auto-assigned to cabinet during registration', {
+          cabinetId: assignmentResult.cabinetId ? this.hashId(assignmentResult.cabinetId) : 'none',
+          created: assignmentResult.created,
+        });
+      } else {
+        this.logger.warn('Failed to auto-assign cabinet during registration', {
+          error: assignmentResult.error,
+        });
+      }
+    } catch (error) {
+      // Log error but don't fail registration
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error('Unexpected error during cabinet auto-assignment', error as Error, {
+        errorMessage,
+      });
+    }
+
+    // Fetch cabinet and subscription context (Phase 2)
+    const cabinetContext = await this.fetchCabinetAndSubscription(
+      user.id as UUID,
+      user.organizationId,
+    );
+
+    // Generate tokens and return response with session creation
+    return this.generateAuthResponseWithSession(user, request, cabinetContext || undefined);
+  }
+
+  /**
+   * Login existing user
+   *
+   * Steps:
+   * 1. Find user by email + organization
+   * 2. Verify password
+   * 3. Check user status (active)
+   * 4. Update last login timestamp
+   * 5. Create session in Redis
+   * 6. Generate JWT tokens
+   * 7. Return tokens + user data
+   *
+   * Edge cases:
+   * - User not found → generic AuthenticationError (prevent enumeration)
+   * - Invalid password → generic AuthenticationError (prevent enumeration)
+   * - User status not ACTIVE → specific AuthenticationError
+   * - Last login update failure → logged but not blocking
+   *
+   * @param dto - Login credentials with email, password, organizationId
+   * @param request - HTTP request for device metadata
+   * @returns AuthResponseDto with tokens and user information
+   * @throws {AuthenticationError} If credentials invalid or user inactive
+   */
+  async login(dto: LoginDto, request: Request): Promise<AuthResponseDto> {
+    this.logger.log(`Login attempt for email: ${this.maskEmail(dto.email)}`);
+
+    // Find user by email + organization
+    // SECURITY: Always scoped to organizationId
+    const user = await this.userRepository.findByEmail(
+      dto.email,
+      dto.organizationId,
+    );
+
+    // SECURITY: Use generic error message to prevent user enumeration
+    if (!user) {
+      this.logger.warn(
+        `Login failed: User not found for email ${this.maskEmail(dto.email)} in organization ${dto.organizationId}`,
+      );
+      throw new AuthenticationError('Invalid email or password', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Verify password (SECURITY: Never log password or hash)
+    const isPasswordValid = await this.passwordService.verifyPassword(
+      dto.password,
+      user.passwordHash,
+    );
+
+    if (!isPasswordValid) {
+      this.logger.warn(`Login failed: Invalid password for user ${user.id}`);
+      throw new AuthenticationError('Invalid email or password', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Check user status - Only ACTIVE users can login
+    if (user.status !== UserStatus.ACTIVE) {
+      this.logger.warn(
+        `Login failed: User ${user.id} is not active (status: ${user.status})`,
+      );
+      throw new AuthenticationError('User account is not active', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Update last login timestamp
+    // Non-blocking: if this fails, we still allow login
+    try {
+      await this.userRepository.updateLastLogin(user.id, user.organizationId);
+    } catch (error) {
+      this.logger.error(
+        `Failed to update last login for user ${user.id}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      // Continue with login despite timestamp update failure
+    }
+
+    this.logger.log(`User logged in successfully: ${user.id}`);
+
+    // Check user's cabinet assignments to determine next step
+    const userCabinets = await this.userCabinetRepository.findByUserId(
+      user.id as UUID,
+      user.organizationId,
+      true, // Active only
+    );
+
+    // CABINET AUTO-SELECTION LOGIC:
+    // - 0 cabinets: Create assignment to default cabinet or return error
+    // - 1 cabinet: Auto-select and include in JWT
+    // - Multiple cabinets: Return cabinet list, client must call /login-select-cabinet
+
+    if (userCabinets.length === 0) {
+      // No cabinets assigned - try to assign to default cabinet
+      this.logger.log('User has no cabinet assignments, attempting to assign to default cabinet');
+
+      try {
+        const defaultCabinet = await this.subscriptionClient.getDefaultCabinet(
+          user.organizationId,
+        );
+
+        if (defaultCabinet) {
+          // Create user-cabinet assignment to default cabinet
+          await this.userCabinetRepository.create({
+            userId: user.id as UUID,
+            cabinetId: defaultCabinet.id,
+            organizationId: user.organizationId,
+            isPrimary: true,
+            isActive: true,
+          });
+
+          this.logger.log('User assigned to default cabinet', {
+            cabinetId: this.hashId(defaultCabinet.id),
+          });
+
+          // Fetch subscription for default cabinet
+          const subscription = await this.subscriptionClient.getCabinetSubscription(
+            defaultCabinet.id,
+            user.organizationId,
+          );
+
+          const cabinetContext = {
+            cabinetId: defaultCabinet.id,
+            subscription: subscription
+              ? {
+                  status: subscription.status,
+                  modules:
+                    subscription.modules
+                      ?.filter((m) => m.isActive && m.moduleCode)
+                      .map((m) => m.moduleCode!) || [],
+                }
+              : null,
+          };
+
+          return this.generateAuthResponseWithSession(user, request, cabinetContext);
+        } else {
+          // No default cabinet found - return error
+          this.logger.warn('No default cabinet found for organization');
+          throw new AuthenticationError(
+            'No cabinets assigned to user. Please contact your administrator.',
+            { reason: 'no_cabinet_access' },
+          );
+        }
+      } catch (error) {
+        // If cabinet assignment fails, log but continue with login without cabinet context
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn('Failed to assign user to default cabinet', {
+          error: errorMessage,
+        });
+
+        if (error instanceof AuthenticationError) {
+          throw error;
+        }
+
+        // Continue with login without cabinet context (graceful degradation)
+        return this.generateAuthResponseWithSession(user, request, undefined);
+      }
+    } else if (userCabinets.length === 1) {
+      // Single cabinet - auto-select
+      const userCabinet = userCabinets[0];
+
+      this.logger.log('Auto-selecting single cabinet for user', {
+        cabinetId: this.hashId(userCabinet.cabinetId),
+      });
+
+      // Fetch cabinet and subscription context
+      const cabinetContext = await this.fetchCabinetAndSubscription(
+        user.id as UUID,
+        user.organizationId,
+      );
+
+      if (cabinetContext) {
+        this.logger.log(
+          `Including cabinet ${cabinetContext.cabinetId} and subscription context in JWT for user ${user.id}`,
+        );
+      }
+
+      return this.generateAuthResponseWithSession(user, request, cabinetContext || undefined);
+    } else {
+      // Multiple cabinets - return error indicating cabinet selection required
+      this.logger.log('User has multiple cabinets, requiring cabinet selection', {
+        cabinetCount: userCabinets.length,
+      });
+
+      throw new AuthenticationError(
+        'Multiple cabinets available. Please use /auth/login-select-cabinet endpoint to select a cabinet.',
+        {
+          reason: 'cabinet_selection_required',
+          metadata: {
+            cabinetCount: userCabinets.length,
+            hint: 'Use GET /auth/cabinets to retrieve available cabinets, then POST /auth/login-select-cabinet with selected cabinetId',
+          },
+        },
+      );
+    }
+  }
+
+  /**
+   * Smart login - automatically resolve organization(s)
+   *
+   * Implements smart login flow that identifies all organizations
+   * a user belongs to and either auto-logs them in (single org)
+   * or returns organization list for selection (multiple orgs).
+   *
+   * Steps:
+   * 1. Find all users with email across all organizations
+   * 2. If no users found → AuthenticationError (generic message)
+   * 3. Verify password against first user (all have same password)
+   * 4. If single organization → auto-login with JWT tokens
+   * 5. If multiple organizations → return org list for user selection
+   *
+   * Edge cases:
+   * - Email not found → generic AuthenticationError (prevent enumeration)
+   * - Invalid password → generic AuthenticationError (prevent enumeration)
+   * - Multiple orgs → return org list WITHOUT tokens
+   * - Single org → full authentication flow with tokens
+   * - Only ACTIVE users can login (enforced by repository)
+   * - Last login timestamp updated for auto-login case
+   *
+   * SECURITY NOTE:
+   * - Uses generic error messages to prevent user enumeration
+   * - Verifies password before revealing organization information
+   * - Returns organization names/logos only after auth verified
+   *
+   * @param dto - Smart login credentials (email + password, no organizationId)
+   * @param request - HTTP request for device metadata
+   * @returns LoginSmartResponseDto with either tokens OR org list
+   * @throws {AuthenticationError} If credentials invalid
+   */
+  async loginSmart(
+    dto: LoginSmartDto,
+    request: Request,
+  ): Promise<LoginSmartResponseDto> {
+    this.logger.log(`Smart login attempt for email: ${this.maskEmail(dto.email)}`);
+
+    const { email, password } = dto;
+
+    // 1. Find all users with this email across organizations
+    // SECURITY: This intentionally bypasses tenant isolation
+    // to identify which orgs user belongs to
+    const users = await this.userRepository.findByEmailAllOrgs(email);
+
+    // 2. If no users found → generic error (prevent enumeration)
+    if (users.length === 0) {
+      this.logger.warn(
+        `Smart login failed: User not found for email ${this.maskEmail(email)}`,
+      );
+      throw new AuthenticationError('Invalid email or password', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // 3. Verify password (use first user, all should have same password)
+    // SECURITY: Password verification before revealing org information
+    const isValidPassword = await this.passwordService.verifyPassword(
+      password,
+      users[0].passwordHash,
+    );
+
+    if (!isValidPassword) {
+      this.logger.warn(
+        `Smart login failed: Invalid password for email ${this.maskEmail(email)}`,
+      );
+      // SECURITY: Same generic error as "user not found"
+      throw new AuthenticationError('Invalid email or password', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // 4. If single organization → auto-login
+    if (users.length === 1) {
+      const user = users[0];
+
+      this.logger.log(
+        `Smart login: Auto-logging in user ${user.id} to organization ${user.organizationId}`,
+      );
+
+      // Update last login timestamp
+      // Non-blocking: if this fails, we still allow login
+      try {
+        await this.userRepository.updateLastLogin(
+          user.id,
+          user.organizationId,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to update last login for user ${user.id}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        );
+        // Continue with login despite timestamp update failure
+      }
+
+      // Generate tokens and session for single-org auto-login
+      const authResponse = await this.generateAuthResponseWithSession(
+        user,
+        request,
+      );
+
+      return {
+        needsOrgSelection: false,
+        accessToken: authResponse.accessToken,
+        refreshToken: authResponse.refreshToken,
+        user: authResponse.user,
+      };
+    }
+
+    // 5. Multiple organizations → return org list for selection
+    this.logger.log(
+      `Smart login: User ${this.maskEmail(email)} belongs to ${users.length} organizations, requiring org selection`,
+    );
+
+    // NOTE: Organization names/logos are not available in auth service
+    // Frontend should fetch org details from enterprise service using organizationIds
+    // For now, we return organizationId as the display name
+    return {
+      needsOrgSelection: true,
+      organizations: users.map((u) => ({
+        id: u.organizationId,
+        name: `Organization ${u.organizationId}`, // Placeholder - frontend should fetch actual name
+        logoUrl: undefined,
+      })),
+    };
+  }
+
+  /**
+   * Login with organization selection
+   *
+   * Completes authentication flow after user selects organization
+   * from multi-org login scenario.
+   *
+   * Steps:
+   * 1. Find user in selected organization
+   * 2. Verify password
+   * 3. Check user status (active)
+   * 4. Update last login timestamp
+   * 5. Create session in Redis
+   * 6. Generate JWT tokens
+   * 7. Return tokens + user data
+   *
+   * Edge cases:
+   * - User not found in selected org → generic AuthenticationError
+   * - Invalid password → generic AuthenticationError
+   * - User status not ACTIVE → specific AuthenticationError
+   * - Last login update failure → logged but not blocking
+   *
+   * SECURITY NOTE:
+   * - Verifies user actually belongs to selected organization
+   * - Re-verifies password (don't trust client-side state)
+   * - Generic error messages prevent enumeration
+   * - Validates user is ACTIVE before issuing tokens
+   *
+   * @param dto - Organization selection data (email + password + organizationId)
+   * @param request - HTTP request for device metadata
+   * @returns AuthResponseDto with tokens and user information
+   * @throws {AuthenticationError} If credentials invalid or user inactive
+   */
+  async loginSelectOrg(
+    dto: SelectOrgDto,
+    request: Request,
+  ): Promise<AuthResponseDto> {
+    this.logger.log(
+      `Login select org attempt for email: ${this.maskEmail(dto.email)} in organization ${dto.organizationId}`,
+    );
+
+    const { email, password, organizationId } = dto;
+
+    // Find user in selected organization
+    // SECURITY: Validates user belongs to selected org
+    const user = await this.userRepository.findByEmail(email, organizationId);
+
+    // SECURITY: Generic error message to prevent enumeration
+    if (!user) {
+      this.logger.warn(
+        `Login select org failed: User not found for email ${this.maskEmail(email)} in organization ${organizationId}`,
+      );
+      throw new AuthenticationError('Invalid email or password', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Verify password (SECURITY: Re-verify, don't trust client state)
+    const isValidPassword = await this.passwordService.verifyPassword(
+      password,
+      user.passwordHash,
+    );
+
+    if (!isValidPassword) {
+      this.logger.warn(
+        `Login select org failed: Invalid password for user ${user.id}`,
+      );
+      // SECURITY: Same generic error as "user not found"
+      throw new AuthenticationError('Invalid email or password', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Check user status (only ACTIVE users can login)
+    if (user.status !== UserStatus.ACTIVE) {
+      this.logger.warn(
+        `Login select org failed: User ${user.id} is not active (status: ${user.status})`,
+      );
+      throw new AuthenticationError('User account is not active', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Update last login timestamp
+    // Non-blocking: if this fails, we still allow login
+    try {
+      await this.userRepository.updateLastLogin(user.id, user.organizationId);
+    } catch (error) {
+      this.logger.error(
+        `Failed to update last login for user ${user.id}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+      // Continue with login despite timestamp update failure
+    }
+
+    this.logger.log(
+      `User logged in successfully to selected organization: ${user.id}`,
+    );
+
+    // Check user's cabinet assignments to determine next step
+    const userCabinets = await this.userCabinetRepository.findByUserId(
+      user.id as UUID,
+      user.organizationId,
+      true, // Active only
+    );
+
+    // CABINET AUTO-SELECTION LOGIC:
+    // - 0 cabinets: Create assignment to default cabinet or return error
+    // - 1 cabinet: Auto-select and include in JWT
+    // - Multiple cabinets: Return error indicating cabinet selection required
+
+    if (userCabinets.length === 0) {
+      // No cabinets assigned - try to assign to default cabinet
+      this.logger.log('User has no cabinet assignments, attempting to assign to default cabinet');
+
+      try {
+        const defaultCabinet = await this.subscriptionClient.getDefaultCabinet(
+          user.organizationId,
+        );
+
+        if (defaultCabinet) {
+          // Create user-cabinet assignment to default cabinet
+          await this.userCabinetRepository.create({
+            userId: user.id as UUID,
+            cabinetId: defaultCabinet.id,
+            organizationId: user.organizationId,
+            isPrimary: true,
+            isActive: true,
+          });
+
+          this.logger.log('User assigned to default cabinet', {
+            cabinetId: this.hashId(defaultCabinet.id),
+          });
+
+          // Fetch subscription for default cabinet
+          const subscription = await this.subscriptionClient.getCabinetSubscription(
+            defaultCabinet.id,
+            user.organizationId,
+          );
+
+          const cabinetContext = {
+            cabinetId: defaultCabinet.id,
+            subscription: subscription
+              ? {
+                  status: subscription.status,
+                  modules:
+                    subscription.modules
+                      ?.filter((m) => m.isActive && m.moduleCode)
+                      .map((m) => m.moduleCode!) || [],
+                }
+              : null,
+          };
+
+          return this.generateAuthResponseWithSession(user, request, cabinetContext);
+        } else {
+          // No default cabinet found - return error
+          this.logger.warn('No default cabinet found for organization');
+          throw new AuthenticationError(
+            'No cabinets assigned to user. Please contact your administrator.',
+            { reason: 'no_cabinet_access' },
+          );
+        }
+      } catch (error) {
+        // If cabinet assignment fails, log but continue with login without cabinet context
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn('Failed to assign user to default cabinet', {
+          error: errorMessage,
+        });
+
+        if (error instanceof AuthenticationError) {
+          throw error;
+        }
+
+        // Continue with login without cabinet context (graceful degradation)
+        return this.generateAuthResponseWithSession(user, request, undefined);
+      }
+    } else if (userCabinets.length === 1) {
+      // Single cabinet - auto-select
+      const userCabinet = userCabinets[0];
+
+      this.logger.log('Auto-selecting single cabinet for user', {
+        cabinetId: this.hashId(userCabinet.cabinetId),
+      });
+
+      // Fetch cabinet and subscription context
+      const cabinetContext = await this.fetchCabinetAndSubscription(
+        user.id as UUID,
+        user.organizationId,
+      );
+
+      if (cabinetContext) {
+        this.logger.log(
+          `Including cabinet ${cabinetContext.cabinetId} and subscription context in JWT for user ${user.id}`,
+        );
+      }
+
+      return this.generateAuthResponseWithSession(user, request, cabinetContext || undefined);
+    } else {
+      // Multiple cabinets - return error indicating cabinet selection required
+      this.logger.log('User has multiple cabinets, requiring cabinet selection', {
+        cabinetCount: userCabinets.length,
+      });
+
+      throw new AuthenticationError(
+        'Multiple cabinets available. Please use /auth/login-select-cabinet endpoint to select a cabinet.',
+        {
+          reason: 'cabinet_selection_required',
+          metadata: {
+            cabinetCount: userCabinets.length,
+            hint: 'Use GET /auth/cabinets to retrieve available cabinets, then POST /auth/login-select-cabinet with selected cabinetId',
+          },
+        },
+      );
+    }
+  }
+
+  /**
+   * Get current user information
+   *
+   * Used by /auth/me endpoint to retrieve authenticated user data.
+   * Requires valid JWT token (validated by JwtAuthGuard).
+   *
+   * Edge cases:
+   * - User not found → AuthenticationError (user deleted after token issued)
+   * - User belongs to different organization → prevented by tenant scoping
+   *
+   * @param userId - User ID extracted from JWT token
+   * @param organizationId - Organization ID extracted from JWT token
+   * @returns UserDto with user information
+   * @throws {AuthenticationError} If user not found
+   */
+  async getCurrentUser(
+    userId: UUID,
+    organizationId: OrganizationId,
+  ): Promise<UserDto> {
+    const user = await this.userRepository.findById(userId, organizationId);
+
+    if (!user) {
+      this.logger.warn(
+        `Current user not found: userId=${userId}, organizationId=${organizationId}`,
+      );
+      throw new AuthenticationError('User not found', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    return this.mapUserToDto(user);
+  }
+
+  /**
+   * Get list of cabinets user has access to
+   *
+   * Fetches all cabinets the user is assigned to and enriches them with
+   * subscription information from the subscription service.
+   *
+   * Steps:
+   * 1. Fetch user-cabinet assignments from UserCabinetRepository
+   * 2. For each cabinet, fetch cabinet details from subscription service
+   * 3. For each cabinet, fetch subscription data from subscription service
+   * 4. Map to CabinetInfoDto with subscription status
+   * 5. Return cabinet list
+   *
+   * Edge cases:
+   * - User has no cabinet assignments → returns empty array
+   * - Cabinet not found in subscription service → skipped (logged)
+   * - Subscription not found for cabinet → includes cabinet with null subscription
+   * - Subscription service unavailable → graceful degradation (logged)
+   *
+   * @param userId - User ID
+   * @param organizationId - Organization ID for tenant scoping
+   * @returns CabinetListResponseDto with cabinet information
+   */
+  async getUserCabinets(
+    userId: UUID,
+    organizationId: OrganizationId,
+  ): Promise<CabinetListResponseDto> {
+    const startTime = Date.now();
+    const correlationId = this.logger.ensureCorrelationId();
+
+    this.logger.setContext({
+      correlationId,
+      organizationId,
+      userId: this.hashId(userId),
+      operation: 'getUserCabinets',
+    });
+
+    this.logger.log('Fetching user cabinets');
+
+    // Fetch user-cabinet assignments
+    const userCabinets = await this.userCabinetRepository.findByUserId(
+      userId,
+      organizationId,
+      true, // Active only
+    );
+
+    if (userCabinets.length === 0) {
+      this.logger.log('User has no cabinet assignments', {
+        duration_ms: Date.now() - startTime,
+      });
+      return { cabinets: [] };
+    }
+
+    this.logger.log(`Found ${userCabinets.length} cabinet assignments`, {
+      cabinetCount: userCabinets.length,
+    });
+
+    // Fetch cabinet details and subscriptions in parallel
+    const cabinetPromises = userCabinets.map(async (userCabinet) => {
+      try {
+        // Fetch cabinet details
+        const cabinet = await this.subscriptionClient.getCabinetById(
+          userCabinet.cabinetId,
+          organizationId,
+        );
+
+        // Fetch subscription for cabinet
+        const subscription = await this.subscriptionClient.getCabinetSubscription(
+          userCabinet.cabinetId,
+          organizationId,
+        );
+
+        // Map to CabinetInfoDto
+        return this.mapCabinetToDto(
+          cabinet,
+          subscription,
+          userCabinet.isPrimary,
+        );
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn('Failed to fetch cabinet details, skipping', {
+          cabinetId: this.hashId(userCabinet.cabinetId),
+          error: errorMessage,
+        });
+        return null;
+      }
+    });
+
+    const cabinets = (await Promise.all(cabinetPromises)).filter(
+      (c): c is CabinetInfoDto => c !== null,
+    );
+
+    const duration = Date.now() - startTime;
+    this.logger.log('User cabinets fetched successfully', {
+      cabinetCount: cabinets.length,
+      duration_ms: duration,
+    });
+
+    return { cabinets };
+  }
+
+  /**
+   * Select cabinet after organization selection
+   *
+   * Validates user has access to the selected cabinet and generates JWT
+   * with full subscription context.
+   *
+   * Steps:
+   * 1. Validate user has access to selected cabinet via UserCabinetRepository
+   * 2. Fetch cabinet details from subscription service
+   * 3. Fetch subscription data from subscription service
+   * 4. Validate subscription is active
+   * 5. Create new session with device metadata
+   * 6. Generate JWT with cabinet and subscription context
+   * 7. Return tokens with cabinet info
+   *
+   * Edge cases:
+   * - User doesn't have access to cabinet → ForbiddenError
+   * - Cabinet not found → NotFoundError
+   * - Cabinet inactive → ForbiddenError
+   * - Subscription expired → still allows login but includes status
+   * - Subscription service unavailable → allows login without subscription context
+   *
+   * SECURITY:
+   * - Validates user-cabinet relationship exists and is active
+   * - Validates cabinet belongs to same organization
+   * - Tenant isolation enforced at all levels
+   *
+   * @param dto - Cabinet selection data
+   * @param request - HTTP request for device metadata
+   * @param user - Current user (from previous auth step)
+   * @returns CabinetSelectionResponseDto with tokens and cabinet info
+   * @throws {ForbiddenError} If user doesn't have access to cabinet
+   * @throws {NotFoundError} If cabinet not found
+   */
+  async selectCabinet(
+    dto: SelectCabinetDto,
+    request: Request,
+    user: User,
+  ): Promise<CabinetSelectionResponseDto> {
+    const startTime = Date.now();
+    const correlationId = this.logger.ensureCorrelationId();
+
+    this.logger.setContext({
+      correlationId,
+      organizationId: user.organizationId,
+      userId: this.hashId(user.id as UUID),
+      cabinetId: this.hashId(dto.cabinetId),
+      operation: 'selectCabinet',
+    });
+
+    this.logger.log('Cabinet selection attempt');
+
+    // Validate user has access to cabinet
+    const userCabinet = await this.userCabinetRepository.findOne(
+      user.id as UUID,
+      dto.cabinetId,
+      user.organizationId,
+    );
+
+    if (!userCabinet) {
+      this.logger.warn('Cabinet selection failed: User not assigned to cabinet');
+      throw new ForbiddenException(
+        'You do not have access to this cabinet',
+        {
+          resourceType: 'cabinet',
+          resourceId: dto.cabinetId,
+        },
+      );
+    }
+
+    if (!userCabinet.isActive) {
+      this.logger.warn('Cabinet selection failed: Cabinet assignment inactive');
+      throw new ForbiddenException(
+        'Your access to this cabinet has been deactivated',
+        {
+          resourceType: 'cabinet',
+          resourceId: dto.cabinetId,
+        },
+      );
+    }
+
+    // Fetch cabinet details
+    const cabinet = await this.subscriptionClient.getCabinetById(
+      dto.cabinetId,
+      user.organizationId,
+    );
+
+    // Fetch subscription data
+    const subscription = await this.subscriptionClient.getCabinetSubscription(
+      dto.cabinetId,
+      user.organizationId,
+    );
+
+    // Prepare subscription context for JWT
+    const subscriptionContext = subscription
+      ? {
+          cabinetId: dto.cabinetId,
+          subscription: {
+            status: subscription.status,
+            modules:
+              subscription.modules
+                ?.filter((m) => m.isActive && m.moduleCode)
+                .map((m) => m.moduleCode!) || [],
+          },
+        }
+      : {
+          cabinetId: dto.cabinetId,
+          subscription: null,
+        };
+
+    // Generate JWT with cabinet and subscription context
+    const authResponse = await this.generateAuthResponseWithSession(
+      user,
+      request,
+      subscriptionContext,
+    );
+
+    const duration = Date.now() - startTime;
+    this.logger.log('Cabinet selected successfully', {
+      duration_ms: duration,
+      subscriptionStatus: subscription?.status || 'none',
+      moduleCount: subscription?.modules?.length || 0,
+    });
+
+    // Map to CabinetSelectionResponseDto
+    const cabinetInfo = this.mapCabinetToDto(
+      cabinet,
+      subscription,
+      userCabinet.isPrimary,
+    );
+
+    const subscriptionDto: CabinetSubscriptionDto = subscription
+      ? {
+          status: subscription.status as SubscriptionStatus,
+          trialEndsAt: subscription.trialEndsAt || null,
+          modules:
+            subscription.modules
+              ?.filter((m) => m.isActive && m.moduleCode)
+              .map((m) => m.moduleCode as ModuleCode) || [],
+        }
+      : {
+          status: SubscriptionStatus.CANCELLED,
+          trialEndsAt: null,
+          modules: [],
+        };
+
+    return {
+      accessToken: authResponse.accessToken,
+      refreshToken: authResponse.refreshToken,
+      tokenType: authResponse.tokenType,
+      expiresIn: authResponse.expiresIn,
+      cabinet: cabinetInfo,
+      subscription: subscriptionDto,
+    };
+  }
+
+  /**
+   * Switch to a different cabinet
+   *
+   * Allows authenticated user to switch to a different cabinet they have access to.
+   * Invalidates the current session and creates a new one with the new cabinet context.
+   *
+   * Steps:
+   * 1. Validate user has access to new cabinet
+   * 2. Blacklist old access token (SECURITY: prevents token reuse after switch)
+   * 3. Invalidate current session
+   * 4. Fetch cabinet and subscription data
+   * 5. Create new session with new cabinet context
+   * 6. Generate new JWT with cabinet and subscription context
+   * 7. Return new tokens
+   *
+   * Edge cases:
+   * - User doesn't have access to new cabinet → ForbiddenError
+   * - Cabinet not found → NotFoundError
+   * - Cabinet inactive → ForbiddenError
+   * - Current session already invalid → proceed anyway (idempotent)
+   * - Subscription expired → still allows switch but includes status
+   *
+   * SECURITY:
+   * - Validates user-cabinet relationship
+   * - Blacklists old access token (prevents immediate reuse after switch)
+   * - Invalidates old session to prevent refresh token reuse
+   * - Creates new session with device metadata
+   * - Enforces tenant isolation
+   * - New tokens include fresh jti and sessionId
+   *
+   * @param user - Current user from JWT
+   * @param dto - Cabinet selection data
+   * @param request - HTTP request for device metadata
+   * @param currentSessionId - Current session ID to invalidate
+   * @param currentTokenJti - Current access token JTI to blacklist (from JWT payload)
+   * @param currentTokenExp - Current access token expiration (from JWT payload)
+   * @returns CabinetSelectionResponseDto with new tokens
+   * @throws {ForbiddenError} If user doesn't have access to cabinet
+   * @throws {NotFoundError} If cabinet not found
+   */
+  async switchCabinet(
+    user: { userId: UUID; organizationId: OrganizationId },
+    dto: SelectCabinetDto,
+    request: Request,
+    currentSessionId?: UUID,
+    currentTokenJti?: string,
+    currentTokenExp?: number,
+  ): Promise<CabinetSelectionResponseDto> {
+    const startTime = Date.now();
+    const correlationId = this.logger.ensureCorrelationId();
+
+    this.logger.setContext({
+      correlationId,
+      organizationId: user.organizationId,
+      userId: this.hashId(user.userId),
+      cabinetId: this.hashId(dto.cabinetId),
+      operation: 'switchCabinet',
+    });
+
+    this.logger.log('Cabinet switch attempt');
+
+    // Fetch user from database
+    const fullUser = await this.userRepository.findById(
+      user.userId,
+      user.organizationId,
+    );
+
+    if (!fullUser) {
+      this.logger.warn('Cabinet switch failed: User not found');
+      throw new AuthenticationError('User not found', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Check user status
+    if (fullUser.status !== UserStatus.ACTIVE) {
+      this.logger.warn('Cabinet switch failed: User not active');
+      throw new AuthenticationError('User account is not active', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Validate user has access to new cabinet
+    const userCabinet = await this.userCabinetRepository.findOne(
+      user.userId,
+      dto.cabinetId,
+      user.organizationId,
+    );
+
+    if (!userCabinet) {
+      this.logger.warn('Cabinet switch failed: User not assigned to cabinet');
+      throw new ForbiddenException(
+        'You do not have access to this cabinet',
+        {
+          resourceType: 'cabinet',
+          resourceId: dto.cabinetId,
+        },
+      );
+    }
+
+    if (!userCabinet.isActive) {
+      this.logger.warn('Cabinet switch failed: Cabinet assignment inactive');
+      throw new ForbiddenException(
+        'Your access to this cabinet has been deactivated',
+        {
+          resourceType: 'cabinet',
+          resourceId: dto.cabinetId,
+        },
+      );
+    }
+
+    // SECURITY FIX: Blacklist the old access token to prevent reuse
+    // This prevents the old token from being used after cabinet switch
+    if (currentTokenJti && currentTokenExp) {
+      try {
+        await this.tokenBlacklistService.blacklistToken(
+          currentTokenJti,
+          currentTokenExp,
+          {
+            reason: 'cabinet_switch',
+            userId: user.userId,
+            organizationId: user.organizationId,
+            blacklistedAt: Date.now(),
+            context: `Cabinet switch to ${dto.cabinetId}`,
+          },
+        );
+        this.logger.log('Old access token blacklisted for cabinet switch', {
+          tokenJti: currentTokenJti.substring(0, 8) + '...',
+        });
+      } catch (error) {
+        // Log but don't fail - token will expire naturally anyway
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn('Failed to blacklist old token', {
+          error: errorMessage,
+        });
+      }
+    }
+
+    // Invalidate current session if provided
+    if (currentSessionId) {
+      try {
+        await this.sessionService.invalidateSession(
+          currentSessionId,
+          user.organizationId,
+          'cabinet_switch',
+        );
+        this.logger.log('Current session invalidated for cabinet switch', {
+          sessionId: this.hashId(currentSessionId),
+        });
+      } catch (error) {
+        // Log but don't fail - session might already be invalid
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        this.logger.warn('Failed to invalidate current session', {
+          error: errorMessage,
+        });
+      }
+    }
+
+    // Fetch cabinet details
+    const cabinet = await this.subscriptionClient.getCabinetById(
+      dto.cabinetId,
+      user.organizationId,
+    );
+
+    // Fetch subscription data
+    const subscription = await this.subscriptionClient.getCabinetSubscription(
+      dto.cabinetId,
+      user.organizationId,
+    );
+
+    // Prepare subscription context for JWT
+    const subscriptionContext = subscription
+      ? {
+          cabinetId: dto.cabinetId,
+          subscription: {
+            status: subscription.status,
+            modules:
+              subscription.modules
+                ?.filter((m) => m.isActive && m.moduleCode)
+                .map((m) => m.moduleCode!) || [],
+          },
+        }
+      : {
+          cabinetId: dto.cabinetId,
+          subscription: null,
+        };
+
+    // Generate new JWT with new cabinet context
+    const authResponse = await this.generateAuthResponseWithSession(
+      fullUser,
+      request,
+      subscriptionContext,
+    );
+
+    const duration = Date.now() - startTime;
+    this.logger.log('Cabinet switched successfully', {
+      duration_ms: duration,
+      subscriptionStatus: subscription?.status || 'none',
+      moduleCount: subscription?.modules?.length || 0,
+    });
+
+    // Map to response DTO
+    const cabinetInfo = this.mapCabinetToDto(
+      cabinet,
+      subscription,
+      userCabinet.isPrimary,
+    );
+
+    const subscriptionDto: CabinetSubscriptionDto = subscription
+      ? {
+          status: subscription.status as SubscriptionStatus,
+          trialEndsAt: subscription.trialEndsAt || null,
+          modules:
+            subscription.modules
+              ?.filter((m) => m.isActive && m.moduleCode)
+              .map((m) => m.moduleCode as ModuleCode) || [],
+        }
+      : {
+          status: SubscriptionStatus.CANCELLED,
+          trialEndsAt: null,
+          modules: [],
+        };
+
+    return {
+      accessToken: authResponse.accessToken,
+      refreshToken: authResponse.refreshToken,
+      tokenType: authResponse.tokenType,
+      expiresIn: authResponse.expiresIn,
+      cabinet: cabinetInfo,
+      subscription: subscriptionDto,
+    };
+  }
+
+  /**
+   * Generate authentication response with session creation
+   *
+   * Creates session in Redis, then generates JWT access and refresh tokens with user claims.
+   * Access token is short-lived (15 minutes) for security.
+   * Refresh token is long-lived (7 days) and bound to session.
+   *
+   * SECURITY NOTE:
+   * - Session created BEFORE token generation
+   * - Refresh token includes sessionId for validation
+   * - Tokens contain user claims but never password hash
+   * - Token secrets loaded from environment configuration
+   * - Issuer and audience validated on token verification
+   *
+   * Edge cases:
+   * - Configuration missing → will throw during ConfigService access
+   * - JWT signing failure → propagated to caller
+   * - Session creation failure → propagated to caller
+   *
+   * @param user - User entity to generate tokens for
+   * @param request - HTTP request for device metadata
+   * @returns AuthResponseDto with tokens and user data
+   * @private
+   */
+  private async generateAuthResponseWithSession(
+    user: User,
+    request: Request,
+    cabinetContext?: {
+      cabinetId: UUID;
+      subscription: {
+        status: string;
+        modules: string[];
+      } | null;
+    },
+  ): Promise<AuthResponseDto> {
+    // Get JWT configuration
+    const jwtConfig = this.configService.get('jwt', { infer: true });
+
+    // Generate refresh token FIRST (needed for session creation)
+    // This is a temporary token that will be stored in the session
+    const refreshPayload = buildRefreshTokenPayload({
+      userId: user.id as UUID,
+      sessionId: 'temp' as UUID, // Will be replaced with actual sessionId
+      organizationId: user.organizationId,
+      clinicId: user.clinicId,
+    });
+
+    const tempRefreshToken = this.jwtService.sign(refreshPayload, {
+      secret: jwtConfig.refreshSecret,
+      expiresIn: jwtConfig.refreshExpiration as any,
+    });
+
+    // Create session in Redis with refresh token
+    const session = await this.sessionService.createSession({
+      userId: user.id as UUID,
+      organizationId: user.organizationId,
+      clinicId: user.clinicId,
+      refreshToken: tempRefreshToken,
+      request,
+    });
+
+    // Now generate the REAL refresh token with the actual sessionId
+    const finalRefreshPayload = buildRefreshTokenPayload({
+      userId: user.id as UUID,
+      sessionId: session.id,
+      organizationId: user.organizationId,
+      clinicId: user.clinicId,
+    });
+
+    const refreshToken = this.jwtService.sign(finalRefreshPayload, {
+      secret: jwtConfig.refreshSecret,
+      expiresIn: jwtConfig.refreshExpiration as any,
+    });
+
+    // Build JWT payload with user claims for access token
+    // These claims will be extracted by JwtAuthGuard and passed to controllers
+    // SECURITY: Include sessionId for revocation support and jti for blacklisting
+    const payload: any = {
+      sub: user.id, // Subject: user ID
+      email: user.email,
+      roles: user.roles,
+      permissions: user.permissions,
+      organizationId: user.organizationId,
+      clinicId: user.clinicId,
+      sessionId: session.id, // SECURITY FIX: Add sessionId for revocation
+      jti: require('uuid').v4(), // SECURITY FIX: Add jti for blacklisting
+    };
+
+    // Include cabinet and subscription context if available (Phase 2)
+    if (cabinetContext) {
+      payload.cabinetId = cabinetContext.cabinetId;
+
+      if (cabinetContext.subscription) {
+        payload.subscription = {
+          status: cabinetContext.subscription.status,
+          modules: cabinetContext.subscription.modules,
+        };
+      }
+    }
+
+    // Generate access token (short-lived)
+    // Used for API authentication
+    // Expires in 15 minutes by default
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: jwtConfig.accessExpiration as any,
+    });
+
+    return {
+      accessToken,
+      refreshToken,
+      tokenType: 'Bearer',
+      expiresIn: 900, // 15 minutes in seconds
+      user: this.mapUserToDto(user),
+    };
+  }
+
+  /**
+   * Map User entity to DTO
+   *
+   * Transforms database entity to API response format.
+   * SECURITY: Excludes passwordHash and internal metadata.
+   *
+   * Edge cases:
+   * - Optional clinicId (undefined if not set)
+   * - Empty roles/permissions arrays
+   * - Timestamps serialized as ISO strings
+   *
+   * @param user - User entity from database
+   * @returns UserDto for API response
+   * @private
+   */
+  private mapUserToDto(user: User): UserDto {
+    return {
+      id: user.id as UUID,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      organizationId: user.organizationId,
+      clinicId: user.clinicId,
+      roles: user.roles,
+      permissions: user.permissions,
+      emailVerified: user.emailVerified,
+      createdAt: user.createdAt,
+    };
+  }
+
+  /**
+   * Refresh access and refresh tokens
+   *
+   * Validates the provided refresh token and generates new tokens.
+   * Implements token rotation for enhanced security.
+   *
+   * Steps:
+   * 1. Validate refresh token against session
+   * 2. Load user from database
+   * 3. Rotate session (create new, revoke old)
+   * 4. Generate new access and refresh tokens
+   * 5. Return tokens + user data
+   *
+   * Edge cases:
+   * - Invalid refresh token → AuthenticationError
+   * - Expired refresh token → AuthenticationError
+   * - Revoked session → AuthenticationError
+   * - User not found → AuthenticationError
+   * - User inactive → AuthenticationError
+   *
+   * @param refreshToken - JWT refresh token
+   * @param organizationId - Organization for tenant isolation
+   * @param request - HTTP request for device metadata
+   * @returns AuthResponseDto with new tokens
+   * @throws {AuthenticationError} If token invalid or user not found
+   */
+  async refresh(
+    refreshToken: string,
+    organizationId: OrganizationId,
+    request: Request,
+  ): Promise<AuthResponseDto> {
+    this.logger.log('Token refresh attempt');
+
+    // Validate refresh token and get session
+    const oldSession = await this.sessionService.validateRefreshToken(
+      refreshToken,
+      organizationId,
+    );
+
+    // Get user
+    const user = await this.userRepository.findById(
+      oldSession.userId,
+      organizationId,
+    );
+
+    if (!user) {
+      this.logger.warn(
+        `Refresh failed: User not found (userId=${oldSession.userId})`,
+      );
+      throw new AuthenticationError('User not found', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Check user status (only ACTIVE users can refresh)
+    if (user.status !== UserStatus.ACTIVE) {
+      this.logger.warn(
+        `Refresh failed: User ${user.id} is not active (status: ${user.status})`,
+      );
+      throw new AuthenticationError('User account is not active', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Extract device metadata from request
+    const deviceMetadata = extractDeviceMetadata(request);
+
+    // Generate new refresh token BEFORE rotation
+    const jwtConfig = this.configService.get('jwt', { infer: true });
+    const newRefreshTokenPayload = buildRefreshTokenPayload({
+      userId: user.id as UUID,
+      sessionId: oldSession.id as UUID,
+      organizationId: user.organizationId,
+      clinicId: user.clinicId,
+    });
+
+    const newRefreshToken = this.jwtService.sign(newRefreshTokenPayload, {
+      secret: jwtConfig.refreshSecret,
+      expiresIn: jwtConfig.refreshExpiration as any,
+    });
+
+    // Rotate session (create new session, revoke old one)
+    const newSession = await this.sessionService.rotateSession(
+      oldSession.id,
+      organizationId,
+      newRefreshToken,
+      deviceMetadata,
+    );
+
+    this.logger.log(`Token refreshed successfully for user ${user.id}`);
+
+    // Generate new tokens with new session
+    return this.generateTokensWithSession(user, newSession);
+  }
+
+  /**
+   * Logout current session
+   *
+   * Invalidates the specified session for the current user.
+   *
+   * Steps:
+   * 1. Validate session belongs to user
+   * 2. Invalidate session in Redis
+   * 3. Return success
+   *
+   * Edge cases:
+   * - Session not found → no-op (idempotent)
+   * - Session belongs to different user → no-op (security)
+   * - Session already revoked → no-op (idempotent)
+   *
+   * @param sessionId - Session identifier to invalidate
+   * @param userId - User identifier from JWT
+   * @param organizationId - Organization for tenant isolation
+   */
+  async logout(
+    sessionId: UUID,
+    userId: UUID,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    this.logger.log(`Logout attempt for session ${sessionId}`);
+
+    // Validate session ownership (prevent cross-user logout)
+    const session = await this.sessionService.validateSessionOwnership(
+      sessionId,
+      userId,
+      organizationId,
+    );
+
+    if (!session) {
+      // Session not found or doesn't belong to user
+      // Return success anyway (idempotent, don't leak information)
+      this.logger.warn(
+        `Logout: Session ${sessionId} not found or doesn't belong to user ${userId}`,
+      );
+      return;
+    }
+
+    // Invalidate session
+    await this.sessionService.invalidateSession(
+      sessionId,
+      organizationId,
+      'user_logout',
+    );
+
+    this.logger.log(`Session ${sessionId} invalidated successfully`);
+  }
+
+  /**
+   * List all active sessions for current user
+   *
+   * Returns session metadata including device info and activity.
+   *
+   * Steps:
+   * 1. Fetch active sessions from SessionService
+   * 2. Map to DTOs
+   * 3. Mark current session (if sessionId provided)
+   * 4. Return session list
+   *
+   * Edge cases:
+   * - User has no sessions → returns empty array
+   * - All sessions expired → returns empty array
+   * - Current session not in list → no session marked as current
+   *
+   * @param userId - User identifier from JWT
+   * @param organizationId - Organization for tenant isolation
+   * @param currentSessionId - Optional current session ID to mark as current
+   * @returns Array of session DTOs
+   */
+  async listUserSessions(
+    userId: UUID,
+    organizationId: OrganizationId,
+    currentSessionId?: UUID,
+  ): Promise<SessionDto[]> {
+    const sessions = await this.sessionService.listActiveSessions(
+      userId,
+      organizationId,
+    );
+
+    return sessions.map((session) =>
+      this.mapSessionToDto(session, currentSessionId),
+    );
+  }
+
+  /**
+   * Revoke a specific session
+   *
+   * Allows user to revoke a session from another device.
+   *
+   * Steps:
+   * 1. Validate session ownership
+   * 2. Verify session exists and belongs to user
+   * 3. Invalidate session
+   * 4. Return success
+   *
+   * Edge cases:
+   * - Session not found → throws NotFoundError
+   * - Session belongs to different user → throws NotFoundError (security)
+   * - Session already revoked → no-op (idempotent)
+   *
+   * @param sessionId - Session identifier to revoke
+   * @param userId - User identifier from JWT
+   * @param organizationId - Organization for tenant isolation
+   * @throws {NotFoundError} If session not found or doesn't belong to user
+   */
+  async revokeSession(
+    sessionId: UUID,
+    userId: UUID,
+    organizationId: OrganizationId,
+  ): Promise<void> {
+    this.logger.log(`Revoke session attempt for session ${sessionId}`);
+
+    // Validate session ownership
+    const session = await this.sessionService.validateSessionOwnership(
+      sessionId,
+      userId,
+      organizationId,
+    );
+
+    if (!session) {
+      throw new NotFoundError('Session not found', {
+        resourceType: 'session',
+        resourceId: sessionId,
+      });
+    }
+
+    // Invalidate session
+    await this.sessionService.invalidateSession(
+      sessionId,
+      organizationId,
+      'user_revoked',
+    );
+
+    this.logger.log(`Session ${sessionId} revoked successfully`);
+  }
+
+  /**
+   * Generate tokens with session binding
+   *
+   * Creates access and refresh tokens linked to a session.
+   * Refresh token includes sessionId for rotation tracking.
+   *
+   * Edge cases:
+   * - Session ID included in refresh token payload
+   * - Access token does NOT include sessionId (stateless)
+   *
+   * @param user - User entity
+   * @param session - Session entity
+   * @returns AuthResponseDto with tokens and user data
+   * @private
+   */
+  private generateTokensWithSession(
+    user: User,
+    session: Session,
+  ): AuthResponseDto {
+    // Build JWT payload with user claims
+    // SECURITY: Include sessionId for revocation support and jti for blacklisting
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      roles: user.roles,
+      permissions: user.permissions,
+      organizationId: user.organizationId,
+      clinicId: user.clinicId,
+      sessionId: session.id, // SECURITY FIX: Add sessionId for revocation
+      jti: require('uuid').v4(), // SECURITY FIX: Add jti for blacklisting
+    };
+
+    // Get JWT configuration
+    const jwtConfig = this.configService.get('jwt', { infer: true });
+
+    // Generate access token (short-lived, WITH sessionId)
+    const accessToken = this.jwtService.sign(payload, {
+      expiresIn: jwtConfig.accessExpiration as any,
+    });
+
+    // Generate refresh token (long-lived, WITH sessionId)
+    const refreshPayload = buildRefreshTokenPayload({
+      userId: user.id as UUID,
+      sessionId: session.id as UUID,
+      organizationId: user.organizationId,
+      clinicId: user.clinicId,
+    });
+
+    const refreshToken = this.jwtService.sign(refreshPayload, {
+      secret: jwtConfig.refreshSecret,
+      expiresIn: jwtConfig.refreshExpiration as any,
+    });
+
+    return {
+      accessToken,
+      refreshToken,
+      tokenType: 'Bearer',
+      expiresIn: 900, // 15 minutes in seconds
+      user: this.mapUserToDto(user),
+    };
+  }
+
+  /**
+   * Map Session entity to DTO
+   *
+   * Transforms session entity to API response format.
+   * SECURITY: Excludes refreshTokenHash.
+   *
+   * Edge cases:
+   * - Optional clinicId
+   * - isCurrent flag based on currentSessionId match
+   *
+   * @param session - Session entity
+   * @param currentSessionId - Optional current session ID
+   * @returns SessionDto for API response
+   * @private
+   */
+  private mapSessionToDto(
+    session: Session,
+    currentSessionId?: UUID,
+  ): SessionDto {
+    return {
+      id: session.id,
+      userId: session.userId,
+      organizationId: session.organizationId,
+      clinicId: session.clinicId,
+      deviceInfo: {
+        deviceId: session.deviceInfo.deviceId,
+        deviceName: session.deviceInfo.deviceName,
+        ipAddress: session.deviceInfo.ipAddress,
+        userAgent: session.deviceInfo.userAgent,
+      },
+      createdAt: session.createdAt,
+      expiresAt: session.expiresAt,
+      lastActivityAt: session.lastActivityAt,
+      isActive: session.isActive(),
+      isCurrent: currentSessionId ? session.id === currentSessionId : false,
+    };
+  }
+
+  /**
+   * Fetch cabinet and subscription context for user
+   *
+   * Fetches the user's cabinet and subscription data from the subscription service.
+   * Used during login to enrich the JWT token with subscription context.
+   *
+   * Logic:
+   * 1. Fetch user's cabinets from subscription service
+   * 2. If no cabinets found, return null (graceful degradation)
+   * 3. Select cabinet: default cabinet OR first cabinet
+   * 4. Fetch subscription for selected cabinet
+   * 5. Return cabinet and subscription data
+   *
+   * @param userId - User UUID
+   * @param organizationId - Organization UUID
+   * @returns Cabinet and subscription data or null if unavailable
+   * @private
+   */
+  private async fetchCabinetAndSubscription(
+    userId: UUID,
+    organizationId: OrganizationId,
+  ): Promise<{
+    cabinetId: UUID;
+    subscription: {
+      status: string;
+      modules: string[];
+    } | null;
+  } | null> {
+    const startTime = Date.now();
+    const correlationId = this.logger.ensureCorrelationId();
+
+    // Set logging context
+    this.logger.setContext({
+      correlationId,
+      organizationId,
+      userId: this.hashId(userId),
+      operation: 'fetchCabinetAndSubscription',
+    });
+
+    this.logger.log('Fetching cabinet and subscription context for JWT');
+
+    try {
+      // Fetch user's cabinets
+      const cabinets = await this.subscriptionClient.getUserCabinets(
+        userId,
+        organizationId,
+      );
+
+      if (!cabinets || cabinets.length === 0) {
+        this.logger.log('No cabinets found for user', {
+          duration_ms: Date.now() - startTime,
+        });
+        this.metricsService.incrementCounter('subscription_validation_total', {
+          status: 'not_found',
+          reason: 'no_cabinets',
+        });
+        return null;
+      }
+
+      // Select cabinet: prefer default, otherwise use first cabinet
+      let selectedCabinet = cabinets.find((c) => c.isDefault) || cabinets[0];
+
+      this.logger.log('Cabinet selected for user', {
+        cabinetId: this.hashId(selectedCabinet.id),
+        isDefault: selectedCabinet.isDefault,
+        totalCabinets: cabinets.length,
+      });
+
+      // Fetch subscription for selected cabinet
+      const subscription = await this.subscriptionClient.getCabinetSubscription(
+        selectedCabinet.id,
+        organizationId,
+      );
+
+      const duration = Date.now() - startTime;
+
+      if (!subscription) {
+        this.logger.log('No subscription found for cabinet', {
+          duration_ms: duration,
+        });
+        this.metricsService.incrementCounter('subscription_validation_total', {
+          status: 'not_found',
+          reason: 'no_subscription',
+        });
+        return {
+          cabinetId: selectedCabinet.id,
+          subscription: null,
+        };
+      }
+
+      // Extract active module codes for JWT
+      const moduleCodes =
+        subscription.modules
+          ?.filter((m) => m.isActive && m.moduleCode)
+          .map((m) => m.moduleCode!) || [];
+
+      // Determine validation status
+      const isExpired = subscription.status === 'EXPIRED';
+      const isInactive = subscription.status === 'CANCELLED';
+      const isValid = subscription.status === 'ACTIVE' || subscription.status === 'TRIAL';
+
+      this.logger.log('Subscription validated for JWT', {
+        duration_ms: duration,
+        subscriptionStatus: subscription.status,
+        moduleCount: moduleCodes.length,
+        isTrial: subscription.isTrial || false,
+      });
+
+      // Record validation metrics
+      if (isValid) {
+        this.metricsService.incrementCounter('subscription_validation_total', {
+          status: 'success',
+          reason: subscription.isTrial ? 'trial' : 'active',
+        });
+      } else if (isExpired) {
+        this.metricsService.incrementCounter('subscription_validation_total', {
+          status: 'failure',
+          reason: 'expired',
+        });
+      } else if (isInactive) {
+        this.metricsService.incrementCounter('subscription_validation_total', {
+          status: 'failure',
+          reason: 'inactive',
+        });
+      }
+
+      return {
+        cabinetId: selectedCabinet.id,
+        subscription: {
+          status: subscription.status,
+          modules: moduleCodes,
+        },
+      };
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+      // Graceful degradation: if subscription service is down, continue with login
+      // but without cabinet/subscription context
+      this.logger.warn('Failed to fetch cabinet/subscription, degrading gracefully', {
+        error: errorMessage,
+        duration_ms: duration,
+      });
+
+      this.metricsService.incrementCounter('subscription_validation_total', {
+        status: 'failure',
+        reason: 'service_error',
+      });
+
+      return null;
+    }
+  }
+
+  /**
+   * Hash ID for logging (PHI protection)
+   */
+  private hashId(id: string): string {
+    return id.substring(0, 8) + '...';
+  }
+
+  /**
+   * Map cabinet to DTO with subscription information
+   *
+   * Transforms cabinet and subscription data from subscription service
+   * into CabinetInfoDto for API responses.
+   *
+   * Edge cases:
+   * - Null subscription → creates DTO with CANCELLED status
+   * - Missing module codes → empty array
+   * - Missing trial dates → null
+   *
+   * @param cabinet - Cabinet summary from subscription service
+   * @param subscription - Subscription summary from subscription service
+   * @param isPrimary - Whether this is user's primary cabinet
+   * @returns CabinetInfoDto for API response
+   * @private
+   */
+  private mapCabinetToDto(
+    cabinet: any,
+    subscription: any,
+    isPrimary: boolean,
+  ): CabinetInfoDto {
+    const subscriptionDto: CabinetSubscriptionDto = subscription
+      ? {
+          status: subscription.status as SubscriptionStatus,
+          trialEndsAt: subscription.trialEndsAt || null,
+          modules:
+            subscription.modules
+              ?.filter((m: any) => m.isActive && m.moduleCode)
+              .map((m: any) => m.moduleCode as ModuleCode) || [],
+        }
+      : {
+          status: SubscriptionStatus.CANCELLED,
+          trialEndsAt: null,
+          modules: [],
+        };
+
+    return {
+      id: cabinet.id,
+      organizationId: cabinet.organizationId,
+      name: cabinet.name,
+      isDefault: cabinet.isDefault || false,
+      isPrimary: isPrimary,
+      subscription: subscriptionDto,
+    };
+  }
+
+  /**
+   * Mask email for logging (GDPR compliance)
+   *
+   * Masks email local part for privacy in logs.
+   * Example: john.doe@example.com -> j***@example.com
+   *
+   * Edge cases:
+   * - Single character local part → shows only first character
+   * - No @ symbol → returns masked string
+   * - Empty string → returns empty string
+   *
+   * @param email - Email address to mask
+   * @returns Masked email address
+   * @private
+   */
+  private maskEmail(email: string): string {
+    if (!email || !email.includes('@')) {
+      return '***';
+    }
+
+    const [local, domain] = email.split('@');
+    if (local.length === 0) {
+      return '***@' + domain;
+    }
+
+    return `${local.charAt(0)}***@${domain}`;
+  }
+}

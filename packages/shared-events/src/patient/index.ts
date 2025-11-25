@@ -1,0 +1,109 @@
+/**
+ * Patient Events Module
+ *
+ * Event contracts for patient lifecycle management in the Dental OS system.
+ * These events capture patient registration, updates, merging, deletion, and anonymization.
+ *
+ * All patient events follow the EventEnvelope pattern and include:
+ * - Full multi-tenant context (organizationId, clinicId, tenantId)
+ * - Complete audit trail metadata
+ * - Type-safe payloads with comprehensive validation
+ * - Edge case handling for GDPR, HIPAA, and data privacy compliance
+ *
+ * @module shared-events/patient
+ * @packageDocumentation
+ */
+
+// ============================================================================
+// Patient Created Event
+// ============================================================================
+export {
+  PATIENT_CREATED_EVENT,
+  PATIENT_CREATED_EVENT_VERSION,
+  isPatientCreatedEvent,
+  createPatientCreatedEvent,
+} from './patient-created.event';
+
+export type {
+  PatientCreatedPayload,
+  PatientCreatedEvent,
+  PatientRegistrationSource,
+  PatientGender,
+  PatientStatus,
+  EmergencyContact,
+  PatientInsuranceInfo,
+} from './patient-created.event';
+
+// ============================================================================
+// Patient Updated Event
+// ============================================================================
+export {
+  PATIENT_UPDATED_EVENT,
+  PATIENT_UPDATED_EVENT_VERSION,
+  isPatientUpdatedEvent,
+  createPatientUpdatedEvent,
+} from './patient-updated.event';
+
+export type {
+  PatientUpdatedPayload,
+  PatientUpdatedEvent,
+  PatientUpdateReason,
+  ChangedField,
+} from './patient-updated.event';
+
+// ============================================================================
+// Patient Merged Event
+// ============================================================================
+export {
+  PATIENT_MERGED_EVENT,
+  PATIENT_MERGED_EVENT_VERSION,
+  isPatientMergedEvent,
+  createPatientMergedEvent,
+} from './patient-merged.event';
+
+export type {
+  PatientMergedPayload,
+  PatientMergedEvent,
+  MergeStrategy,
+  MergeConflictResolution,
+  MergedDataSummary,
+} from './patient-merged.event';
+
+// ============================================================================
+// Patient Deleted Event
+// ============================================================================
+export {
+  PATIENT_DELETED_EVENT,
+  PATIENT_DELETED_EVENT_VERSION,
+  isPatientDeletedEvent,
+  createPatientDeletedEvent,
+} from './patient-deleted.event';
+
+export type {
+  PatientDeletedPayload,
+  PatientDeletedEvent,
+  DeletionType,
+  DeletionReason,
+  RetentionPolicy,
+  DeletionImpact,
+} from './patient-deleted.event';
+
+// ============================================================================
+// Patient Anonymized Event
+// ============================================================================
+export {
+  PATIENT_ANONYMIZED_EVENT,
+  PATIENT_ANONYMIZED_EVENT_VERSION,
+  isPatientAnonymizedEvent,
+  createPatientAnonymizedEvent,
+} from './patient-anonymized.event';
+
+export type {
+  PatientAnonymizedPayload,
+  PatientAnonymizedEvent,
+  AnonymizationMethod,
+  AnonymizationReason,
+  AnonymizedField,
+  RetainedDataDetails,
+  AnonymizationImpact,
+} from './patient-anonymized.event';

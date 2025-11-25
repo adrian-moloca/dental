@@ -1,0 +1,24 @@
+# ================================
+# OpenSearch Dashboards Configuration
+# ================================
+
+# Server
+server.host: '0.0.0.0'
+server.port: 5601
+server.name: 'dental-opensearch-dashboards'
+
+# OpenSearch connection
+opensearch.hosts: ['https://opensearch:9200']
+opensearch.ssl.verificationMode: none
+opensearch.username: 'admin'
+opensearch.password: 'admin'
+opensearch.requestHeadersWhitelist: ['securitytenant', 'Authorization']
+
+# Security
+opensearch_security.multitenancy.enabled: true
+opensearch_security.multitenancy.tenants.preferred: ['Private', 'Global']
+opensearch_security.readonly_mode.roles: ['kibana_read_only']
+opensearch_security.cookie.secure: false
+
+# Logging
+logging.verbose: false

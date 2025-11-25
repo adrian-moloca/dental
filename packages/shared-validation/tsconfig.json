@@ -1,0 +1,61 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": "../../",
+    "rootDir": "./src",
+    "module": "commonjs",
+    "strict": false,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "paths": {
+      "@dentalos/shared-types": [
+        "packages/shared-types/dist/index.d.ts",
+        "packages/shared-types/dist/index.js",
+        "packages/shared-types/src"
+      ],
+      "@dentalos/shared-domain": [
+        "packages/shared-domain/dist/index.d.ts",
+        "packages/shared-domain/dist/index.js",
+        "packages/shared-domain/src"
+      ],
+      "@dentalos/shared-validation": [
+        "packages/shared-validation/dist/index.d.ts",
+        "packages/shared-validation/dist/index.js",
+        "packages/shared-validation/src"
+      ],
+      "@dentalos/shared-auth": [
+        "packages/shared-auth/dist/index.d.ts",
+        "packages/shared-auth/dist/index.js",
+        "packages/shared-auth/src"
+      ],
+      "@dentalos/shared-infra": [
+        "packages/shared-infra/dist/index.d.ts",
+        "packages/shared-infra/dist/index.js",
+        "packages/shared-infra/src"
+      ],
+      "@dentalos/shared-events": [
+        "packages/shared-events/dist/index.d.ts",
+        "packages/shared-events/dist/index.js",
+        "packages/shared-events/src"
+      ],
+      "@dentalos/shared-errors": [
+        "packages/shared-errors/dist/index.d.ts",
+        "packages/shared-errors/dist/index.js",
+        "packages/shared-errors/src"
+      ],
+      "@dentalos/shared-config": [
+        "packages/shared-config/dist/index.d.ts",
+        "packages/shared-config/dist/index.js",
+        "packages/shared-config/src"
+      ],
+      "@dentalos/shared-testing": ["packages/shared-testing/src"]
+    },
+    "types": ["node"],
+    "declaration": true,
+    "declarationMap": true,
+    "composite": true,
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.test.ts"]
+}

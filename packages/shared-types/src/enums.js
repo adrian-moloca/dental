@@ -1,0 +1,320 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.GoodsReceiptStatus = exports.LocationType = exports.SupplierStatus = exports.PurchaseOrderStatus = exports.MovementType = exports.StockStatus = exports.ProductStatus = exports.UnitOfMeasure = exports.ProductCategory = exports.Environment = exports.LogLevel = exports.HttpStatusCode = exports.TimeZone = exports.LanguageCode = exports.CurrencyCode = exports.DayOfWeek = exports.RecurrencePattern = exports.MimeTypeCategory = exports.DocumentType = exports.NotificationChannel = exports.NotificationType = exports.ContactMethod = exports.MaritalStatus = exports.Gender = exports.Priority = exports.TreatmentStatus = exports.AppointmentStatus = exports.PaymentStatus = exports.ApprovalStatus = exports.Status = void 0;
+var Status;
+(function (Status) {
+    Status["ACTIVE"] = "ACTIVE";
+    Status["INACTIVE"] = "INACTIVE";
+    Status["PENDING"] = "PENDING";
+    Status["ARCHIVED"] = "ARCHIVED";
+})(Status || (exports.Status = Status = {}));
+var ApprovalStatus;
+(function (ApprovalStatus) {
+    ApprovalStatus["DRAFT"] = "DRAFT";
+    ApprovalStatus["PENDING_APPROVAL"] = "PENDING_APPROVAL";
+    ApprovalStatus["APPROVED"] = "APPROVED";
+    ApprovalStatus["REJECTED"] = "REJECTED";
+    ApprovalStatus["CANCELLED"] = "CANCELLED";
+})(ApprovalStatus || (exports.ApprovalStatus = ApprovalStatus = {}));
+var PaymentStatus;
+(function (PaymentStatus) {
+    PaymentStatus["UNPAID"] = "UNPAID";
+    PaymentStatus["PARTIALLY_PAID"] = "PARTIALLY_PAID";
+    PaymentStatus["PAID"] = "PAID";
+    PaymentStatus["OVERDUE"] = "OVERDUE";
+    PaymentStatus["REFUNDED"] = "REFUNDED";
+    PaymentStatus["CANCELLED"] = "CANCELLED";
+})(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
+var AppointmentStatus;
+(function (AppointmentStatus) {
+    AppointmentStatus["SCHEDULED"] = "SCHEDULED";
+    AppointmentStatus["CONFIRMED"] = "CONFIRMED";
+    AppointmentStatus["CHECKED_IN"] = "CHECKED_IN";
+    AppointmentStatus["IN_PROGRESS"] = "IN_PROGRESS";
+    AppointmentStatus["COMPLETED"] = "COMPLETED";
+    AppointmentStatus["CANCELLED"] = "CANCELLED";
+    AppointmentStatus["NO_SHOW"] = "NO_SHOW";
+    AppointmentStatus["RESCHEDULED"] = "RESCHEDULED";
+})(AppointmentStatus || (exports.AppointmentStatus = AppointmentStatus = {}));
+var TreatmentStatus;
+(function (TreatmentStatus) {
+    TreatmentStatus["PLANNED"] = "PLANNED";
+    TreatmentStatus["IN_PROGRESS"] = "IN_PROGRESS";
+    TreatmentStatus["COMPLETED"] = "COMPLETED";
+    TreatmentStatus["CANCELLED"] = "CANCELLED";
+    TreatmentStatus["ON_HOLD"] = "ON_HOLD";
+})(TreatmentStatus || (exports.TreatmentStatus = TreatmentStatus = {}));
+var Priority;
+(function (Priority) {
+    Priority["LOW"] = "LOW";
+    Priority["MEDIUM"] = "MEDIUM";
+    Priority["HIGH"] = "HIGH";
+    Priority["URGENT"] = "URGENT";
+})(Priority || (exports.Priority = Priority = {}));
+var Gender;
+(function (Gender) {
+    Gender["MALE"] = "MALE";
+    Gender["FEMALE"] = "FEMALE";
+    Gender["OTHER"] = "OTHER";
+    Gender["PREFER_NOT_TO_SAY"] = "PREFER_NOT_TO_SAY";
+})(Gender || (exports.Gender = Gender = {}));
+var MaritalStatus;
+(function (MaritalStatus) {
+    MaritalStatus["SINGLE"] = "SINGLE";
+    MaritalStatus["MARRIED"] = "MARRIED";
+    MaritalStatus["DIVORCED"] = "DIVORCED";
+    MaritalStatus["WIDOWED"] = "WIDOWED";
+    MaritalStatus["SEPARATED"] = "SEPARATED";
+    MaritalStatus["OTHER"] = "OTHER";
+})(MaritalStatus || (exports.MaritalStatus = MaritalStatus = {}));
+var ContactMethod;
+(function (ContactMethod) {
+    ContactMethod["EMAIL"] = "EMAIL";
+    ContactMethod["PHONE"] = "PHONE";
+    ContactMethod["SMS"] = "SMS";
+    ContactMethod["POSTAL_MAIL"] = "POSTAL_MAIL";
+})(ContactMethod || (exports.ContactMethod = ContactMethod = {}));
+var NotificationType;
+(function (NotificationType) {
+    NotificationType["INFO"] = "INFO";
+    NotificationType["SUCCESS"] = "SUCCESS";
+    NotificationType["WARNING"] = "WARNING";
+    NotificationType["ERROR"] = "ERROR";
+    NotificationType["REMINDER"] = "REMINDER";
+})(NotificationType || (exports.NotificationType = NotificationType = {}));
+var NotificationChannel;
+(function (NotificationChannel) {
+    NotificationChannel["IN_APP"] = "IN_APP";
+    NotificationChannel["EMAIL"] = "EMAIL";
+    NotificationChannel["SMS"] = "SMS";
+    NotificationChannel["PUSH"] = "PUSH";
+})(NotificationChannel || (exports.NotificationChannel = NotificationChannel = {}));
+var DocumentType;
+(function (DocumentType) {
+    DocumentType["MEDICAL_RECORD"] = "MEDICAL_RECORD";
+    DocumentType["CONSENT_FORM"] = "CONSENT_FORM";
+    DocumentType["INSURANCE_CARD"] = "INSURANCE_CARD";
+    DocumentType["PRESCRIPTION"] = "PRESCRIPTION";
+    DocumentType["LAB_RESULT"] = "LAB_RESULT";
+    DocumentType["XRAY"] = "XRAY";
+    DocumentType["PHOTO"] = "PHOTO";
+    DocumentType["INVOICE"] = "INVOICE";
+    DocumentType["RECEIPT"] = "RECEIPT";
+    DocumentType["OTHER"] = "OTHER";
+})(DocumentType || (exports.DocumentType = DocumentType = {}));
+var MimeTypeCategory;
+(function (MimeTypeCategory) {
+    MimeTypeCategory["IMAGE"] = "IMAGE";
+    MimeTypeCategory["DOCUMENT"] = "DOCUMENT";
+    MimeTypeCategory["VIDEO"] = "VIDEO";
+    MimeTypeCategory["AUDIO"] = "AUDIO";
+    MimeTypeCategory["ARCHIVE"] = "ARCHIVE";
+    MimeTypeCategory["OTHER"] = "OTHER";
+})(MimeTypeCategory || (exports.MimeTypeCategory = MimeTypeCategory = {}));
+var RecurrencePattern;
+(function (RecurrencePattern) {
+    RecurrencePattern["DAILY"] = "DAILY";
+    RecurrencePattern["WEEKLY"] = "WEEKLY";
+    RecurrencePattern["BIWEEKLY"] = "BIWEEKLY";
+    RecurrencePattern["MONTHLY"] = "MONTHLY";
+    RecurrencePattern["YEARLY"] = "YEARLY";
+    RecurrencePattern["CUSTOM"] = "CUSTOM";
+})(RecurrencePattern || (exports.RecurrencePattern = RecurrencePattern = {}));
+var DayOfWeek;
+(function (DayOfWeek) {
+    DayOfWeek[DayOfWeek["SUNDAY"] = 0] = "SUNDAY";
+    DayOfWeek[DayOfWeek["MONDAY"] = 1] = "MONDAY";
+    DayOfWeek[DayOfWeek["TUESDAY"] = 2] = "TUESDAY";
+    DayOfWeek[DayOfWeek["WEDNESDAY"] = 3] = "WEDNESDAY";
+    DayOfWeek[DayOfWeek["THURSDAY"] = 4] = "THURSDAY";
+    DayOfWeek[DayOfWeek["FRIDAY"] = 5] = "FRIDAY";
+    DayOfWeek[DayOfWeek["SATURDAY"] = 6] = "SATURDAY";
+})(DayOfWeek || (exports.DayOfWeek = DayOfWeek = {}));
+var CurrencyCode;
+(function (CurrencyCode) {
+    CurrencyCode["USD"] = "USD";
+    CurrencyCode["EUR"] = "EUR";
+    CurrencyCode["GBP"] = "GBP";
+    CurrencyCode["CAD"] = "CAD";
+    CurrencyCode["AUD"] = "AUD";
+    CurrencyCode["JPY"] = "JPY";
+    CurrencyCode["CNY"] = "CNY";
+    CurrencyCode["INR"] = "INR";
+})(CurrencyCode || (exports.CurrencyCode = CurrencyCode = {}));
+var LanguageCode;
+(function (LanguageCode) {
+    LanguageCode["EN"] = "en";
+    LanguageCode["ES"] = "es";
+    LanguageCode["FR"] = "fr";
+    LanguageCode["DE"] = "de";
+    LanguageCode["IT"] = "it";
+    LanguageCode["PT"] = "pt";
+    LanguageCode["ZH"] = "zh";
+    LanguageCode["JA"] = "ja";
+    LanguageCode["KO"] = "ko";
+    LanguageCode["AR"] = "ar";
+})(LanguageCode || (exports.LanguageCode = LanguageCode = {}));
+var TimeZone;
+(function (TimeZone) {
+    TimeZone["UTC"] = "UTC";
+    TimeZone["AMERICA_NEW_YORK"] = "America/New_York";
+    TimeZone["AMERICA_CHICAGO"] = "America/Chicago";
+    TimeZone["AMERICA_DENVER"] = "America/Denver";
+    TimeZone["AMERICA_LOS_ANGELES"] = "America/Los_Angeles";
+    TimeZone["EUROPE_LONDON"] = "Europe/London";
+    TimeZone["EUROPE_PARIS"] = "Europe/Paris";
+    TimeZone["ASIA_TOKYO"] = "Asia/Tokyo";
+    TimeZone["AUSTRALIA_SYDNEY"] = "Australia/Sydney";
+})(TimeZone || (exports.TimeZone = TimeZone = {}));
+var HttpStatusCode;
+(function (HttpStatusCode) {
+    HttpStatusCode[HttpStatusCode["OK"] = 200] = "OK";
+    HttpStatusCode[HttpStatusCode["CREATED"] = 201] = "CREATED";
+    HttpStatusCode[HttpStatusCode["ACCEPTED"] = 202] = "ACCEPTED";
+    HttpStatusCode[HttpStatusCode["NO_CONTENT"] = 204] = "NO_CONTENT";
+    HttpStatusCode[HttpStatusCode["BAD_REQUEST"] = 400] = "BAD_REQUEST";
+    HttpStatusCode[HttpStatusCode["UNAUTHORIZED"] = 401] = "UNAUTHORIZED";
+    HttpStatusCode[HttpStatusCode["FORBIDDEN"] = 403] = "FORBIDDEN";
+    HttpStatusCode[HttpStatusCode["NOT_FOUND"] = 404] = "NOT_FOUND";
+    HttpStatusCode[HttpStatusCode["CONFLICT"] = 409] = "CONFLICT";
+    HttpStatusCode[HttpStatusCode["UNPROCESSABLE_ENTITY"] = 422] = "UNPROCESSABLE_ENTITY";
+    HttpStatusCode[HttpStatusCode["TOO_MANY_REQUESTS"] = 429] = "TOO_MANY_REQUESTS";
+    HttpStatusCode[HttpStatusCode["INTERNAL_SERVER_ERROR"] = 500] = "INTERNAL_SERVER_ERROR";
+    HttpStatusCode[HttpStatusCode["SERVICE_UNAVAILABLE"] = 503] = "SERVICE_UNAVAILABLE";
+})(HttpStatusCode || (exports.HttpStatusCode = HttpStatusCode = {}));
+var LogLevel;
+(function (LogLevel) {
+    LogLevel["DEBUG"] = "DEBUG";
+    LogLevel["INFO"] = "INFO";
+    LogLevel["WARN"] = "WARN";
+    LogLevel["ERROR"] = "ERROR";
+    LogLevel["FATAL"] = "FATAL";
+})(LogLevel || (exports.LogLevel = LogLevel = {}));
+var Environment;
+(function (Environment) {
+    Environment["DEVELOPMENT"] = "DEVELOPMENT";
+    Environment["STAGING"] = "STAGING";
+    Environment["PRODUCTION"] = "PRODUCTION";
+    Environment["TEST"] = "TEST";
+})(Environment || (exports.Environment = Environment = {}));
+var ProductCategory;
+(function (ProductCategory) {
+    ProductCategory["CONSUMABLE"] = "CONSUMABLE";
+    ProductCategory["INSTRUMENT"] = "INSTRUMENT";
+    ProductCategory["EQUIPMENT"] = "EQUIPMENT";
+    ProductCategory["MEDICATION"] = "MEDICATION";
+    ProductCategory["IMPLANT"] = "IMPLANT";
+    ProductCategory["ORTHODONTIC"] = "ORTHODONTIC";
+    ProductCategory["PROSTHETIC"] = "PROSTHETIC";
+    ProductCategory["ENDODONTIC"] = "ENDODONTIC";
+    ProductCategory["PERIODONTIC"] = "PERIODONTIC";
+    ProductCategory["SURGICAL"] = "SURGICAL";
+    ProductCategory["PREVENTIVE"] = "PREVENTIVE";
+    ProductCategory["RESTORATIVE"] = "RESTORATIVE";
+    ProductCategory["LABORATORY"] = "LABORATORY";
+    ProductCategory["STERILIZATION"] = "STERILIZATION";
+    ProductCategory["PPE"] = "PPE";
+    ProductCategory["OFFICE_SUPPLIES"] = "OFFICE_SUPPLIES";
+    ProductCategory["OTHER"] = "OTHER";
+})(ProductCategory || (exports.ProductCategory = ProductCategory = {}));
+var UnitOfMeasure;
+(function (UnitOfMeasure) {
+    UnitOfMeasure["PIECE"] = "PIECE";
+    UnitOfMeasure["BOX"] = "BOX";
+    UnitOfMeasure["PACK"] = "PACK";
+    UnitOfMeasure["CASE"] = "CASE";
+    UnitOfMeasure["KIT"] = "KIT";
+    UnitOfMeasure["BOTTLE"] = "BOTTLE";
+    UnitOfMeasure["TUBE"] = "TUBE";
+    UnitOfMeasure["VIAL"] = "VIAL";
+    UnitOfMeasure["SYRINGE"] = "SYRINGE";
+    UnitOfMeasure["CARTRIDGE"] = "CARTRIDGE";
+    UnitOfMeasure["ROLL"] = "ROLL";
+    UnitOfMeasure["SHEET"] = "SHEET";
+    UnitOfMeasure["LITER"] = "LITER";
+    UnitOfMeasure["MILLILITER"] = "MILLILITER";
+    UnitOfMeasure["GRAM"] = "GRAM";
+    UnitOfMeasure["KILOGRAM"] = "KILOGRAM";
+    UnitOfMeasure["MILLIGRAM"] = "MILLIGRAM";
+    UnitOfMeasure["METER"] = "METER";
+    UnitOfMeasure["CENTIMETER"] = "CENTIMETER";
+    UnitOfMeasure["EACH"] = "EACH";
+})(UnitOfMeasure || (exports.UnitOfMeasure = UnitOfMeasure = {}));
+var ProductStatus;
+(function (ProductStatus) {
+    ProductStatus["ACTIVE"] = "ACTIVE";
+    ProductStatus["INACTIVE"] = "INACTIVE";
+    ProductStatus["DISCONTINUED"] = "DISCONTINUED";
+    ProductStatus["PENDING_APPROVAL"] = "PENDING_APPROVAL";
+})(ProductStatus || (exports.ProductStatus = ProductStatus = {}));
+var StockStatus;
+(function (StockStatus) {
+    StockStatus["AVAILABLE"] = "AVAILABLE";
+    StockStatus["LOW_STOCK"] = "LOW_STOCK";
+    StockStatus["OUT_OF_STOCK"] = "OUT_OF_STOCK";
+    StockStatus["RESERVED"] = "RESERVED";
+    StockStatus["QUARANTINED"] = "QUARANTINED";
+    StockStatus["EXPIRED"] = "EXPIRED";
+    StockStatus["DAMAGED"] = "DAMAGED";
+    StockStatus["IN_TRANSIT"] = "IN_TRANSIT";
+})(StockStatus || (exports.StockStatus = StockStatus = {}));
+var MovementType;
+(function (MovementType) {
+    MovementType["RECEIPT"] = "RECEIPT";
+    MovementType["CONSUMPTION"] = "CONSUMPTION";
+    MovementType["ADJUSTMENT_INCREASE"] = "ADJUSTMENT_INCREASE";
+    MovementType["ADJUSTMENT_DECREASE"] = "ADJUSTMENT_DECREASE";
+    MovementType["TRANSFER_OUT"] = "TRANSFER_OUT";
+    MovementType["TRANSFER_IN"] = "TRANSFER_IN";
+    MovementType["RETURN_TO_SUPPLIER"] = "RETURN_TO_SUPPLIER";
+    MovementType["DISPOSAL"] = "DISPOSAL";
+    MovementType["QUARANTINE"] = "QUARANTINE";
+    MovementType["RELEASE_FROM_QUARANTINE"] = "RELEASE_FROM_QUARANTINE";
+    MovementType["STOCKTAKE_INCREASE"] = "STOCKTAKE_INCREASE";
+    MovementType["STOCKTAKE_DECREASE"] = "STOCKTAKE_DECREASE";
+    MovementType["DAMAGE"] = "DAMAGE";
+    MovementType["THEFT_LOSS"] = "THEFT_LOSS";
+})(MovementType || (exports.MovementType = MovementType = {}));
+var PurchaseOrderStatus;
+(function (PurchaseOrderStatus) {
+    PurchaseOrderStatus["DRAFT"] = "DRAFT";
+    PurchaseOrderStatus["PENDING_APPROVAL"] = "PENDING_APPROVAL";
+    PurchaseOrderStatus["APPROVED"] = "APPROVED";
+    PurchaseOrderStatus["REJECTED"] = "REJECTED";
+    PurchaseOrderStatus["SENT_TO_SUPPLIER"] = "SENT_TO_SUPPLIER";
+    PurchaseOrderStatus["PARTIALLY_RECEIVED"] = "PARTIALLY_RECEIVED";
+    PurchaseOrderStatus["FULLY_RECEIVED"] = "FULLY_RECEIVED";
+    PurchaseOrderStatus["CLOSED"] = "CLOSED";
+    PurchaseOrderStatus["CANCELLED"] = "CANCELLED";
+})(PurchaseOrderStatus || (exports.PurchaseOrderStatus = PurchaseOrderStatus = {}));
+var SupplierStatus;
+(function (SupplierStatus) {
+    SupplierStatus["ACTIVE"] = "ACTIVE";
+    SupplierStatus["INACTIVE"] = "INACTIVE";
+    SupplierStatus["PENDING_QUALIFICATION"] = "PENDING_QUALIFICATION";
+    SupplierStatus["QUALIFIED"] = "QUALIFIED";
+    SupplierStatus["DISQUALIFIED"] = "DISQUALIFIED";
+    SupplierStatus["SUSPENDED"] = "SUSPENDED";
+})(SupplierStatus || (exports.SupplierStatus = SupplierStatus = {}));
+var LocationType;
+(function (LocationType) {
+    LocationType["WAREHOUSE"] = "WAREHOUSE";
+    LocationType["CLINIC"] = "CLINIC";
+    LocationType["TREATMENT_ROOM"] = "TREATMENT_ROOM";
+    LocationType["STERILIZATION_ROOM"] = "STERILIZATION_ROOM";
+    LocationType["STORAGE_ROOM"] = "STORAGE_ROOM";
+    LocationType["QUARANTINE_AREA"] = "QUARANTINE_AREA";
+    LocationType["DISPOSAL_AREA"] = "DISPOSAL_AREA";
+    LocationType["RECEIVING_AREA"] = "RECEIVING_AREA";
+    LocationType["MOBILE_UNIT"] = "MOBILE_UNIT";
+})(LocationType || (exports.LocationType = LocationType = {}));
+var GoodsReceiptStatus;
+(function (GoodsReceiptStatus) {
+    GoodsReceiptStatus["DRAFT"] = "DRAFT";
+    GoodsReceiptStatus["RECEIVED"] = "RECEIVED";
+    GoodsReceiptStatus["PARTIALLY_ACCEPTED"] = "PARTIALLY_ACCEPTED";
+    GoodsReceiptStatus["FULLY_ACCEPTED"] = "FULLY_ACCEPTED";
+    GoodsReceiptStatus["REJECTED"] = "REJECTED";
+    GoodsReceiptStatus["CANCELLED"] = "CANCELLED";
+})(GoodsReceiptStatus || (exports.GoodsReceiptStatus = GoodsReceiptStatus = {}));
+//# sourceMappingURL=enums.js.map

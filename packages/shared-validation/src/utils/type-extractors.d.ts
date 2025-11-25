@@ -1,0 +1,16 @@
+import { z, ZodSchema, ZodTypeAny } from 'zod';
+export type ExtractInput<T extends ZodTypeAny> = z.input<T>;
+export type ExtractOutput<T extends ZodTypeAny> = z.output<T>;
+export type ExtractType<T extends ZodTypeAny> = z.infer<T>;
+export type ExtractShape<T extends ZodSchema> = T extends z.ZodObject<infer S> ? S : never;
+export type ExtractArrayElement<T extends ZodTypeAny> = T extends z.ZodArray<infer E> ? z.infer<E> : never;
+export type ExtractUnionOptions<T extends ZodTypeAny> = T extends z.ZodUnion<infer U> ? U extends readonly [infer First, ...infer Rest] ? First extends ZodTypeAny ? z.infer<First> | (Rest extends readonly ZodTypeAny[] ? z.infer<Rest[number]> : never) : never : never : never;
+export declare function extractInputType<T extends ZodTypeAny>(_schema: T): z.input<T> extends infer R ? R : never;
+export declare function extractOutputType<T extends ZodTypeAny>(_schema: T): z.output<T> extends infer R ? R : never;
+export declare function isType<T extends ZodTypeAny>(schema: T, value: unknown): value is z.infer<T>;
+export declare function assertType<T extends ZodTypeAny>(schema: T, value: unknown, errorMessage?: string): asserts value is z.infer<T>;
+export type Nullable<T> = T | null;
+export type Optional<T> = T | undefined;
+export type Maybe<T> = T | null | undefined;
+export type ArrayOf<T> = T[];
+export type PromiseOf<T> = Promise<T>;

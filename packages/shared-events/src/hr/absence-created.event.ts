@@ -1,0 +1,48 @@
+import type { UUID, OrganizationId, ClinicId, ISODateString } from '@dentalos/shared-types';
+import type { EventEnvelope } from '../envelope/event-envelope';
+import type { AbsenceType, AbsenceStatus } from '@dentalos/shared-domain';
+
+export const ABSENCE_CREATED_EVENT_TYPE = 'dental.hr.absence.created' as const;
+export const ABSENCE_CREATED_EVENT_VERSION = 1;
+
+export interface AbsenceCreatedPayload {
+  absenceId: UUID;
+  staffId: UUID;
+  tenantId: string;
+  organizationId: OrganizationId;
+  clinicId?: ClinicId;
+
+  type: AbsenceType;
+  status: AbsenceStatus;
+
+  startDate: ISODateString;
+  endDate: ISODateString;
+  totalDays: number;
+
+  reason?: string;
+
+  requestedAt: ISODateString;
+  requestedBy: UUID;
+}
+
+export type AbsenceCreatedEvent = EventEnvelope<AbsenceCreatedPayload>;
+
+export function isAbsenceCreatedEvent(event: EventEnvelope<unknown>): event is AbsenceCreatedEvent {
+  return event.type === ABSENCE_CREATED_EVENT_TYPE;
+}
+
+export function createAbsenceCreatedEvent(
+  payload: AbsenceCreatedPayload,
+  metadata: EventEnvelope<unknown>['metadata'],
+  tenantContext: EventEnvelope<unknown>['tenantContext']
+): AbsenceCreatedEvent {
+  return {
+    id: crypto.randomUUID() as UUID,
+    type: ABSENCE_CREATED_EVENT_TYPE,
+    version: ABSENCE_CREATED_EVENT_VERSION,
+    occurredAt: new Date(),
+    payload,
+    metadata,
+    tenantContext,
+  };
+}

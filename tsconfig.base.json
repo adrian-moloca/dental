@@ -1,0 +1,73 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "esnext",
+    "lib": ["ES2022", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@dentalos/shared-types": [
+        "packages/shared-types/dist/index.d.ts",
+        "packages/shared-types/dist/index.js"
+      ],
+      "@dentalos/shared-domain": [
+        "packages/shared-domain/dist/index.d.ts",
+        "packages/shared-domain/dist/index.js"
+      ],
+      "@dentalos/shared-infra": [
+        "packages/shared-infra/dist/index.d.ts",
+        "packages/shared-infra/dist/index.js"
+      ],
+      "@dentalos/shared-auth": [
+        "packages/shared-auth/dist/index.d.ts",
+        "packages/shared-auth/dist/index.js"
+      ],
+      "@dentalos/shared-errors": [
+        "packages/shared-errors/dist/index.d.ts",
+        "packages/shared-errors/dist/index.js"
+      ],
+      "@dentalos/shared-events": [
+        "packages/shared-events/dist/index.d.ts",
+        "packages/shared-events/dist/index.js"
+      ],
+      "@dentalos/shared-utils": [
+        "packages/shared-utils/dist/index.d.ts",
+        "packages/shared-utils/dist/index.js"
+      ],
+      "@dentalos/shared-validation": [
+        "packages/shared-validation/dist/index.d.ts",
+        "packages/shared-validation/dist/index.js"
+      ],
+      "@dentalos/shared-tracing": [
+        "packages/shared-tracing/dist/index.d.ts",
+        "packages/shared-tracing/dist/index.js"
+      ],
+      "@dentalos/ui-kit": [
+        "packages/ui-kit/dist/index.d.ts",
+        "packages/ui-kit/dist/index.js"
+      ]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

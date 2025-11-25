@@ -1,0 +1,41 @@
+import { defineConfig } from 'vitest/config';
+import path from 'path';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['test/integration/**/*.spec.ts', 'test/e2e/**/*.spec.ts'],
+    testTimeout: 30000,
+    hookTimeout: 30000,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.ts'],
+      exclude: [
+        'src/**/*.spec.ts',
+        'src/**/*.dto.ts',
+        'src/**/*.interface.ts',
+        'src/**/*.module.ts',
+        'src/main.ts',
+      ],
+    },
+    setupFiles: ['./test/setup.ts'],
+  },
+  resolve: {
+    alias: {
+      '@dentalos/shared-types': path.resolve(__dirname, '../../packages/shared-types/src'),
+      '@dentalos/shared-validation': path.resolve(
+        __dirname,
+        '../../packages/shared-validation/src',
+      ),
+      '@dentalos/shared-domain': path.resolve(__dirname, '../../packages/shared-domain/src'),
+      '@dentalos/shared-auth': path.resolve(__dirname, '../../packages/shared-auth/src'),
+      '@dentalos/shared-infra': path.resolve(__dirname, '../../packages/shared-infra/src'),
+      '@dentalos/shared-events': path.resolve(__dirname, '../../packages/shared-events/src'),
+      '@dentalos/shared-errors': path.resolve(__dirname, '../../packages/shared-errors/src'),
+      '@dentalos/shared-config': path.resolve(__dirname, '../../packages/shared-config/src'),
+      '@dentalos/shared-testing': path.resolve(__dirname, '../../packages/shared-testing/src'),
+    },
+  },
+});

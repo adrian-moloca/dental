@@ -1,0 +1,513 @@
+version: "3.9"
+
+x-app-common: &app-common
+  restart: unless-stopped
+  networks:
+    - dentalos-network
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-healthcheck-defaults: &healthcheck-defaults
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 60s
+
+services:
+  # ============================================================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================================================
+
+  postgres-auth:
+    <<: *app-common
+    image: postgres:16-alpine
+    container_name: dentalos-postgres-auth
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dental_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dental_password}
+      POSTGRES_DB: ${POSTGRES_DB:-dentalos_auth}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "${HOST_POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dental_user} -d ${POSTGRES_DB:-dentalos_auth}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  postgres-subscription:
+    <<: *app-common
+    image: postgres:16-alpine
+    container_name: dentalos-postgres-subscription
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUBSCRIPTION_USER:-dental_user}
+      POSTGRES_PASSWORD: ${POSTGRES_SUBSCRIPTION_PASSWORD:-dental_password}
+      POSTGRES_DB: ${POSTGRES_SUBSCRIPTION_DB:-dentalos_subscription}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "${HOST_POSTGRES_SUBSCRIPTION_PORT:-5434}:5432"
+    volumes:
+      - postgres_subscription_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUBSCRIPTION_USER:-dental_user} -d ${POSTGRES_SUBSCRIPTION_DB:-dentalos_subscription}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  mongodb:
+    <<: *app-common
+    image: mongo:6-jammy
+    container_name: dentalos-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-admin_password}
+    ports:
+      - "${HOST_MONGO_PORT:-27018}:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    command: mongod --quiet --logpath /dev/null
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  redis:
+    <<: *app-common
+    image: redis:7-alpine
+    container_name: dentalos-redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-redis_password}", "--maxmemory", "512mb", "--maxmemory-policy", "allkeys-lru"]
+    ports:
+      - "${HOST_REDIS_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_password}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  rabbitmq:
+    <<: *app-common
+    image: rabbitmq:3.13-management-alpine
+    container_name: dentalos-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-dental_user}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-dental_password}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST:-/}
+    ports:
+      - "${HOST_RABBITMQ_PORT:-5673}:5672"
+      - "${HOST_RABBITMQ_MANAGEMENT_PORT:-15673}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  minio:
+    <<: *app-common
+    image: minio/minio:RELEASE.2024-10-02T17-50-41Z
+    container_name: dentalos-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "${HOST_MINIO_API_PORT:-9000}:9000"
+      - "${HOST_MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  minio-init:
+    image: minio/mc:RELEASE.2024-10-02T08-27-28Z
+    container_name: dentalos-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - dentalos-network
+    entrypoint: >
+      /bin/sh -c "
+      echo '[MinIO Init] Configuring MinIO client...';
+      mc alias set minio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin};
+      echo '[MinIO Init] Creating buckets...';
+      mc mb --ignore-existing minio/dentalos-local;
+      mc mb --ignore-existing minio/dentalos-documents;
+      mc mb --ignore-existing minio/dentalos-images;
+      mc mb --ignore-existing minio/dentalos-backups;
+      echo '[MinIO Init] Setting policies...';
+      mc anonymous set download minio/dentalos-images;
+      echo '[MinIO Init] Initialization complete!';
+      exit 0;
+      "
+
+  mailhog:
+    <<: *app-common
+    image: mailhog/mailhog:v1.0.1
+    container_name: dentalos-mailhog
+    ports:
+      - "${HOST_MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${HOST_MAILHOG_UI_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8025"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ============================================================================
+  # BACKEND MICROSERVICES
+  # ============================================================================
+
+  backend-auth:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-auth/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-auth:${VERSION:-latest}
+    container_name: dentalos-backend-auth
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_HOST: postgres-auth
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${POSTGRES_USER:-dental_user}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-dental_password}
+      DATABASE_NAME: ${POSTGRES_DB:-dentalos_auth}
+      DATABASE_SSL: "false"
+      DATABASE_SYNCHRONIZE: "false"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      REDIS_DB: 0
+      RABBITMQ_HOST: ${RABBITMQ_URI:-amqp://dental_user:dental_password@rabbitmq:5672/}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      DEVICE_TOKEN_SECRET: ${DEVICE_TOKEN_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SUBSCRIPTION_SERVICE_URL: http://backend-subscription-service:3011
+      SUBSCRIPTION_SERVICE_TIMEOUT: 5000
+    ports:
+      - "${HOST_AUTH_PORT:-3301}:3001"
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/v1/health"]
+
+  backend-patient-service:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-patient-service/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-patient-service:${VERSION:-latest}
+    container_name: dentalos-backend-patient-service
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      MONGODB_URI: ${MONGO_URI_PATIENT:-mongodb://admin:admin_password@mongodb:27017/patient?authSource=admin}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - "${HOST_PATIENT_PORT:-3304}:3004"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3004/api/v1/health"]
+
+  backend-scheduling:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-scheduling/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-scheduling:${VERSION:-latest}
+    container_name: dentalos-backend-scheduling
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      MONGODB_URI: ${MONGO_URI_SCHEDULING:-mongodb://admin:admin_password@mongodb:27017/dental-scheduling?authSource=admin}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      JWT_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - "${HOST_SCHEDULING_PORT:-3302}:3002"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3002/api/v1/health"]
+
+  backend-clinical:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-clinical/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-clinical:${VERSION:-latest}
+    container_name: dentalos-backend-clinical
+    environment:
+      NODE_ENV: production
+      PORT: 3005
+      MONGODB_URI: ${MONGO_URI_CLINICAL:-mongodb://admin:admin_password@mongodb:27017/dentalos_clinical?authSource=admin}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - "${HOST_CLINICAL_PORT:-3305}:3005"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3005/api/v1/health"]
+
+  backend-billing-service:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-billing-service/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-billing-service:${VERSION:-latest}
+    container_name: dentalos-backend-billing-service
+    environment:
+      NODE_ENV: production
+      PORT: 3010
+      MONGODB_URI: ${MONGO_URI_BILLING:-mongodb://admin:admin_password@mongodb:27017/billing?authSource=admin}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      JWT_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - "${HOST_BILLING_PORT:-3310}:3010"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3010/api/v1/health"]
+
+  backend-inventory-service:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-inventory-service/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-inventory-service:${VERSION:-latest}
+    container_name: dentalos-backend-inventory-service
+    environment:
+      NODE_ENV: production
+      PORT: 3008
+      MONGODB_URI: ${MONGO_URI_INVENTORY:-mongodb://admin:admin_password@mongodb:27017/inventory?authSource=admin}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      JWT_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - "${HOST_INVENTORY_PORT:-3308}:3008"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3008/api/v1/health"]
+
+  backend-subscription-service:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-subscription-service/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-subscription-service:${VERSION:-latest}
+    container_name: dentalos-backend-subscription-service
+    environment:
+      NODE_ENV: production
+      PORT: 3011
+      DATABASE_HOST: postgres-subscription
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: ${POSTGRES_SUBSCRIPTION_USER:-dental_user}
+      DATABASE_PASSWORD: ${POSTGRES_SUBSCRIPTION_PASSWORD:-dental_password}
+      DATABASE_NAME: ${POSTGRES_SUBSCRIPTION_DB:-dentalos_subscription}
+      DATABASE_SSL: "false"
+      DATABASE_SYNCHRONIZE: "false"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+    ports:
+      - "${HOST_SUBSCRIPTION_PORT:-3311}:3011"
+    depends_on:
+      postgres-subscription:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3011/api/v1/health"]
+
+  backend-enterprise-service:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-enterprise-service/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-enterprise-service:${VERSION:-latest}
+    container_name: dentalos-backend-enterprise-service
+    environment:
+      NODE_ENV: production
+      PORT: 3017
+      MONGODB_URI: ${MONGO_URI_ENTERPRISE:-mongodb://admin:admin_password@mongodb:27017/enterprise?authSource=admin}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+    ports:
+      - "${HOST_ENTERPRISE_PORT:-3317}:3017"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3017/api/v1/health"]
+
+  backend-provider-schedule:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-provider-schedule/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-provider-schedule:${VERSION:-latest}
+    container_name: dentalos-backend-provider-schedule
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      MONGODB_URI: ${MONGO_URI_PROVIDER:-mongodb://admin:admin_password@mongodb:27017/provider-schedule?authSource=admin}
+    ports:
+      - "${HOST_PROVIDER_PORT:-3303}:3003"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3003/api/v1/health"]
+
+  backend-health-aggregator:
+    <<: *app-common
+    build:
+      context: .
+      dockerfile: apps/backend-health-aggregator/Dockerfile
+      args:
+        NODE_ENV: production
+    image: dentalos/backend-health-aggregator:${VERSION:-latest}
+    container_name: dentalos-backend-health-aggregator
+    environment:
+      NODE_ENV: production
+      PORT: 3099
+      HEALTH_ALERT_WEBHOOK_URL: ${HEALTH_ALERT_WEBHOOK_URL:-}
+      AUTH_SERVICE_URL: http://backend-auth:3001/api/v1/health
+      SUBSCRIPTION_SERVICE_URL: http://backend-subscription-service:3011/api/v1/health
+      BILLING_SERVICE_URL: http://backend-billing-service:3010/api/v1/health
+      CLINICAL_SERVICE_URL: http://backend-clinical:3005/api/v1/health
+      SCHEDULING_SERVICE_URL: http://backend-scheduling:3002/api/v1/health
+      PATIENT_SERVICE_URL: http://backend-patient-service:3004/api/v1/health
+      INVENTORY_SERVICE_URL: http://backend-inventory-service:3008/api/v1/health
+      PROVIDER_SCHEDULE_URL: http://backend-provider-schedule:3003/api/v1/health
+      ENTERPRISE_SERVICE_URL: http://backend-enterprise-service:3017/api/v1/health
+    ports:
+      - "${HOST_HEALTH_AGGREGATOR_PORT:-3399}:3099"
+    depends_on:
+      - backend-auth
+      - backend-patient-service
+      - backend-scheduling
+      - backend-clinical
+      - backend-billing-service
+      - backend-inventory-service
+      - backend-subscription-service
+      - backend-enterprise-service
+      - backend-provider-schedule
+    healthcheck:
+      <<: *healthcheck-defaults
+      test: ["CMD", "curl", "-f", "http://localhost:3099/api/v1/health"]
+
+volumes:
+  postgres_auth_data:
+    driver: local
+    name: dentalos-postgres-auth-data
+  postgres_subscription_data:
+    driver: local
+    name: dentalos-postgres-subscription-data
+  mongodb_data:
+    driver: local
+    name: dentalos-mongodb-data
+  mongodb_config:
+    driver: local
+    name: dentalos-mongodb-config
+  redis_data:
+    driver: local
+    name: dentalos-redis-data
+  rabbitmq_data:
+    driver: local
+    name: dentalos-rabbitmq-data
+  minio_data:
+    driver: local
+    name: dentalos-minio-data
+
+networks:
+  dentalos-network:
+    name: dentalos-network
+    driver: bridge

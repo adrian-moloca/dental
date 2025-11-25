@@ -1,0 +1,30 @@
+{
+  "watch": ["src", "../../packages/*/src"],
+  "ext": "ts,json",
+  "ignore": [
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "dist/**/*",
+    "coverage/**/*",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
+  "exec": "node --enable-source-maps -r ts-node/register/transpile-only -r tsconfig-paths/register src/main.ts",
+  "env": {
+    "TS_NODE_FILES": "true",
+    "TS_NODE_TRANSPILE_ONLY": "true",
+    "TS_NODE_TYPE_CHECK": "false",
+    "TS_NODE_SKIP_IGNORE": "true",
+    "TS_NODE_CACHE": "false",
+    "TS_NODE_COMPILER_OPTIONS": "{\"module\":\"commonjs\",\"target\":\"ES2021\"}"
+  },
+  "verbose": true,
+  "restartable": "rs",
+  "delay": 1500,
+  "legacyWatch": true,
+  "events": {
+    "restart": "echo '\\n=== [NODEMON] Restarting due to changes... ==='",
+    "crash": "echo '\\n=== [NODEMON] App crashed - waiting for changes... ==='"
+  },
+  "stdin": false
+}

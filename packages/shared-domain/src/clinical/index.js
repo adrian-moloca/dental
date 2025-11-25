@@ -1,0 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ConsentStatus = exports.ConsentType = exports.ProcedureStatus = exports.TreatmentPhase = exports.ProcedureItemStatus = exports.TreatmentPlanStatus = exports.ClinicalNoteType = exports.FurcationClass = exports.ToothCondition = exports.ToothSurface = void 0;
+var clinical_types_1 = require("./clinical.types");
+Object.defineProperty(exports, "ToothSurface", { enumerable: true, get: function () { return clinical_types_1.ToothSurface; } });
+Object.defineProperty(exports, "ToothCondition", { enumerable: true, get: function () { return clinical_types_1.ToothCondition; } });
+var clinical_types_2 = require("./clinical.types");
+Object.defineProperty(exports, "FurcationClass", { enumerable: true, get: function () { return clinical_types_2.FurcationClass; } });
+var clinical_types_3 = require("./clinical.types");
+Object.defineProperty(exports, "ClinicalNoteType", { enumerable: true, get: function () { return clinical_types_3.ClinicalNoteType; } });
+var clinical_types_4 = require("./clinical.types");
+Object.defineProperty(exports, "TreatmentPlanStatus", { enumerable: true, get: function () { return clinical_types_4.TreatmentPlanStatus; } });
+Object.defineProperty(exports, "ProcedureItemStatus", { enumerable: true, get: function () { return clinical_types_4.ProcedureItemStatus; } });
+Object.defineProperty(exports, "TreatmentPhase", { enumerable: true, get: function () { return clinical_types_4.TreatmentPhase; } });
+var clinical_types_5 = require("./clinical.types");
+Object.defineProperty(exports, "ProcedureStatus", { enumerable: true, get: function () { return clinical_types_5.ProcedureStatus; } });
+var clinical_types_6 = require("./clinical.types");
+Object.defineProperty(exports, "ConsentType", { enumerable: true, get: function () { return clinical_types_6.ConsentType; } });
+Object.defineProperty(exports, "ConsentStatus", { enumerable: true, get: function () { return clinical_types_6.ConsentStatus; } });
+//# sourceMappingURL=index.js.map

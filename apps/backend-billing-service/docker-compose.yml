@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  billing-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dentalos-billing
+    ports:
+      - "3010:3010"
+    environment:
+      NODE_ENV: production
+      PORT: 3010
+      MONGODB_URI: mongodb://mongo:27017/billing
+      REDIS_HOST: redis
+      REDIS_PORT: 6381
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret}
+      TAX_DEFAULT_RATE: 0.10
+      BILLING_CURRENCY: USD
+      BILLING_AUTO_GENERATE_INVOICES: "true"
+      LEDGER_AUTO_POST: "true"
+      LEDGER_REQUIRE_BALANCE: "true"
+    depends_on:
+      - mongo
+      - redis
+    networks:
+      - dentalos-network
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7.0
+    container_name: dentalos-billing-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    environment:
+      MONGO_INITDB_DATABASE: billing
+    networks:
+      - dentalos-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: dentalos-billing-redis
+    ports:
+      - "6381:6381"
+    volumes:
+      - redis-data:/data
+    networks:
+      - dentalos-network
+    restart: unless-stopped
+
+networks:
+  dentalos-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local
+  mongo-config:
+    driver: local
+  redis-data:
+    driver: local

@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "baseUrl": "../../",
+    "rootDir": "../../",
+    "outDir": "./dist",
+    "target": "ES2021",
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "paths": {
+      "@dentalos/shared-types": ["packages/shared-types/src"],
+      "@dentalos/shared-validation": ["packages/shared-validation/src"],
+      "@dentalos/shared-domain": ["packages/shared-domain/src"],
+      "@dentalos/shared-auth": ["packages/shared-auth/src"],
+      "@dentalos/shared-infra": ["packages/shared-infra/src"],
+      "@dentalos/shared-events": ["packages/shared-events/src"],
+      "@dentalos/shared-errors": ["packages/shared-errors/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*.test.ts", "**/*.spec.ts"]
+}

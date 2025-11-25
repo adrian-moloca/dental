@@ -1,0 +1,41 @@
+import { z } from 'zod';
+declare const RabbitMQConfigSchema: z.ZodObject<{
+    host: z.ZodDefault<z.ZodString>;
+    port: z.ZodDefault<z.ZodNumber>;
+    username: z.ZodDefault<z.ZodString>;
+    password: z.ZodDefault<z.ZodString>;
+    vhost: z.ZodDefault<z.ZodString>;
+    heartbeat: z.ZodDefault<z.ZodNumber>;
+    connectionTimeout: z.ZodDefault<z.ZodNumber>;
+    channelMax: z.ZodDefault<z.ZodNumber>;
+    prefetchCount: z.ZodDefault<z.ZodNumber>;
+    reconnectDelay: z.ZodDefault<z.ZodNumber>;
+    maxReconnectAttempts: z.ZodDefault<z.ZodNumber>;
+}, "strip", z.ZodTypeAny, {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    vhost: string;
+    heartbeat: number;
+    connectionTimeout: number;
+    channelMax: number;
+    prefetchCount: number;
+    reconnectDelay: number;
+    maxReconnectAttempts: number;
+}, {
+    host?: string | undefined;
+    port?: number | undefined;
+    username?: string | undefined;
+    password?: string | undefined;
+    vhost?: string | undefined;
+    heartbeat?: number | undefined;
+    connectionTimeout?: number | undefined;
+    channelMax?: number | undefined;
+    prefetchCount?: number | undefined;
+    reconnectDelay?: number | undefined;
+    maxReconnectAttempts?: number | undefined;
+}>;
+export type RabbitMQConfig = z.infer<typeof RabbitMQConfigSchema>;
+export declare function loadRabbitMQConfig(): RabbitMQConfig;
+export {};

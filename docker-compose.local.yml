@@ -1,0 +1,112 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dentalos
+      POSTGRES_PASSWORD: dentalos_pass
+      POSTGRES_DB: dentalos_auth
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "redispass"]
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    environment:
+      RABBITMQ_DEFAULT_USER: dentalos
+      RABBITMQ_DEFAULT_PASS: dentalos_pass
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2024-10-02T17-50-41Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    restart: unless-stopped
+
+  auth:
+    env_file: env/local/auth.env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+  patient:
+    env_file: env/local/patient.env
+    depends_on:
+      - mongo
+      - redis
+
+  scheduling:
+    env_file: env/local/scheduling.env
+    depends_on:
+      - mongo
+      - redis
+
+  enterprise:
+    env_file: env/local/enterprise.env
+    depends_on:
+      - mongo
+      - redis
+
+  billing:
+    env_file: env/local/billing.env
+    depends_on:
+      - mongo
+      - redis
+
+  inventory:
+    env_file: env/local/inventory.env
+    depends_on:
+      - mongo
+      - redis
+      - minio
+
+  clinical:
+    env_file: env/local/clinical.env
+    depends_on:
+      - mongo
+
+  provider-schedule:
+    env_file: env/local/provider-schedule.env
+    depends_on:
+      - mongo
+
+  subscription:
+    env_file: env/local/subscription.env
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+volumes:
+  pgdata:
+  mongodata:
+  miniodata:

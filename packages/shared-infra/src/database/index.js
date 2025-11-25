@@ -1,0 +1,21 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AggregationBuilder = exports.QueryBuilder = exports.TransactionManager = exports.BaseRepository = exports.eventEmitterPlugin = exports.auditTrailPlugin = exports.baseSchemaPlugin = exports.MongoDBClient = exports.PostgresClient = void 0;
+var postgres_client_1 = require("./postgres.client");
+Object.defineProperty(exports, "PostgresClient", { enumerable: true, get: function () { return postgres_client_1.PostgresClient; } });
+var mongodb_client_1 = require("./mongodb.client");
+Object.defineProperty(exports, "MongoDBClient", { enumerable: true, get: function () { return mongodb_client_1.MongoDBClient; } });
+var base_schema_plugin_1 = require("./base-schema.plugin");
+Object.defineProperty(exports, "baseSchemaPlugin", { enumerable: true, get: function () { return base_schema_plugin_1.baseSchemaPlugin; } });
+var audit_trail_plugin_1 = require("./audit-trail.plugin");
+Object.defineProperty(exports, "auditTrailPlugin", { enumerable: true, get: function () { return audit_trail_plugin_1.auditTrailPlugin; } });
+var event_emitter_plugin_1 = require("./event-emitter.plugin");
+Object.defineProperty(exports, "eventEmitterPlugin", { enumerable: true, get: function () { return event_emitter_plugin_1.eventEmitterPlugin; } });
+var base_repository_1 = require("./base-repository");
+Object.defineProperty(exports, "BaseRepository", { enumerable: true, get: function () { return base_repository_1.BaseRepository; } });
+var transaction_manager_1 = require("./transaction.manager");
+Object.defineProperty(exports, "TransactionManager", { enumerable: true, get: function () { return transaction_manager_1.TransactionManager; } });
+var query_builder_1 = require("./query-builder");
+Object.defineProperty(exports, "QueryBuilder", { enumerable: true, get: function () { return query_builder_1.QueryBuilder; } });
+Object.defineProperty(exports, "AggregationBuilder", { enumerable: true, get: function () { return query_builder_1.AggregationBuilder; } });
+//# sourceMappingURL=index.js.map

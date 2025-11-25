@@ -1,0 +1,19 @@
+{
+  "name": "@dentalos/shared-domain",
+  "version": "0.1.0",
+  "description": "Domain-Driven Design building blocks for Dental OS",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dentalos/shared-types": "workspace:*",
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

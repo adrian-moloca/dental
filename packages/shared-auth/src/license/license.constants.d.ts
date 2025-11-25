@@ -1,0 +1,10 @@
+import { ModuleCode } from '../jwt/jwt-payload.types';
+export declare const GRACE_PERIOD_DAYS = 7;
+export declare const READ_METHODS: readonly ["GET", "HEAD", "OPTIONS"];
+export declare const WRITE_METHODS: readonly ["POST", "PUT", "PATCH", "DELETE"];
+export declare const CORE_MODULES: readonly ModuleCode[];
+export declare const PREMIUM_MODULES: readonly ModuleCode[];
+export declare const ALL_MODULES: readonly ModuleCode[];
+export type HttpMethod = typeof READ_METHODS[number] | typeof WRITE_METHODS[number];
+export type ReadMethod = typeof READ_METHODS[number];
+export type WriteMethod = typeof WRITE_METHODS[number];

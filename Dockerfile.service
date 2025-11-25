@@ -1,0 +1,42 @@
+# syntax=docker/dockerfile:1.6
+ARG NODE_VERSION=20-slim
+
+FROM node:${NODE_VERSION} AS builder
+WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.base.json ./
+COPY packages ./packages
+COPY apps ./apps
+RUN corepack enable
+
+# Build arguments to select the service
+ARG SERVICE_PKG
+ARG SERVICE_DIR
+
+# Install with all deps for build
+RUN pnpm install --frozen-lockfile
+# Build shared libs first to ensure artifacts exist
+RUN pnpm build:packages
+# Build the targeted service
+RUN pnpm --filter "${SERVICE_PKG}" build
+# Prune dev deps to slim runtime node_modules (CI=true avoids TTY prompt)
+ENV CI=true
+RUN pnpm prune --prod
+
+FROM node:${NODE_VERSION} AS runner
+ENV NODE_ENV=production
+ARG SERVICE_DIR
+WORKDIR /app/${SERVICE_DIR}
+
+# Default command can be overridden via build arg
+ARG START_CMD="node dist/main.js"
+ENV START_CMD=${START_CMD}
+
+# Copy built artifacts and dependencies
+COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/packages /app/packages
+COPY --from=builder /app/pnpm-workspace.yaml /app/pnpm-workspace.yaml
+COPY --from=builder /app/pnpm-lock.yaml /app/pnpm-lock.yaml
+COPY --from=builder /app/package.json /app/package.json
+COPY --from=builder /app/${SERVICE_DIR}/dist ./dist
+
+CMD ["sh", "-c", "$START_CMD"]

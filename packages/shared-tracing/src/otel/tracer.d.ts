@@ -1,0 +1,14 @@
+import * as api from '@opentelemetry/api';
+import type { Span, SpanStatusCode } from '@opentelemetry/api';
+import type { TracerConfig, SpanAttributes } from '../types';
+export declare function initializeTracer(config: TracerConfig): void;
+export declare function shutdownTracer(): Promise<void>;
+export declare function startSpan(name: string, attributes?: SpanAttributes): Span | null;
+export declare function endSpan(span: Span | null): void;
+export declare function addSpanAttributes(span: Span | null, attributes: SpanAttributes): void;
+export declare function setSpanStatus(span: Span | null, status: SpanStatusCode, message?: string): void;
+export declare function recordSpanError(span: Span | null, error: Error): void;
+export declare function withSpan<T>(name: string, fn: (span: Span | null) => Promise<T>, attributes?: SpanAttributes): Promise<T>;
+export declare function getActiveSpan(): Span | undefined;
+export declare function startChildSpan(name: string, attributes?: SpanAttributes): Span | null;
+export { api as openTelemetryApi };

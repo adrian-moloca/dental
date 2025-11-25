@@ -1,0 +1,131 @@
+/**
+ * Scheduling Validation Schemas
+ *
+ * Zod schemas for validating scheduling-related DTOs and domain types.
+ *
+ * @module shared-validation/schemas/scheduling
+ */
+
+// ============================================================================
+// Appointment Schemas
+// ============================================================================
+export {
+  AppointmentStatusSchema,
+  CancellationTypeSchema,
+  AppointmentPrioritySchema,
+  ParticipantRoleSchema,
+  BookingSourceSchema,
+  CheckInMethodSchema,
+  ConfirmationMethodSchema,
+  RecurrencePatternSchema,
+  AppointmentParticipantSchema,
+  RecurrenceRuleSchema,
+  AppointmentNoteSchema,
+  BookingMetadataSchema,
+  ResourceAllocationSchema,
+  CancellationDetailsSchema,
+  ConfirmationDetailsSchema,
+  CheckInDetailsSchema,
+  CompletionDetailsSchema,
+  AppointmentSchema,
+  CreateAppointmentDtoSchema,
+  UpdateAppointmentDtoSchema,
+  AppointmentQueryDtoSchema,
+  ConfirmAppointmentDtoSchema,
+  CheckInAppointmentDtoSchema,
+  CancelAppointmentDtoSchema,
+  RescheduleAppointmentDtoSchema,
+  CompleteAppointmentDtoSchema,
+} from './appointment.schemas';
+
+export type {
+  AppointmentInput,
+  AppointmentOutput,
+  CreateAppointmentDtoInput,
+  CreateAppointmentDtoOutput,
+  UpdateAppointmentDtoInput,
+  UpdateAppointmentDtoOutput,
+  AppointmentQueryDtoInput,
+  AppointmentQueryDtoOutput,
+  ConfirmAppointmentDtoInput,
+  ConfirmAppointmentDtoOutput,
+  CheckInAppointmentDtoInput,
+  CheckInAppointmentDtoOutput,
+  CancelAppointmentDtoInput,
+  CancelAppointmentDtoOutput,
+  RescheduleAppointmentDtoInput,
+  RescheduleAppointmentDtoOutput,
+  CompleteAppointmentDtoInput,
+  CompleteAppointmentDtoOutput,
+} from './appointment.schemas';
+
+// ============================================================================
+// Provider Schedule Schemas
+// ============================================================================
+export {
+  DayOfWeekSchema,
+  TimeSlotTypeSchema,
+  AbsenceTypeSchema,
+  AbsenceStatusSchema,
+  ScheduleRecurrenceSchema,
+  ScheduleExceptionTypeSchema,
+  TimeOfDaySchema,
+  WorkPeriodSchema,
+  DailyWorkingHoursSchema,
+  TimeSlotSchema,
+  WeeklyHoursSchema,
+  ScheduleExceptionSchema,
+  ProviderAbsenceSchema,
+  ProviderScheduleSchema,
+  AvailabilitySearchCriteriaSchema,
+  AvailableSlotSchema,
+  AvailabilitySummarySchema,
+  BulkScheduleUpdateSchema,
+  CreateWeeklyHoursDtoSchema,
+  UpdateWeeklyHoursDtoSchema,
+  CreateScheduleExceptionDtoSchema,
+  CreateProviderAbsenceDtoSchema,
+  UpdateProviderAbsenceDtoSchema,
+  ReviewAbsenceDtoSchema,
+  CreateProviderScheduleDtoSchema,
+  UpdateProviderScheduleDtoSchema,
+} from './provider-schedule.schemas';
+
+export type {
+  TimeOfDayInput,
+  TimeOfDayOutput,
+  WorkPeriodInput,
+  WorkPeriodOutput,
+  DailyWorkingHoursInput,
+  DailyWorkingHoursOutput,
+  TimeSlotInput,
+  TimeSlotOutput,
+  WeeklyHoursInput,
+  WeeklyHoursOutput,
+  ScheduleExceptionInput,
+  ScheduleExceptionOutput,
+  ProviderAbsenceInput,
+  ProviderAbsenceOutput,
+  ProviderScheduleInput,
+  ProviderScheduleOutput,
+  AvailabilitySearchCriteriaInput,
+  AvailabilitySearchCriteriaOutput,
+  AvailableSlotInput,
+  AvailableSlotOutput,
+  CreateWeeklyHoursDtoInput,
+  CreateWeeklyHoursDtoOutput,
+  UpdateWeeklyHoursDtoInput,
+  UpdateWeeklyHoursDtoOutput,
+  CreateScheduleExceptionDtoInput,
+  CreateScheduleExceptionDtoOutput,
+  CreateProviderAbsenceDtoInput,
+  CreateProviderAbsenceDtoOutput,
+  UpdateProviderAbsenceDtoInput,
+  UpdateProviderAbsenceDtoOutput,
+  ReviewAbsenceDtoInput,
+  ReviewAbsenceDtoOutput,
+  CreateProviderScheduleDtoInput,
+  CreateProviderScheduleDtoOutput,
+  UpdateProviderScheduleDtoInput,
+  UpdateProviderScheduleDtoOutput,
+} from './provider-schedule.schemas';

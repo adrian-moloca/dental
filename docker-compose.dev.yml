@@ -1,0 +1,520 @@
+version: "3.9"
+
+x-service-base: &service-base
+  image: node:22
+  working_dir: /workspace
+  env_file:
+    - .env.docker
+  volumes:
+    - .:/workspace:delegated
+    - pnpm-store:/pnpm/store
+  networks:
+    - dental-dev
+
+services:
+  # ============================================================================
+  # BOOTSTRAP: Install dependencies and build shared packages
+  # ============================================================================
+  bootstrap:
+    image: node:22
+    working_dir: /workspace
+    env_file:
+      - .env.docker
+    environment:
+      - CI=true
+    volumes:
+      - .:/workspace:delegated
+      - pnpm-store:/pnpm/store
+    networks:
+      - dental-dev
+    command: >
+      bash -lc "
+        corepack enable &&
+        echo '[1/3] Installing dependencies...' &&
+        pnpm install --no-frozen-lockfile &&
+        echo '[2/3] Building shared packages in correct order...' &&
+        pnpm --filter @dentalos/shared-types build &&
+        pnpm --filter @dentalos/shared-domain build &&
+        pnpm --filter @dentalos/shared-validation build &&
+        pnpm --filter @dentalos/shared-auth build &&
+        pnpm --filter @dentalos/shared-errors build &&
+        pnpm --filter @dentalos/shared-events build &&
+        pnpm --filter @dentalos/shared-infra build &&
+        pnpm --filter @dentalos/shared-security build &&
+        pnpm --filter @dentalos/shared-testing build &&
+        pnpm --filter @dentalos/shared-tracing build &&
+        echo '[3/3] Bootstrap complete!'
+      "
+
+  # ============================================================================
+  # INFRASTRUCTURE SERVICES
+  # ============================================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: dentalos-postgres-auth
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${HOST_POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - dental-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  postgres-subscription:
+    image: postgres:16-alpine
+    container_name: dentalos-postgres-subscription
+    environment:
+      POSTGRES_USER: ${POSTGRES_SUBSCRIPTION_USER:-dental_user}
+      POSTGRES_PASSWORD: ${POSTGRES_SUBSCRIPTION_PASSWORD:-dental_password}
+      POSTGRES_DB: ${POSTGRES_SUBSCRIPTION_DB:-dentalos_subscription}
+    ports:
+      - "${HOST_POSTGRES_SUBSCRIPTION_PORT:-5434}:5432"
+    volumes:
+      - pgdata-subscription:/var/lib/postgresql/data
+    networks:
+      - dental-dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_SUBSCRIPTION_USER:-dental_user} -d ${POSTGRES_SUBSCRIPTION_DB:-dentalos_subscription}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: dentalos-redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    ports:
+      - "${HOST_REDIS_PORT:-6381}:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - dental-dev
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: dentalos-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    ports:
+      - "${HOST_RABBITMQ_PORT:-5672}:5672"
+      - "${HOST_RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    networks:
+      - dental-dev
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  mongo:
+    image: mongo:6
+    container_name: dentalos-mongo
+    ports:
+      - "${HOST_MONGO_PORT:-27018}:27017"
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - dental-dev
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  minio:
+    image: minio/minio:RELEASE.2024-10-02T17-50-41Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+    ports:
+      - "${HOST_MINIO_API_PORT:-9000}:9000"
+      - "${HOST_MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - miniodata:/data
+    networks:
+      - dental-dev
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  # ============================================================================
+  # APPLICATION SERVICES
+  # ============================================================================
+
+  # Auth Service - NestJS with watch mode
+  # INTERNAL PORT: 3001 | HOST PORT: 3301
+  auth:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-auth && ./dev-start.sh'
+    environment:
+      PORT: ${AUTH_PORT:-3001}
+      DATABASE_HOST: ${POSTGRES_HOST}
+      DATABASE_PORT: ${POSTGRES_PORT}
+      DATABASE_USERNAME: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_NAME: ${POSTGRES_DB}
+      DATABASE_SSL: "false"
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      RABBITMQ_HOST: ${RABBITMQ_URI}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      DEVICE_TOKEN_SECRET: ${DEVICE_TOKEN_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SUBSCRIPTION_SERVICE_URL: http://subscription:${SUBSCRIPTION_PORT:-3011}
+      SUBSCRIPTION_SERVICE_TIMEOUT: ${SUBSCRIPTION_SERVICE_TIMEOUT:-5000}
+    ports:
+      - "${HOST_AUTH_PORT:-3301}:${AUTH_PORT:-3001}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${AUTH_PORT:-3001}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Patient Service - MongoDB-based service with watch mode
+  # INTERNAL PORT: 3004 | HOST PORT: 3304
+  patient:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-patient-service && npx nodemon'
+    environment:
+      PORT: ${PATIENT_PORT:-3004}
+      MONGODB_URI: ${MONGO_URI_PATIENT}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - "${HOST_PATIENT_PORT:-3304}:${PATIENT_PORT:-3004}"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PATIENT_PORT:-3004}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Scheduling Service - NestJS with watch mode
+  # INTERNAL PORT: 3002 | HOST PORT: 3302
+  scheduling:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-scheduling && npx nodemon'
+    environment:
+      PORT: ${SCHEDULING_PORT:-3002}
+      MONGODB_URI: ${MONGO_URI_SCHEDULING}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - "${HOST_SCHEDULING_PORT:-3302}:${SCHEDULING_PORT:-3002}"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${SCHEDULING_PORT:-3002}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Provider Schedule Service - NestJS with watch mode
+  # INTERNAL PORT: 3003 | HOST PORT: 3303
+  provider-schedule:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-provider-schedule && npx nodemon'
+    environment:
+      PORT: ${PROVIDER_PORT:-3003}
+      MONGODB_URI: ${MONGO_URI_PROVIDER}
+    ports:
+      - "${HOST_PROVIDER_PORT:-3303}:${PROVIDER_PORT:-3003}"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${PROVIDER_PORT:-3003}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Clinical Service - MongoDB-based service with watch mode
+  # INTERNAL PORT: 3005 | HOST PORT: 3305
+  clinical:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-clinical && npx nodemon'
+    environment:
+      PORT: ${CLINICAL_PORT:-3005}
+      MONGODB_URI: ${MONGO_URI_CLINICAL}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - "${HOST_CLINICAL_PORT:-3305}:${CLINICAL_PORT:-3005}"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${CLINICAL_PORT:-3005}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Inventory Service - MongoDB with MinIO integration
+  # INTERNAL PORT: 3008 | HOST PORT: 3308
+  inventory:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-inventory-service && npx nodemon'
+    environment:
+      PORT: ${INVENTORY_PORT:-3008}
+      MONGODB_URI: ${MONGO_URI_INVENTORY}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_ACCESS_SECRET}
+      STORAGE_ENDPOINT: ${MINIO_ENDPOINT}
+      STORAGE_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
+      STORAGE_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
+      STORAGE_BUCKET: ${MINIO_BUCKET}
+      STORAGE_REGION: ${MINIO_REGION}
+    ports:
+      - "${HOST_INVENTORY_PORT:-3308}:${INVENTORY_PORT:-3008}"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${INVENTORY_PORT:-3008}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Billing Service - MongoDB-based service with watch mode
+  # INTERNAL PORT: 3010 | HOST PORT: 3310
+  billing:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-billing-service && npx nodemon'
+    environment:
+      PORT: ${BILLING_PORT:-3010}
+      MONGODB_URI: ${MONGO_URI_BILLING}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_ACCESS_SECRET}
+    ports:
+      - "${HOST_BILLING_PORT:-3310}:${BILLING_PORT:-3010}"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${BILLING_PORT:-3010}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Subscription Service - NestJS + PostgreSQL with watch mode
+  # INTERNAL PORT: 3011 | HOST PORT: 3311
+  subscription:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-subscription-service && npx nodemon'
+    environment:
+      PORT: ${SUBSCRIPTION_PORT:-3011}
+      NODE_ENV: development
+      DATABASE_HOST: ${POSTGRES_SUBSCRIPTION_HOST:-postgres-subscription}
+      DATABASE_PORT: ${POSTGRES_SUBSCRIPTION_INTERNAL_PORT:-5432}
+      DATABASE_USERNAME: ${POSTGRES_SUBSCRIPTION_USER:-dental_user}
+      DATABASE_PASSWORD: ${POSTGRES_SUBSCRIPTION_PASSWORD:-dental_password}
+      DATABASE_NAME: ${POSTGRES_SUBSCRIPTION_DB:-dentalos_subscription}
+      DATABASE_SSL: "false"
+      DATABASE_LOGGING: "true"
+      DATABASE_SYNCHRONIZE: "false"
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_TLS: "false"
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      STRIPE_API_KEY: ${STRIPE_API_KEY:-sk_test_placeholder}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      LOG_LEVEL: debug
+      SWAGGER_ENABLED: "true"
+    ports:
+      - "${HOST_SUBSCRIPTION_PORT:-3311}:${SUBSCRIPTION_PORT:-3011}"
+    depends_on:
+      postgres-subscription:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${SUBSCRIPTION_PORT:-3011}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Enterprise Service - MongoDB-based service with watch mode
+  # INTERNAL PORT: 3017 | HOST PORT: 3317
+  enterprise:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-enterprise-service && npx nodemon'
+    environment:
+      PORT: ${ENTERPRISE_PORT:-3017}
+      MONGODB_URI: ${MONGO_URI_ENTERPRISE}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "${HOST_ENTERPRISE_PORT:-3317}:${ENTERPRISE_PORT:-3017}"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${ENTERPRISE_PORT:-3017}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Health Aggregator - Monitors all service health endpoints
+  # INTERNAL PORT: 3099 | HOST PORT: 3399
+  health-aggregator:
+    <<: *service-base
+    command: sh -c 'cd /workspace/apps/backend-health-aggregator && npx nodemon'
+    environment:
+      PORT: ${HEALTH_AGGREGATOR_PORT:-3099}
+      NODE_ENV: ${NODE_ENV:-development}
+      HEALTH_ALERT_WEBHOOK_URL: ${HEALTH_ALERT_WEBHOOK_URL:-}
+      AUTH_SERVICE_URL: http://auth:${AUTH_PORT:-3001}/api/v1/health
+      SUBSCRIPTION_SERVICE_URL: http://subscription:${SUBSCRIPTION_PORT:-3011}/api/v1/health
+      BILLING_SERVICE_URL: http://billing:${BILLING_PORT:-3010}/api/v1/health
+      CLINICAL_SERVICE_URL: http://clinical:${CLINICAL_PORT:-3005}/api/v1/health
+      SCHEDULING_SERVICE_URL: http://scheduling:${SCHEDULING_PORT:-3002}/api/v1/health
+      PATIENT_SERVICE_URL: http://patient:${PATIENT_PORT:-3004}/api/v1/health
+      INVENTORY_SERVICE_URL: http://inventory:${INVENTORY_PORT:-3008}/api/v1/health
+      PROVIDER_SCHEDULE_URL: http://provider-schedule:${PROVIDER_PORT:-3003}/api/v1/health
+      ENTERPRISE_SERVICE_URL: http://enterprise:${ENTERPRISE_PORT:-3017}/api/v1/health
+    ports:
+      - "${HOST_HEALTH_AGGREGATOR_PORT:-3399}:${HEALTH_AGGREGATOR_PORT:-3099}"
+    depends_on:
+      - auth
+      - patient
+      - scheduling
+      - subscription
+      - billing
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:${HEALTH_AGGREGATOR_PORT:-3099}/api/v1/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Web Frontend - React/Vite development server
+  web:
+    <<: *service-base
+    working_dir: /workspace/apps/web-clinic-portal
+    command: >
+      sh -c 'echo "=== VITE DEV SERVER STARTING ===" &&
+      echo "Time: $$(date)" &&
+      echo "================================" &&
+      npm run dev -- --host --port 5173 --force'
+    environment:
+      PORT: ${WEB_PORT:-5173}
+      VITE_FORCE: "true"
+      VITE_AUTH_API_URL: ${VITE_AUTH_API_URL}
+      VITE_PATIENT_API_URL: ${VITE_PATIENT_API_URL}
+      VITE_PROVIDER_API_URL: ${VITE_PROVIDER_API_URL}
+      VITE_SCHEDULING_API_URL: ${VITE_SCHEDULING_API_URL}
+      VITE_CLINICAL_API_URL: ${VITE_CLINICAL_API_URL}
+      VITE_BILLING_API_URL: ${VITE_BILLING_API_URL}
+      VITE_INVENTORY_API_URL: ${VITE_INVENTORY_API_URL}
+      VITE_ENTERPRISE_API_URL: ${VITE_ENTERPRISE_API_URL}
+      VITE_HEALTH_AGGREGATOR_URL: ${VITE_HEALTH_AGGREGATOR_URL}
+      VITE_IMAGING_API_URL: ${VITE_IMAGING_API_URL}
+    ports:
+      - "${HOST_WEB_PORT:-5173}:5173"
+    volumes:
+      # Override base volumes - exclude dist and cache directories
+      - .:/workspace:delegated
+      - pnpm-store:/pnpm/store
+      # Exclude dist from being mounted (prevent stale build artifacts)
+      - /workspace/apps/web-clinic-portal/dist
+      # Exclude node_modules/.vite cache
+      - /workspace/apps/web-clinic-portal/node_modules/.vite
+    depends_on:
+      - auth
+      - patient
+      - scheduling
+
+volumes:
+  pgdata:
+    driver: local
+    name: dentalos-pgdata-auth
+  pgdata-subscription:
+    driver: local
+    name: dentalos-pgdata-subscription
+  mongodata:
+    driver: local
+    name: dentalos-mongodata
+  miniodata:
+    driver: local
+    name: dentalos-miniodata
+  redisdata:
+    driver: local
+    name: dentalos-redisdata
+  rabbitmqdata:
+    driver: local
+    name: dentalos-rabbitmqdata
+  pnpm-store:
+
+networks:
+  dental-dev:
+    name: dental-dev

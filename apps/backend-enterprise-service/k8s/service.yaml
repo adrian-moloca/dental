@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-enterprise-service
+  namespace: dentalos
+  labels:
+    app: backend-enterprise-service
+    component: backend
+  annotations:
+    # Service annotations for monitoring and load balancing
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3017"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  ports:
+    - name: http
+      port: 3017
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: backend-enterprise-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-enterprise-service-headless
+  namespace: dentalos
+  labels:
+    app: backend-enterprise-service
+    component: backend
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service for direct pod access
+  ports:
+    - name: http
+      port: 3017
+      targetPort: http
+      protocol: TCP
+  selector:
+    app: backend-enterprise-service

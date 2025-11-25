@@ -1,0 +1,181 @@
+import type { UUID, OrganizationId, ClinicId, ISODateString } from '@dentalos/shared-types';
+import type { EventEnvelope } from '../envelope/event-envelope';
+export declare const IMAGING_STUDY_CREATED_EVENT: "dental.imaging.study.created";
+export declare const IMAGING_STUDY_UPDATED_EVENT: "dental.imaging.study.updated";
+export declare const IMAGING_REPORT_CREATED_EVENT: "dental.imaging.report.created";
+export declare const IMAGING_AI_RESULT_CREATED_EVENT: "dental.imaging.ai-result.created";
+export declare const IMAGING_STUDY_CREATED_VERSION = 1;
+export declare const IMAGING_STUDY_UPDATED_VERSION = 1;
+export declare const IMAGING_REPORT_CREATED_VERSION = 1;
+export declare const IMAGING_AI_RESULT_CREATED_VERSION = 1;
+export type ImagingModality = 'BITEWING' | 'PERIAPICAL' | 'PANORAMIC' | 'CEPHALOMETRIC' | 'CBCT' | 'CT' | 'MRI' | 'OCCLUSAL' | 'INTRAORAL' | 'EXTRAORAL' | 'DIGITAL_XRAY' | 'PHOTOGRAPH' | 'VIDEO' | 'OTHER';
+export type ImagingRegion = 'FULL_MOUTH' | 'MAXILLA' | 'MANDIBLE' | 'ANTERIOR' | 'POSTERIOR' | 'LEFT_QUADRANT' | 'RIGHT_QUADRANT' | 'UPPER_LEFT' | 'UPPER_RIGHT' | 'LOWER_LEFT' | 'LOWER_RIGHT' | 'SINGLE_TOOTH' | 'TMJ' | 'SINUS' | 'AIRWAY' | 'SOFT_TISSUE' | 'OTHER';
+export type ImagingStudyStatus = 'SCHEDULED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'FAILED' | 'ARCHIVED';
+export type ReportStatus = 'DRAFT' | 'PENDING_REVIEW' | 'SIGNED' | 'AMENDED' | 'FINALIZED';
+export type ReportType = 'DIAGNOSTIC' | 'SCREENING' | 'FOLLOW_UP' | 'CONSULTATION' | 'TREATMENT_PLANNING' | 'PREOPERATIVE' | 'POSTOPERATIVE' | 'COMPARATIVE' | 'EMERGENCY' | 'OTHER';
+export type AIFindingSeverity = 'NORMAL' | 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'UNCERTAIN';
+export interface CriticalFinding {
+    findingId: UUID;
+    findingType: string;
+    severity: AIFindingSeverity;
+    confidence: number;
+    toothNumbers?: (string | number)[];
+    description: string;
+    location?: {
+        x?: number;
+        y?: number;
+        width?: number;
+        height?: number;
+    };
+    recommendation?: string;
+}
+export interface StudyChange {
+    field: string;
+    previousValue?: string | number | boolean | null;
+    newValue?: string | number | boolean | null;
+    description?: string;
+}
+export interface ImagingStudyCreatedPayload {
+    studyId: UUID;
+    patientId: UUID;
+    organizationId: OrganizationId;
+    clinicId: ClinicId;
+    tenantId: string;
+    modality: ImagingModality;
+    region: ImagingRegion;
+    studyDate: ISODateString;
+    toothNumbers?: (string | number)[];
+    referringProviderId: UUID;
+    referringProviderName?: string;
+    performingProviderId?: UUID;
+    performingProviderName?: string;
+    appointmentId?: UUID;
+    procedureId?: UUID;
+    treatmentPlanId?: UUID;
+    status: ImagingStudyStatus;
+    fileCount: number;
+    totalFileSize?: number;
+    description?: string;
+    clinicalIndication?: string;
+    patientName: string;
+    isUrgent: boolean;
+    hasCriticalFindings?: boolean;
+    radiationDose?: {
+        value: number;
+        unit: string;
+    };
+    studyInstanceUID?: string;
+    equipmentInfo?: {
+        manufacturer?: string;
+        model?: string;
+        serialNumber?: string;
+    };
+    timestamp: ISODateString;
+    metadata?: Record<string, unknown>;
+}
+export type ImagingStudyCreatedEvent = EventEnvelope<ImagingStudyCreatedPayload>;
+export declare function isImagingStudyCreatedEvent(event: EventEnvelope<unknown>): event is ImagingStudyCreatedEvent;
+export declare function createImagingStudyCreatedEvent(payload: ImagingStudyCreatedPayload, metadata: EventEnvelope<unknown>['metadata'], tenantContext: EventEnvelope<unknown>['tenantContext']): ImagingStudyCreatedEvent;
+export interface ImagingStudyUpdatedPayload {
+    studyId: UUID;
+    patientId: UUID;
+    organizationId: OrganizationId;
+    clinicId: ClinicId;
+    tenantId: string;
+    changes: {
+        status?: ImagingStudyStatus;
+        previousStatus?: ImagingStudyStatus;
+        fileCount?: number;
+        previousFileCount?: number;
+        reportStatus?: ReportStatus;
+        previousReportStatus?: ReportStatus;
+        description?: string;
+        hasCriticalFindings?: boolean;
+        detailedChanges?: StudyChange[];
+    };
+    updatedBy: UUID;
+    updatedByName?: string;
+    patientName?: string;
+    reason?: string;
+    isCriticalUpdate: boolean;
+    timestamp: ISODateString;
+    metadata?: Record<string, unknown>;
+}
+export type ImagingStudyUpdatedEvent = EventEnvelope<ImagingStudyUpdatedPayload>;
+export declare function isImagingStudyUpdatedEvent(event: EventEnvelope<unknown>): event is ImagingStudyUpdatedEvent;
+export declare function createImagingStudyUpdatedEvent(payload: ImagingStudyUpdatedPayload, metadata: EventEnvelope<unknown>['metadata'], tenantContext: EventEnvelope<unknown>['tenantContext']): ImagingStudyUpdatedEvent;
+export interface ImagingReportCreatedPayload {
+    reportId: UUID;
+    studyId: UUID;
+    patientId: UUID;
+    organizationId: OrganizationId;
+    clinicId: ClinicId;
+    tenantId: string;
+    reportType: ReportType;
+    generatedBy: UUID;
+    generatedByName?: string;
+    signedBy?: UUID;
+    signedByName?: string;
+    signedAt?: ISODateString;
+    findingsSummary: string;
+    detailedFindings?: string;
+    impression?: string;
+    recommendations?: string;
+    hasCriticalFindings: boolean;
+    criticalFindings?: string[];
+    status: ReportStatus;
+    patientName: string;
+    patientNotified: boolean;
+    requiresAcknowledgment: boolean;
+    procedureCodes?: string[];
+    billingCodes?: string[];
+    templateId?: UUID;
+    version: number;
+    previousVersionId?: UUID;
+    amendmentReason?: string;
+    timestamp: ISODateString;
+    metadata?: Record<string, unknown>;
+}
+export type ImagingReportCreatedEvent = EventEnvelope<ImagingReportCreatedPayload>;
+export declare function isImagingReportCreatedEvent(event: EventEnvelope<unknown>): event is ImagingReportCreatedEvent;
+export declare function createImagingReportCreatedEvent(payload: ImagingReportCreatedPayload, metadata: EventEnvelope<unknown>['metadata'], tenantContext: EventEnvelope<unknown>['tenantContext']): ImagingReportCreatedEvent;
+export interface ImagingAIResultCreatedPayload {
+    aiResultId: UUID;
+    studyId: UUID;
+    patientId: UUID;
+    organizationId: OrganizationId;
+    clinicId: ClinicId;
+    tenantId: string;
+    aiModelName: string;
+    aiModelVersion?: string;
+    aiVendor?: string;
+    findingsCount: number;
+    criticalFindings: CriticalFinding[];
+    criticalFindingsCount?: number;
+    toothNumbers?: (string | number)[];
+    overallConfidence: number;
+    processingTime?: number;
+    requiresReview: boolean;
+    isReviewed: boolean;
+    reviewedBy?: UUID;
+    reviewedByName?: string;
+    reviewedAt?: ISODateString;
+    providerAgreement?: 'AGREE' | 'PARTIALLY_AGREE' | 'DISAGREE' | 'UNCERTAIN';
+    reviewNotes?: string;
+    patientName?: string;
+    integratedToClinicalNote: boolean;
+    clinicalNoteId?: UUID;
+    triggeredAlerts: boolean;
+    alertIds?: UUID[];
+    analysisMetadata?: {
+        imageResolution?: string;
+        imageCount?: number;
+        computeResources?: string;
+        parameters?: Record<string, unknown>;
+    };
+    timestamp: ISODateString;
+    metadata?: Record<string, unknown>;
+}
+export type ImagingAIResultCreatedEvent = EventEnvelope<ImagingAIResultCreatedPayload>;
+export declare function isImagingAIResultCreatedEvent(event: EventEnvelope<unknown>): event is ImagingAIResultCreatedEvent;
+export declare function createImagingAIResultCreatedEvent(payload: ImagingAIResultCreatedPayload, metadata: EventEnvelope<unknown>['metadata'], tenantContext: EventEnvelope<unknown>['tenantContext']): ImagingAIResultCreatedEvent;

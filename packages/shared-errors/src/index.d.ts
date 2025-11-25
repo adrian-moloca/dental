@@ -1,0 +1,14 @@
+export { BaseError, type BaseErrorOptions, type ErrorResponse, type TenantContext, } from './base';
+export { ValidationError } from './domain';
+export { NotFoundError } from './domain';
+export { ConflictError } from './domain';
+export { DomainError } from './domain';
+export { AuthenticationError } from './auth';
+export { AuthorizationError } from './auth';
+export { SecurityError } from './auth';
+export { InfrastructureError } from './infra';
+export { RateLimitError } from './infra';
+export { TenantIsolationError } from './tenant';
+export { mapErrorToHttpStatus, mapErrorCodeToHttpStatus, isClientError, isServerError, getStatusDescription, } from './mappers';
+export { buildErrorResponse, sanitizeErrorForClient, sanitizeMetadata, buildDevelopmentErrorResponse, buildProductionErrorResponse, extractErrorCode as extractErrorCodeFromBuilder, } from './mappers';
+export { isRetryableError, isUserError, isCriticalError, extractErrorCode, extractCorrelationId, isOperationalError, isTransientError, calculateRetryDelay, shouldLogError, } from './utils';

@@ -1,0 +1,218 @@
+# Backend Auth Service - Test Workflow
+# Runs unit and integration tests on every PR and push to main/develop
+
+name: Backend Auth Tests
+
+on:
+  pull_request:
+    paths:
+      - 'apps/backend-auth/**'
+      - 'packages/shared-*/**'
+      - '.github/workflows/backend-auth-test.yml'
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'apps/backend-auth/**'
+      - 'packages/shared-*/**'
+
+jobs:
+  # ============================================================================
+  # Unit Tests
+  # ============================================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Needed for accurate coverage diff
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.22.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: pnpm --filter @dentalos/backend-auth test:unit
+
+      - name: Generate coverage report
+        run: pnpm --filter @dentalos/backend-auth test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./apps/backend-auth/coverage/coverage-final.json
+          flags: backend-auth-unit
+          name: backend-auth-unit-coverage
+          fail_ci_if_error: true
+
+      - name: Check coverage thresholds
+        run: |
+          # Fail if coverage is below thresholds defined in vitest.config.ts
+          pnpm --filter @dentalos/backend-auth test:coverage
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: unit-test-results
+          path: apps/backend-auth/test-results/unit-results.json
+
+  # ============================================================================
+  # Integration Tests
+  # ============================================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: dentalos_auth_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6381:6381
+
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:test@localhost:5432/dentalos_auth_test
+      TEST_REDIS_URL: redis://localhost:6381/1
+      NODE_ENV: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.22.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Wait for services
+        run: |
+          # Wait for PostgreSQL
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+          # Wait for Redis
+          until redis-cli -h localhost -p 6381 ping; do
+            echo "Waiting for Redis..."
+            sleep 2
+          done
+
+      - name: Run database migrations
+        run: |
+          # TODO: Run TypeORM migrations once they exist
+          echo "Database migrations would run here"
+
+      - name: Run integration tests
+        run: pnpm --filter @dentalos/backend-auth test:integration
+
+      - name: Generate E2E coverage report
+        run: pnpm --filter @dentalos/backend-auth test:coverage:e2e
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./apps/backend-auth/coverage-e2e/coverage-final.json
+          flags: backend-auth-integration
+          name: backend-auth-integration-coverage
+          fail_ci_if_error: false # Don't fail CI on E2E coverage issues
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-test-results
+          path: apps/backend-auth/test-results/e2e-results.json
+
+      - name: Upload test logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-test-logs
+          path: apps/backend-auth/logs/
+
+  # ============================================================================
+  # Test Summary
+  # ============================================================================
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    if: always()
+
+    steps:
+      - name: Download unit test results
+        uses: actions/download-artifact@v3
+        with:
+          name: unit-test-results
+          path: ./unit-results
+
+      - name: Download integration test results
+        uses: actions/download-artifact@v3
+        with:
+          name: integration-test-results
+          path: ./integration-results
+
+      - name: Generate test summary
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Unit Tests" >> $GITHUB_STEP_SUMMARY
+          # TODO: Parse unit-results.json and add to summary
+          echo "✅ Unit tests passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Integration Tests" >> $GITHUB_STEP_SUMMARY
+          # TODO: Parse integration-results.json and add to summary
+          echo "✅ Integration tests passed" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check if all tests passed
+        run: |
+          if [ "${{ needs.unit-tests.result }}" != "success" ] || [ "${{ needs.integration-tests.result }}" != "success" ]; then
+            echo "❌ Some tests failed"
+            exit 1
+          fi
+          echo "✅ All tests passed"

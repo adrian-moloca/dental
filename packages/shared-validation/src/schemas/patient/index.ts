@@ -1,0 +1,105 @@
+/**
+ * Patient validation schemas barrel export
+ * @module shared-validation/schemas/patient
+ */
+
+// Core patient entity schemas
+export {
+  PersonNameSchema,
+  PhoneTypeSchema,
+  PhoneContactSchema,
+  EmailTypeSchema,
+  EmailContactSchema,
+  AddressTypeSchema,
+  PhysicalAddressSchema,
+  PatientContactsSchema,
+  EthnicitySchema,
+  DemographicsSchema,
+  MedicalSeveritySchema,
+  MedicalFlagsSchema,
+  InsuranceCoverageTypeSchema,
+  RelationshipToSubscriberSchema,
+  InsuranceInfoSchema,
+  PatientInsuranceSchema,
+  CommunicationChannelSchema,
+  CommunicationPreferencesSchema,
+  ConsentTypeSchema,
+  ConsentRecordSchema,
+  EmergencyContactSchema,
+  PatientStatusSchema,
+  PatientSchema,
+} from './patient.schemas';
+
+// Type exports for core schemas
+export type {
+  PersonNameInput,
+  PersonNameOutput,
+  PhoneContactInput,
+  PhoneContactOutput,
+  EmailContactInput,
+  EmailContactOutput,
+  PhysicalAddressInput,
+  PhysicalAddressOutput,
+  PatientContactsInput,
+  PatientContactsOutput,
+  DemographicsInput,
+  DemographicsOutput,
+  MedicalFlagsInput,
+  MedicalFlagsOutput,
+  InsuranceInfoInput,
+  InsuranceInfoOutput,
+  PatientInsuranceInput,
+  PatientInsuranceOutput,
+  CommunicationPreferencesInput,
+  CommunicationPreferencesOutput,
+  ConsentRecordInput,
+  ConsentRecordOutput,
+  EmergencyContactInput,
+  EmergencyContactOutput,
+  PatientInput,
+  PatientOutput,
+} from './patient.schemas';
+
+// Patient DTO schemas
+export {
+  CreatePatientDtoSchema,
+  UpdatePatientDtoSchema,
+  PatientQueryDtoSchema,
+  RelationshipTypeSchema,
+  CreateRelationshipDtoSchema,
+  MergePatientsDtoSchema,
+  ExportFormatSchema,
+  ExportPatientDtoSchema,
+  AnonymizePatientDtoSchema,
+  ImportSourceSchema,
+  BulkImportPatientDtoSchema,
+  ArchivePatientDtoSchema,
+  RestorePatientDtoSchema,
+  SendPatientCommunicationDtoSchema,
+} from './patient-dto.schemas';
+
+// Type exports for DTO schemas
+export type {
+  CreatePatientDtoInput,
+  CreatePatientDtoOutput,
+  UpdatePatientDtoInput,
+  UpdatePatientDtoOutput,
+  PatientQueryDtoInput,
+  PatientQueryDtoOutput,
+  CreateRelationshipDtoInput,
+  CreateRelationshipDtoOutput,
+  MergePatientsDtoInput,
+  MergePatientsDtoOutput,
+  ExportPatientDtoInput,
+  ExportPatientDtoOutput,
+  AnonymizePatientDtoInput,
+  AnonymizePatientDtoOutput,
+  BulkImportPatientDtoInput,
+  BulkImportPatientDtoOutput,
+  ArchivePatientDtoInput,
+  ArchivePatientDtoOutput,
+  RestorePatientDtoInput,
+  RestorePatientDtoOutput,
+  SendPatientCommunicationDtoInput,
+  SendPatientCommunicationDtoOutput,
+} from './patient-dto.schemas';

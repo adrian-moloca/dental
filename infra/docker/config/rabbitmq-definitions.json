@@ -1,0 +1,119 @@
+{
+  "rabbit_version": "3.12.0",
+  "rabbitmq_version": "3.12.0",
+  "product_name": "RabbitMQ",
+  "users": [],
+  "vhosts": [
+    {
+      "name": "dental"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "dental_user",
+      "vhost": "dental",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "topic_permissions": [],
+  "parameters": [],
+  "global_parameters": [
+    {
+      "name": "cluster_name",
+      "value": "dental-cluster"
+    }
+  ],
+  "policies": [
+    {
+      "vhost": "dental",
+      "name": "ha-policy",
+      "pattern": ".*",
+      "apply-to": "all",
+      "definition": {
+        "ha-mode": "all",
+        "ha-sync-mode": "automatic"
+      },
+      "priority": 0
+    }
+  ],
+  "queues": [
+    {
+      "name": "dental.notifications",
+      "vhost": "dental",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 86400000,
+        "x-max-length": 10000
+      }
+    },
+    {
+      "name": "dental.appointments",
+      "vhost": "dental",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 86400000,
+        "x-max-length": 10000
+      }
+    },
+    {
+      "name": "dental.analytics",
+      "vhost": "dental",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-message-ttl": 604800000,
+        "x-max-length": 50000
+      }
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "dental.events",
+      "vhost": "dental",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "dental.direct",
+      "vhost": "dental",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "dental.events",
+      "vhost": "dental",
+      "destination": "dental.notifications",
+      "destination_type": "queue",
+      "routing_key": "notification.*",
+      "arguments": {}
+    },
+    {
+      "source": "dental.events",
+      "vhost": "dental",
+      "destination": "dental.appointments",
+      "destination_type": "queue",
+      "routing_key": "appointment.*",
+      "arguments": {}
+    },
+    {
+      "source": "dental.events",
+      "vhost": "dental",
+      "destination": "dental.analytics",
+      "destination_type": "queue",
+      "routing_key": "analytics.*",
+      "arguments": {}
+    }
+  ]
+}

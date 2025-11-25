@@ -1,0 +1,121 @@
+################################################################################
+# DENTALOS PORT REGISTRY - AUTHORITATIVE PORT ASSIGNMENTS
+# Generated: 2025-11-24
+################################################################################
+# This is the single source of truth for ALL port assignments in DentalOS.
+# ALL configuration files, docker-compose files, and scripts MUST use these ports.
+################################################################################
+
+# ============================================================================
+# BACKEND MICROSERVICES - INTERNAL CONTAINER PORTS
+# ============================================================================
+AUTH_PORT=3001                    # Authentication & Authorization Service
+SCHEDULING_PORT=3002              # Appointment Scheduling Service
+PROVIDER_PORT=3003                # Provider Schedule Management Service
+PATIENT_PORT=3004                 # Patient Management Service
+CLINICAL_PORT=3005                # Clinical Records & Treatment Service
+INVENTORY_PORT=3008               # Inventory Management Service
+BILLING_PORT=3010                 # Billing & Payment Service
+SUBSCRIPTION_PORT=3011            # Subscription & Licensing Service
+ENTERPRISE_PORT=3017              # Enterprise/Multi-Clinic Service
+HEALTH_AGGREGATOR_PORT=3099       # Health Check Aggregator Service
+
+# ============================================================================
+# BACKEND MICROSERVICES - HOST PORT MAPPINGS (for development)
+# ============================================================================
+HOST_AUTH_PORT=3301               # Maps to container 3001
+HOST_SCHEDULING_PORT=3302         # Maps to container 3002
+HOST_PROVIDER_PORT=3303           # Maps to container 3003
+HOST_PATIENT_PORT=3304            # Maps to container 3004
+HOST_CLINICAL_PORT=3305           # Maps to container 3005
+HOST_INVENTORY_PORT=3308          # Maps to container 3008
+HOST_BILLING_PORT=3310            # Maps to container 3010
+HOST_SUBSCRIPTION_PORT=3311       # Maps to container 3011
+HOST_ENTERPRISE_PORT=3317         # Maps to container 3017
+HOST_HEALTH_AGGREGATOR_PORT=3399  # Maps to container 3099
+
+# ============================================================================
+# FRONTEND APPLICATIONS
+# ============================================================================
+WEB_PORT=5173                     # Web Clinic Portal (Vite dev server)
+HOST_WEB_PORT=5173                # Exposed to host (same as internal)
+
+# ============================================================================
+# INFRASTRUCTURE SERVICES - INTERNAL PORTS
+# ============================================================================
+POSTGRES_PORT=5432                # PostgreSQL (Auth database)
+POSTGRES_SUBSCRIPTION_INTERNAL_PORT=5432  # PostgreSQL (Subscription database)
+MONGO_PORT=27017                  # MongoDB (shared by multiple services)
+REDIS_PORT=6379                   # Redis (cache & sessions)
+RABBITMQ_PORT=5672                # RabbitMQ (AMQP)
+RABBITMQ_MGMT_PORT=15672          # RabbitMQ Management UI
+MINIO_PORT=9000                   # MinIO S3-compatible storage (API)
+MINIO_CONSOLE_PORT=9001           # MinIO Admin Console
+MAILHOG_SMTP_PORT=1025            # MailHog SMTP (dev email testing)
+MAILHOG_UI_PORT=8025              # MailHog Web UI
+
+# ============================================================================
+# INFRASTRUCTURE SERVICES - HOST PORT MAPPINGS
+# ============================================================================
+HOST_POSTGRES_PORT=5433           # PostgreSQL Auth (avoid conflict with local postgres)
+HOST_POSTGRES_SUBSCRIPTION_PORT=5434  # PostgreSQL Subscription
+HOST_MONGO_PORT=27018             # MongoDB (avoid conflict with local mongo)
+HOST_REDIS_PORT=6381              # Redis (avoid conflict with local redis)
+HOST_RABBITMQ_PORT=5672           # RabbitMQ AMQP
+HOST_RABBITMQ_MANAGEMENT_PORT=15672  # RabbitMQ Management UI
+HOST_MINIO_API_PORT=9000          # MinIO API
+HOST_MINIO_CONSOLE_PORT=9001      # MinIO Console
+HOST_MAILHOG_SMTP_PORT=1025       # MailHog SMTP
+HOST_MAILHOG_UI_PORT=8025         # MailHog UI
+
+# ============================================================================
+# SERVICE URLS (Inter-Service Communication within Docker network)
+# ============================================================================
+AUTH_SERVICE_URL=http://auth:3001
+SCHEDULING_SERVICE_URL=http://scheduling:3002
+PROVIDER_SERVICE_URL=http://provider-schedule:3003
+PATIENT_SERVICE_URL=http://patient:3004
+CLINICAL_SERVICE_URL=http://clinical:3005
+INVENTORY_SERVICE_URL=http://inventory:3008
+BILLING_SERVICE_URL=http://billing:3010
+SUBSCRIPTION_SERVICE_URL=http://subscription:3011
+ENTERPRISE_SERVICE_URL=http://enterprise:3017
+HEALTH_AGGREGATOR_URL=http://health-aggregator:3099
+
+# ============================================================================
+# FRONTEND API URLS (from host machine - uses HOST ports)
+# ============================================================================
+VITE_API_BASE_URL=http://localhost:3301
+VITE_AUTH_API_URL=http://localhost:3301
+VITE_PATIENT_API_URL=http://localhost:3304
+VITE_SCHEDULING_API_URL=http://localhost:3302
+VITE_PROVIDER_API_URL=http://localhost:3303
+VITE_CLINICAL_API_URL=http://localhost:3305
+VITE_INVENTORY_API_URL=http://localhost:3308
+VITE_BILLING_API_URL=http://localhost:3310
+VITE_SUBSCRIPTION_API_URL=http://localhost:3311
+VITE_ENTERPRISE_API_URL=http://localhost:3317
+VITE_WS_URL=ws://localhost:3301
+
+################################################################################
+# USAGE NOTES
+################################################################################
+# 1. Internal ports (e.g., AUTH_PORT=3001) are used INSIDE Docker containers
+# 2. Host ports (e.g., HOST_AUTH_PORT=3301) are exposed to the host machine
+# 3. Service URLs use Docker network names (e.g., http://auth:3001)
+# 4. Frontend (VITE_*) URLs use HOST ports since browser runs on host
+# 5. Test scripts and health checks use HOST ports (e.g., localhost:3301)
+################################################################################
+# DO NOT modify these ports without updating ALL configuration files:
+#   - .env.docker
+#   - .env.example
+#   - docker-compose.yml
+#   - docker-compose.dev.yml
+#   - docker-compose.prod.yml
+#   - docker-compose.local.yml
+#   - test-health-all.sh
+#   - seed-local-data.sh
+#   - All service .env files
+#   - All service configuration.ts files
+#   - All service main.ts files
+################################################################################

@@ -1,0 +1,33 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "../../",
+    "rootDir": "../../",
+    "incremental": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@dentalos/shared-types": ["packages/shared-types/src"],
+      "@dentalos/shared-validation": ["packages/shared-validation/src"],
+      "@dentalos/shared-domain": ["packages/shared-domain/src"],
+      "@dentalos/shared-auth": ["packages/shared-auth/src"],
+      "@dentalos/shared-infra": ["packages/shared-infra/src"],
+      "@dentalos/shared-events": ["packages/shared-events/src"],
+      "@dentalos/shared-errors": ["packages/shared-errors/src"],
+      "@dentalos/shared-config": ["packages/shared-config/src"],
+      "@dentalos/shared-testing": ["packages/shared-testing/src"],
+      "@dentalos/shared-security": ["packages/shared-security/src"],
+      "@dentalos/shared-tracing": ["packages/shared-tracing/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "src/**/*.spec.ts", "src/**/test/**/*", "src/test/**/*"]
+}
