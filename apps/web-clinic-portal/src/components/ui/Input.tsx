@@ -20,7 +20,7 @@ export function Input({ label, hint, error, success, fullWidth, className, icon,
   return (
     <div className={clsx('space-y-2 text-sm', { 'w-full': fullWidth })}>
       {label && (
-        <label htmlFor={id} className="block text-slate-200 font-medium">
+        <label htmlFor={id} className="block text-[var(--foreground)] font-medium">
           {label}
           {rest.required && (
             <span className="text-red-400 ml-1" aria-label="required">
@@ -33,7 +33,7 @@ export function Input({ label, hint, error, success, fullWidth, className, icon,
         <input
           id={id}
           className={clsx(
-            'w-full rounded-lg border bg-ink-800/60 px-3 py-2 text-white placeholder:text-slate-500 transition-all duration-200',
+            'w-full rounded-lg border bg-[#1F1F2D] px-3 py-2 text-[#F4EFF0] placeholder:text-slate-400 transition-all duration-200',
             'focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]',
             'disabled:opacity-50 disabled:cursor-not-allowed',
             error && 'border-red-500/70 focus:ring-red-500 pr-10',

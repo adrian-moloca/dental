@@ -22,9 +22,12 @@ export function AppShell({ children, title, subtitle, actions }: Props) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#0b1224] text-slate-100">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <SkipNav />
-      <div className="fixed inset-0 bg-[radial-gradient(circle_at_5%_10%,rgba(13,138,232,0.14),transparent_25%),radial-gradient(circle_at_90%_20%,rgba(255,127,23,0.12),transparent_25%)]" aria-hidden={true} />
+      <div
+        className="fixed inset-0 bg-[radial-gradient(circle_at_5%_10%,rgba(24,106,175,0.06),transparent_25%),radial-gradient(circle_at_90%_20%,rgba(84,179,215,0.08),transparent_25%)]"
+        aria-hidden={true}
+      />
 
       {/* Mobile Menu */}
       <MobileMenu
@@ -49,18 +52,14 @@ export function AppShell({ children, title, subtitle, actions }: Props) {
             {(title || subtitle || actions) && (
               <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  {title && (
-                    <h1 className="text-2xl font-semibold text-white">{title}</h1>
-                  )}
-                  {subtitle && (
-                    <p className="text-sm text-slate-400 mt-1">{subtitle}</p>
-                  )}
+                  {title && <h1 className="text-2xl font-semibold text-[var(--foreground)]">{title}</h1>}
+                  {subtitle && <p className="text-sm text-[var(--muted)] mt-1">{subtitle}</p>}
                 </div>
                 <div className="flex items-center gap-3">
                   {actions}
                   <div className="hidden sm:flex items-center gap-2">
                     <div className="text-right leading-tight">
-                      <div className="text-slate-200 font-semibold">
+                      <div className="text-[var(--foreground)] font-semibold">
                         {user?.firstName && user?.lastName
                           ? `${user.firstName} ${user.lastName}`
                           : user?.email ?? 'Signed in'}

@@ -41,9 +41,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-ink-900">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--bg)] text-[var(--text)]">
       <div className="relative w-full max-w-lg animate-fade-in">
-        <div className="absolute inset-0 blur-3xl bg-gradient-to-br from-brand-400/30 to-accent-500/20 animate-pulse-glow" aria-hidden={true} />
+        <div className="absolute inset-0 blur-3xl bg-gradient-to-br from-brand-400/15 to-accent-400/12 animate-pulse-glow" aria-hidden={true} />
         <Card padding="lg" tone="glass" className="relative">
           <div className="mb-6 text-center space-y-2">
             <div className="flex items-center justify-center gap-2 mb-3">
@@ -63,8 +63,8 @@ export default function LoginPage() {
               </svg>
               <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Dental OS</p>
             </div>
-            <h1 className="text-3xl font-bold gradient-text">Clinic Portal</h1>
-            <p className="text-sm text-slate-400">Modern practice management at your fingertips</p>
+            <h1 className="text-3xl font-bold text-[var(--foreground)]">Clinic Portal</h1>
+            <p className="text-sm text-[var(--muted)]">Modern practice management at your fingertips</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <Input

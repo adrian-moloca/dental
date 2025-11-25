@@ -50,9 +50,9 @@ export default function SelectOrganizationPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-ink-900">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--bg)] text-[var(--text)]">
       <div className="relative w-full max-w-2xl animate-fade-in">
-        <div className="absolute inset-0 blur-3xl bg-gradient-to-br from-brand-400/30 to-accent-500/20 animate-pulse-glow" />
+        <div className="absolute inset-0 blur-3xl bg-gradient-to-br from-brand-400/15 to-accent-400/12 animate-pulse-glow" />
         <Card padding="lg" tone="glass" className="relative">
           <div className="mb-6 text-center space-y-2">
             <div className="flex items-center justify-center gap-2 mb-3">
@@ -73,10 +73,10 @@ export default function SelectOrganizationPage() {
                 Dental OS
               </p>
             </div>
-            <h1 className="text-3xl font-bold gradient-text">
+            <h1 className="text-3xl font-bold text-[var(--foreground)]">
               Select Organization
             </h1>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[var(--muted)]">
               You have access to multiple organizations. Please select one to
               continue.
             </p>
