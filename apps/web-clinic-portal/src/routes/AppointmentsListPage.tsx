@@ -2,6 +2,7 @@
  * Appointments List Page - Preclinic-style
  *
  * Calendar view with appointments management, filters, and quick actions.
+ * Now using the new Calendar component with Day, Week, and Month views.
  */
 
 import { useState, useMemo } from 'react';
@@ -27,19 +28,20 @@ import {
   TableEmpty,
   DataTableHeader,
 } from '../components/ui-new';
-import { Scheduler, type DatesSetArg } from '../components/data/Scheduler';
+import { Calendar } from '../components/calendar';
+import type { CalendarEvent, Resource } from '../components/calendar';
 import toast from 'react-hot-toast';
 import { addHours, format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 
 type ViewMode = 'calendar' | 'list';
-type CalendarView = 'resourceTimeGridDay' | 'resourceTimeGridWeek';
+type CalendarView = 'day' | 'week' | 'month';
 
 export default function AppointmentsListPage() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
-  const [calendarView, setCalendarView] = useState<CalendarView>('resourceTimeGridWeek');
-  const [dateRange, setDateRange] = useState<{ start?: Date; end?: Date }>({});
+  const [calendarView, setCalendarView] = useState<CalendarView>('week');
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedProviders, setSelectedProviders] = useState<string[] | null>(null);
   const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [quickDraft, setQuickDraft] = useState({
@@ -51,14 +53,14 @@ export default function AppointmentsListPage() {
   });
 
   const { data, isLoading, error, refetch } = useAppointments({
-    startDate: dateRange.start,
-    endDate: dateRange.end,
+    startDate: currentDate,
+    endDate: currentDate,
   });
 
   const createAppointment = useCreateAppointment();
 
   // Build resources from appointments
-  const resources = useMemo(() => {
+  const resources = useMemo<Resource[]>(() => {
     const providers = new Map<string, string>();
     (data?.data ?? []).forEach((a) => {
       if (a.providerId) {
@@ -78,19 +80,18 @@ export default function AppointmentsListPage() {
   }, [resources, selectedProviders]);
 
   // Build calendar events
-  const schedulerEvents = useMemo(() => {
-    const resourceSet = new Set(filteredResources.map((r) => r.id));
-    return (data?.data ?? [])
-      .filter((a) => !a.providerId || resourceSet.has(a.providerId))
-      .map((a) => ({
-        id: a.id,
-        title: `Pacient ${a.patientId?.slice(0, 8) || 'N/A'}`,
-        start: a.start,
-        end: a.end,
-        resourceId: a.providerId ?? 'default',
-        status: a.status,
-      }));
-  }, [data?.data, filteredResources]);
+  const calendarEvents = useMemo<CalendarEvent[]>(() => {
+    return (data?.data ?? []).map((a) => ({
+      id: a.id,
+      title: `Pacient ${a.patientId?.slice(0, 8) || 'N/A'}`,
+      start: new Date(a.start),
+      end: new Date(a.end),
+      resourceId: a.providerId ?? 'default',
+      status: a.status as CalendarEvent['status'],
+      patientName: `Pacient ${a.patientId?.slice(0, 8) || 'N/A'}`,
+      providerName: a.providerId ? `Dr. ${a.providerId.slice(0, 8)}` : undefined,
+    }));
+  }, [data?.data]);
 
   const handleQuickCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,6 +148,21 @@ export default function AppointmentsListPage() {
       default:
         return <Badge variant="soft-secondary">{status}</Badge>;
     }
+  };
+
+  const handleEventClick = (event: CalendarEvent) => {
+    navigate('/reception');
+  };
+
+  const handleSlotClick = (date: Date, resourceId?: string) => {
+    setQuickDraft({
+      patientId: '',
+      providerId: resourceId ?? '',
+      start: date,
+      end: addHours(date, 1),
+      serviceCode: '',
+    });
+    setShowQuickCreate(true);
   };
 
   // Loading state
@@ -258,25 +274,6 @@ export default function AppointmentsListPage() {
                   Lista
                 </Button>
               </div>
-
-              {viewMode === 'calendar' && (
-                <div className="btn-group ms-2" role="group">
-                  <Button
-                    variant={calendarView === 'resourceTimeGridDay' ? 'primary' : 'outline-secondary'}
-                    size="sm"
-                    onClick={() => setCalendarView('resourceTimeGridDay')}
-                  >
-                    Zi
-                  </Button>
-                  <Button
-                    variant={calendarView === 'resourceTimeGridWeek' ? 'primary' : 'outline-secondary'}
-                    size="sm"
-                    onClick={() => setCalendarView('resourceTimeGridWeek')}
-                  >
-                    Saptamana
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
         </CardBody>
@@ -285,34 +282,16 @@ export default function AppointmentsListPage() {
       {/* Calendar View */}
       {viewMode === 'calendar' && (
         <Card className="shadow-sm mb-4">
-          <CardBody className="p-0">
-            <div className="p-4">
-              <Scheduler
-                resources={filteredResources}
-                events={schedulerEvents}
-                view={calendarView}
-                onDatesChange={(arg: DatesSetArg) => {
-                  setDateRange({ start: arg.start, end: arg.end });
-                }}
-                onSelectSlot={(slot) => {
-                  setQuickDraft({
-                    patientId: '',
-                    providerId: slot.resource?.id ?? '',
-                    start: slot.start ?? new Date(),
-                    end: slot.end ?? addHours(new Date(), 1),
-                    serviceCode: '',
-                  });
-                  setShowQuickCreate(true);
-                }}
-                onMove={(evt) => {
-                  toast.success(`Programare ${evt.title} mutata`);
-                }}
-                onResize={(evt) => {
-                  toast.success(`Durata programarii ${evt.title} modificata`);
-                }}
-              />
-            </div>
-          </CardBody>
+          <Calendar
+            events={calendarEvents}
+            resources={filteredResources}
+            initialView={calendarView}
+            initialDate={currentDate}
+            onEventClick={handleEventClick}
+            onSlotClick={handleSlotClick}
+            onDateChange={setCurrentDate}
+            onViewChange={setCalendarView}
+          />
         </Card>
       )}
 

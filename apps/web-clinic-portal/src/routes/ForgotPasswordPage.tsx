@@ -8,6 +8,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { authClient } from '../api/authClient';
 import { Button, Input } from '../components/ui-new';
+import dentalClinicImage from '../assets/dental-clinic-future.png';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -48,6 +49,14 @@ export default function ForgotPasswordPage() {
                       Securitatea contului tau este importanta pentru noi.
                       Urmeaza instructiunile din email pentru a-ti reseta parola.
                     </p>
+                  </div>
+                  <div className="auth-cover-illustration mt-5">
+                    <img
+                      src={dentalClinicImage}
+                      alt="Modern Dental Clinic"
+                      className="img-fluid rounded-3"
+                      style={{ maxWidth: '100%', height: 'auto' }}
+                    />
                   </div>
                 </div>
                 <div className="auth-cover-bg"></div>
@@ -151,6 +160,14 @@ export default function ForgotPasswordPage() {
                     Iti vom trimite un link securizat pentru a-ti reseta parola.
                     Procesul dureaza doar cateva minute.
                   </p>
+                </div>
+                <div className="auth-cover-illustration mt-5">
+                  <img
+                    src={dentalClinicImage}
+                    alt="Modern Dental Clinic"
+                    className="img-fluid rounded-3"
+                    style={{ maxWidth: '100%', height: 'auto' }}
+                  />
                 </div>
               </div>
               <div className="auth-cover-bg"></div>

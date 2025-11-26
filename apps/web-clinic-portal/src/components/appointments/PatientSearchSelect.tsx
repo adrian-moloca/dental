@@ -9,8 +9,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { patientsClient } from '../../api/patientsClient';
 import type { PatientDto } from '../../types/patient.types';
-import { Icon } from '../ui/Icon';
-import clsx from 'clsx';
 
 interface PatientSearchSelectProps {
   value?: string;
@@ -51,7 +49,6 @@ export function PatientSearchSelect({
       patientsClient.getById(value).then((response) => {
         setSelectedPatient(response.data);
       }).catch(() => {
-        // Patient not found
         setSelectedPatient(undefined);
       });
     }
@@ -99,28 +96,23 @@ export function PatientSearchSelect({
     }
   };
 
-  const formatPatientDisplay = (patient: PatientDto) => {
-    const phone = patient.phones?.find(p => p.isPrimary)?.number || patient.phones?.[0]?.number;
-    return `${patient.firstName} ${patient.lastName}${phone ? ` • ${phone}` : ''}`;
-  };
-
   return (
-    <div className="space-y-2 text-sm" ref={containerRef}>
+    <div className="mb-3" ref={containerRef}>
       {label && (
-        <label className="block text-[var(--foreground)] font-medium">
+        <label className="form-label">
           {label}
           {required && (
-            <span className="text-red-400 ml-1" aria-label="required">
+            <span className="text-danger ms-1" aria-label="required">
               *
             </span>
           )}
         </label>
       )}
 
-      <div className="relative">
+      <div className="position-relative">
         {!selectedPatient ? (
           <>
-            <div className="relative">
+            <div className="position-relative">
               <input
                 ref={inputRef}
                 type="text"
@@ -129,55 +121,55 @@ export function PatientSearchSelect({
                 onFocus={handleInputFocus}
                 disabled={disabled}
                 placeholder="Search by name, phone, or email..."
-                className={clsx(
-                  'w-full rounded-lg border bg-[#1F1F2D] px-3 py-2 pr-10 text-[#F4EFF0] placeholder:text-slate-400 transition-all duration-200',
-                  'focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]',
-                  'disabled:opacity-50 disabled:cursor-not-allowed',
-                  error && 'border-red-500/70 focus:ring-red-500',
-                  !error && 'border-[var(--border)]',
-                )}
+                className={`form-control ${error ? 'is-invalid' : ''}`}
+                style={{ paddingRight: '40px' }}
                 aria-invalid={error ? 'true' : 'false'}
                 aria-describedby={error ? 'patient-error' : undefined}
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-                <Icon name="search" className="w-5 h-5" aria-hidden="true" />
+              <div className="position-absolute end-0 top-50 translate-middle-y pe-3">
+                <i className="ti ti-search text-muted" aria-hidden="true"></i>
               </div>
             </div>
 
             {/* Dropdown */}
             {isOpen && (
-              <div className="absolute z-50 mt-1 w-full rounded-lg border border-[var(--border)] bg-[#1F1F2D] shadow-lg max-h-64 overflow-auto">
+              <div
+                className="dropdown-menu show w-100 shadow-lg border mt-1"
+                style={{ maxHeight: '256px', overflowY: 'auto', position: 'absolute', zIndex: 1050 }}
+              >
                 {isLoading ? (
-                  <div className="p-4 text-center text-slate-400">
-                    <Icon name="spinner" className="w-5 h-5 animate-spin mx-auto mb-2" />
-                    Searching...
+                  <div className="p-4 text-center text-muted">
+                    <div className="spinner-border spinner-border-sm mb-2" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <div className="small">Searching...</div>
                   </div>
                 ) : patients.length === 0 ? (
-                  <div className="p-4 text-center text-slate-400">
+                  <div className="p-4 text-center text-muted">
                     {searchQuery.length < 2 ? (
-                      'Type at least 2 characters to search'
+                      <span className="small">Type at least 2 characters to search</span>
                     ) : (
                       <>
-                        No patients found
-                        <div className="text-xs mt-1">Try a different search term</div>
+                        <div className="small">No patients found</div>
+                        <div className="small mt-1">Try a different search term</div>
                       </>
                     )}
                   </div>
                 ) : (
-                  <ul role="listbox" className="py-1">
+                  <ul role="listbox" className="list-unstyled mb-0">
                     {patients.map((patient) => (
                       <li key={patient.id}>
                         <button
                           type="button"
                           onClick={() => handleSelectPatient(patient)}
-                          className="w-full text-left px-4 py-2 hover:bg-[var(--brand)]/10 focus:bg-[var(--brand)]/10 focus:outline-none transition-colors"
+                          className="dropdown-item d-block w-100 text-start"
                           role="option"
                           aria-selected="false"
                         >
-                          <div className="font-medium text-[#F4EFF0]">
+                          <div className="fw-medium">
                             {patient.firstName} {patient.lastName}
                           </div>
-                          <div className="text-xs text-slate-400 mt-0.5 flex gap-3">
+                          <div className="small text-muted mt-1 d-flex gap-3">
                             {patient.phones?.[0]?.number && (
                               <span>{patient.phones[0].number}</span>
                             )}
@@ -195,17 +187,12 @@ export function PatientSearchSelect({
           </>
         ) : (
           // Selected patient display
-          <div
-            className={clsx(
-              'flex items-center justify-between w-full rounded-lg border bg-[#1F1F2D] px-3 py-2 text-[#F4EFF0]',
-              error ? 'border-red-500/70' : 'border-[var(--border)]',
-            )}
-          >
-            <div className="flex-1">
-              <div className="font-medium">
+          <div className={`d-flex align-items-center justify-content-between border rounded p-2 ${error ? 'border-danger' : ''}`}>
+            <div className="flex-grow-1">
+              <div className="fw-medium">
                 {selectedPatient.firstName} {selectedPatient.lastName}
               </div>
-              <div className="text-xs text-slate-400 mt-0.5">
+              <div className="small text-muted mt-1">
                 {selectedPatient.phones?.find(p => p.isPrimary)?.number ||
                   selectedPatient.phones?.[0]?.number ||
                   selectedPatient.emails?.[0]?.address}
@@ -215,10 +202,10 @@ export function PatientSearchSelect({
               <button
                 type="button"
                 onClick={handleClear}
-                className="ml-2 p-1 hover:bg-slate-700/50 rounded transition-colors"
+                className="btn btn-sm btn-ghost-secondary ms-2"
                 aria-label="Clear selection"
               >
-                <Icon name="x" className="w-4 h-4 text-slate-400" />
+                <i className="ti ti-x"></i>
               </button>
             )}
           </div>
@@ -226,10 +213,10 @@ export function PatientSearchSelect({
       </div>
 
       {error && (
-        <span id="patient-error" className="flex items-center gap-1 text-xs text-red-400" role="alert">
-          <Icon name="exclamation" className="w-3 h-3" aria-hidden="true" />
+        <div id="patient-error" className="invalid-feedback d-block" role="alert">
+          <i className="ti ti-alert-circle me-1"></i>
           {error}
-        </span>
+        </div>
       )}
     </div>
   );

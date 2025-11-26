@@ -5,9 +5,6 @@
  * Shows after patient is selected in appointment creation.
  */
 
-import { Card } from '../ui/Card';
-import { Badge } from '../ui-new/Badge';
-import { Icon } from '../ui/Icon';
 import type { PatientDto } from '../../types/patient.types';
 
 interface PatientSummaryCardProps {
@@ -38,102 +35,104 @@ export function PatientSummaryCard({ patient }: PatientSummaryCardProps) {
   };
 
   return (
-    <Card padding="md" tone="glass" className="border-l-4 border-l-[var(--brand)]">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <h3 className="text-lg font-semibold text-[#F4EFF0]">
-            {patient.firstName} {patient.lastName}
-          </h3>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="text-sm text-slate-400">
-              {calculateAge(patient.dateOfBirth)} years old
-            </span>
-            {patient.gender && (
-              <>
-                <span className="text-slate-600">•</span>
-                <Badge
-                  variant="soft-secondary"
-                  size="sm"
-                  className="capitalize"
-                >
-                  {patient.gender}
-                </Badge>
-              </>
+    <div className="card border-start border-primary border-4">
+      <div className="card-body">
+        <div className="d-flex align-items-start justify-content-between mb-3">
+          <div>
+            <h5 className="card-title mb-1">
+              {patient.firstName} {patient.lastName}
+            </h5>
+            <div className="d-flex align-items-center gap-2 mt-1">
+              <span className="text-muted small">
+                {calculateAge(patient.dateOfBirth)} years old
+              </span>
+              {patient.gender && (
+                <>
+                  <span className="text-muted">•</span>
+                  <span className="badge bg-secondary-subtle text-secondary text-capitalize">
+                    {patient.gender}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="vstack gap-2">
+          {/* Contact Information */}
+          <div className="row g-3">
+            {primaryPhone && (
+              <div className="col-sm-6">
+                <div className="d-flex align-items-center gap-2 small">
+                  <i className="ti ti-phone text-muted" aria-hidden="true"></i>
+                  <span>{primaryPhone.number}</span>
+                  {primaryPhone.type && (
+                    <span className="badge bg-light text-dark ms-auto">
+                      {primaryPhone.type}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {primaryEmail && (
+              <div className="col-sm-6">
+                <div className="d-flex align-items-center gap-2 small">
+                  <i className="ti ti-mail text-muted" aria-hidden="true"></i>
+                  <span className="text-truncate">{primaryEmail.address}</span>
+                </div>
+              </div>
             )}
           </div>
-        </div>
-      </div>
 
-      <div className="space-y-2">
-        {/* Contact Information */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {primaryPhone && (
-            <div className="flex items-center gap-2 text-sm">
-              <Icon name="phone" className="w-4 h-4 text-slate-400" aria-hidden="true" />
-              <span className="text-[#F4EFF0]">{primaryPhone.number}</span>
-              {primaryPhone.type && (
-                <Badge variant="outline-secondary" size="sm" className="ml-auto">
-                  {primaryPhone.type}
-                </Badge>
-              )}
-            </div>
-          )}
-
-          {primaryEmail && (
-            <div className="flex items-center gap-2 text-sm">
-              <Icon name="mail" className="w-4 h-4 text-slate-400" aria-hidden="true" />
-              <span className="text-[#F4EFF0] truncate">{primaryEmail.address}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Date of Birth */}
-        <div className="flex items-center gap-2 text-sm">
-          <Icon name="calendar" className="w-4 h-4 text-slate-400" aria-hidden="true" />
-          <span className="text-slate-400">Born:</span>
-          <span className="text-[#F4EFF0]">{formatDate(patient.dateOfBirth)}</span>
-        </div>
-
-        {/* Address */}
-        {patient.address && (
-          <div className="flex items-start gap-2 text-sm">
-            <Icon name="map" className="w-4 h-4 text-slate-400 mt-0.5" aria-hidden="true" />
-            <span className="text-[#F4EFF0]">
-              {patient.address.street}, {patient.address.city}, {patient.address.state}{' '}
-              {patient.address.postalCode}
-            </span>
+          {/* Date of Birth */}
+          <div className="d-flex align-items-center gap-2 small">
+            <i className="ti ti-calendar text-muted" aria-hidden="true"></i>
+            <span className="text-muted">Born:</span>
+            <span>{formatDate(patient.dateOfBirth)}</span>
           </div>
-        )}
 
-        {/* Emergency Contact */}
-        {patient.emergencyContact && (
-          <div className="flex items-start gap-2 text-sm pt-2 border-t border-[var(--border)]">
-            <Icon name="alert" className="w-4 h-4 text-amber-400 mt-0.5" aria-hidden="true" />
-            <div>
-              <span className="text-slate-400">Emergency:</span>{' '}
-              <span className="text-[#F4EFF0]">
-                {patient.emergencyContact.name} ({patient.emergencyContact.relationship})
+          {/* Address */}
+          {patient.address && (
+            <div className="d-flex align-items-start gap-2 small">
+              <i className="ti ti-map-pin text-muted mt-1" aria-hidden="true"></i>
+              <span>
+                {patient.address.street}, {patient.address.city}, {patient.address.state}{' '}
+                {patient.address.postalCode}
               </span>
-              {patient.emergencyContact.phone && (
-                <span className="text-slate-400 ml-2">
-                  {patient.emergencyContact.phone}
-                </span>
-              )}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Medical Notes/Alerts */}
-        {patient.notes && (
-          <div className="flex items-start gap-2 text-sm pt-2 border-t border-[var(--border)]">
-            <Icon name="info" className="w-4 h-4 text-blue-400 mt-0.5" aria-hidden="true" />
-            <div>
-              <span className="text-slate-400">Notes:</span>{' '}
-              <span className="text-[#F4EFF0]">{patient.notes}</span>
+          {/* Emergency Contact */}
+          {patient.emergencyContact && (
+            <div className="d-flex align-items-start gap-2 small pt-2 border-top">
+              <i className="ti ti-alert-circle text-warning mt-1" aria-hidden="true"></i>
+              <div>
+                <span className="text-muted">Emergency:</span>{' '}
+                <span>
+                  {patient.emergencyContact.name} ({patient.emergencyContact.relationship})
+                </span>
+                {patient.emergencyContact.phone && (
+                  <span className="text-muted ms-2">
+                    {patient.emergencyContact.phone}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Medical Notes/Alerts */}
+          {patient.notes && (
+            <div className="d-flex align-items-start gap-2 small pt-2 border-top">
+              <i className="ti ti-info-circle text-info mt-1" aria-hidden="true"></i>
+              <div>
+                <span className="text-muted">Notes:</span>{' '}
+                <span>{patient.notes}</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }

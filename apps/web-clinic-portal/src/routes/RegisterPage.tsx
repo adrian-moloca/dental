@@ -8,6 +8,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button, Input, PasswordInput } from '../components/ui-new';
+import dentalClinicImage from '../assets/dental-clinic-future.png';
 
 interface FormData {
   firstName: string;
@@ -118,33 +119,13 @@ export default function RegisterPage() {
                     Creeaza-ti un cont si incepe sa gestionezi clinica mai eficient.
                   </p>
                 </div>
-
-                {/* Features List */}
-                <div className="mt-5">
-                  <div className="d-flex align-items-center gap-3 text-white mb-3">
-                    <div className="avatar avatar-sm bg-white bg-opacity-10 rounded-circle">
-                      <i className="ti ti-check text-white"></i>
-                    </div>
-                    <span>Programari si calendar inteligent</span>
-                  </div>
-                  <div className="d-flex align-items-center gap-3 text-white mb-3">
-                    <div className="avatar avatar-sm bg-white bg-opacity-10 rounded-circle">
-                      <i className="ti ti-check text-white"></i>
-                    </div>
-                    <span>Fise pacienti complete</span>
-                  </div>
-                  <div className="d-flex align-items-center gap-3 text-white mb-3">
-                    <div className="avatar avatar-sm bg-white bg-opacity-10 rounded-circle">
-                      <i className="ti ti-check text-white"></i>
-                    </div>
-                    <span>Facturare si rapoarte financiare</span>
-                  </div>
-                  <div className="d-flex align-items-center gap-3 text-white">
-                    <div className="avatar avatar-sm bg-white bg-opacity-10 rounded-circle">
-                      <i className="ti ti-check text-white"></i>
-                    </div>
-                    <span>Stoc si aprovizionare</span>
-                  </div>
+                <div className="auth-cover-illustration mt-5">
+                  <img
+                    src={dentalClinicImage}
+                    alt="Modern Dental Clinic"
+                    className="img-fluid rounded-3"
+                    style={{ maxWidth: '100%', height: 'auto' }}
+                  />
                 </div>
               </div>
               <div className="auth-cover-bg"></div>
