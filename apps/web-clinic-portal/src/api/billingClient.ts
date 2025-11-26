@@ -38,11 +38,34 @@ export interface PaymentDto {
   id: string;
   invoiceId: string;
   amount: number;
-  paymentMethod: 'cash' | 'credit_card' | 'debit_card' | 'ach' | 'check' | 'split';
+  paymentMethod: 'cash' | 'credit_card' | 'debit_card' | 'ach' | 'check' | 'split' | 'card' | 'bank_transfer';
   status: 'pending' | 'completed' | 'failed' | 'refunded';
   reference?: string;
   recordedAt: string;
   notes?: string;
+}
+
+export interface RecordPaymentRequest {
+  invoiceId?: string;
+  patientId?: string;
+  totalAmount: number;
+  payments: Array<{
+    amount: number;
+    method: 'cash' | 'card' | 'check' | 'bank_transfer';
+    reference?: string;
+  }>;
+  notes?: string;
+}
+
+export interface RecordPaymentResponse {
+  id: string;
+  invoiceId?: string;
+  patientId?: string;
+  totalAmount: number;
+  payments: PaymentDto[];
+  newBalance: number;
+  recordedAt: string;
+  recordedBy: string;
 }
 
 export interface PatientBalanceDto {
@@ -74,6 +97,9 @@ export const billingClient = {
   // Payments
   recordPayment: (invoiceId: string, data: Partial<PaymentDto>) =>
     client.post<PaymentDto>(`/invoices/${invoiceId}/payments`, data),
+
+  recordPaymentBatch: (data: RecordPaymentRequest) =>
+    client.post<RecordPaymentResponse>('/payments', data),
 
   getPayments: (invoiceId: string) =>
     client.get<PaymentDto[]>(`/invoices/${invoiceId}/payments`),

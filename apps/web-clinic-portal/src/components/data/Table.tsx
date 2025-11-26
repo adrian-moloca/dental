@@ -35,20 +35,20 @@ export function Table<T>({
   const pages = pageSize && total ? Math.ceil(total / pageSize) : undefined;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-white/5 bg-white/5 shadow-soft">
-      {toolbar && <div className="border-b border-white/5 px-4 py-3">{toolbar}</div>}
+    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-sm">
+      {toolbar && <div className="border-b border-[var(--border)] px-4 py-3">{toolbar}</div>}
       <div className="min-w-full overflow-x-auto">
         <table
-          className="min-w-full text-sm text-slate-200"
+          className="min-w-full text-sm text-[var(--text)]"
           aria-label={ariaLabel}
         >
-          <thead className="bg-white/5 text-xs uppercase tracking-[0.08em] text-slate-400">
+          <thead className="bg-[var(--surface-card)] text-xs uppercase tracking-[0.08em] text-[var(--text-secondary)]">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.id}
                   className={clsx(
-                    'px-4 py-3 text-left align-middle whitespace-nowrap border-b border-white/5',
+                    'px-4 py-3 text-left align-middle whitespace-nowrap border-b border-[var(--border)] font-semibold',
                     col.align === 'right' && 'text-right',
                     col.align === 'center' && 'text-center',
                   )}
@@ -59,9 +59,9 @@ export function Table<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-[var(--border)]">
             {data.map((row, idx) => (
-              <tr key={(row as unknown as { id?: string })?.id ?? idx} className="hover:bg-white/5 transition">
+              <tr key={(row as unknown as { id?: string })?.id ?? idx} className="hover:bg-[var(--surface-hover)] transition-colors">
                 {columns.map((col) => (
                   <td
                     key={col.id}
@@ -80,25 +80,25 @@ export function Table<T>({
         </table>
       </div>
       {data.length === 0 && (
-        <div className="p-6 text-center text-slate-400 text-sm">
+        <div className="p-6 text-center text-[var(--text-tertiary)] text-sm">
           {emptyState || 'No data right now.'}
         </div>
       )}
       {pages && pages > 1 && (
-        <div className="flex items-center justify-between border-t border-white/5 px-4 py-3 text-sm text-slate-300">
+        <div className="flex items-center justify-between border-t border-[var(--border)] px-4 py-3 text-sm text-[var(--text-secondary)]">
           <span>
             Page {page ?? 1} of {pages}
           </span>
           <div className="flex items-center gap-2">
             <button
-              className="px-3 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-40"
+              className="px-3 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] disabled:opacity-40 transition-colors"
               onClick={() => onPageChange?.((page ?? 1) - 1)}
               disabled={!onPageChange || (page ?? 1) <= 1}
             >
               Prev
             </button>
             <button
-              className="px-3 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 disabled:opacity-40"
+              className="px-3 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] disabled:opacity-40 transition-colors"
               onClick={() => onPageChange?.((page ?? 1) + 1)}
               disabled={!onPageChange || (page ?? 1) >= pages}
             >

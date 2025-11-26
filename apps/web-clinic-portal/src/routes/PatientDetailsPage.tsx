@@ -4,7 +4,8 @@
 
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { usePatient, useUpdatePatient, useDeletePatient } from '../hooks/usePatients';
+import { usePatient, useUpdatePatient, useDeletePatient, usePatientBalance } from '../hooks/usePatients';
+import { useAppointments } from '../hooks/useAppointments';
 import { AppShell } from '../components/layout/AppShell';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -13,12 +14,21 @@ import { Tabs } from '../components/ui/Tabs';
 import { Timeline } from '../components/data/Timeline';
 import { DocumentList } from '../components/data/DocumentList';
 import { PatientForm } from '../components/patients/PatientForm';
+import { AlertBanner } from '../components/patients/AlertBanner';
+import { BalanceCard } from '../components/patients/BalanceCard';
+import { VisitHistory } from '../components/patients/VisitHistory';
 import type { CreatePatientDto } from '../types/patient.types';
 
 export default function PatientDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data, isLoading, error } = usePatient(id);
+  const { data: balanceData, isLoading: balanceLoading } = usePatientBalance(id);
+  const { data: appointmentsData, isLoading: appointmentsLoading } = useAppointments({
+    patientId: id,
+    status: 'completed',
+    limit: 3,
+  });
   const updatePatient = useUpdatePatient();
   const deletePatient = useDeletePatient();
   const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'documents'>('overview');
@@ -49,6 +59,10 @@ export default function PatientDetailsPage() {
     } catch (error: any) {
       setErrorMessage(error.response?.data?.message || error.message || 'Failed to delete patient');
     }
+  };
+
+  const handleCollectPayment = () => {
+    navigate(`/billing/payments/new?patientId=${id}`);
   };
 
   if (isLoading) {
@@ -88,6 +102,23 @@ export default function PatientDetailsPage() {
   }
 
   const patient = data.data;
+
+  // Extract medical alerts from patient data
+  const allergies = patient.medicalHistory?.allergies;
+  const medicalConditions = patient.medicalHistory?.conditions;
+  const medications = patient.medicalHistory?.medications;
+
+  // Transform appointments to visits
+  const visits = appointmentsData?.data?.map((apt: any) => ({
+    id: apt.id,
+    appointmentDate: apt.startTime,
+    appointmentType: apt.appointmentType?.name || 'General Visit',
+    status: apt.status === 'completed' ? 'completed' : apt.status === 'no_show' ? 'no_show' : 'cancelled',
+    providerName: apt.providerName || apt.provider?.name,
+    proceduresSummary: apt.notes || apt.reasonForVisit,
+    notes: apt.internalNotes,
+  })) || [];
+
   const timelineItems = [
     { id: 't1', title: 'Appointment completed', detail: 'Prophylaxis + fluoride', time: 'Today 10:30', tone: 'success' as const },
     { id: 't2', title: 'Treatment plan accepted', detail: 'Ortho aligners phase 1', time: 'Yesterday', tone: 'info' as const },
@@ -169,8 +200,18 @@ export default function PatientDetailsPage() {
             </div>
 
             {activeTab === 'overview' && (
-              <div className="grid gap-6 lg:grid-cols-3">
-                <Card padding="lg" tone="glass" className="lg:col-span-2 space-y-4">
+              <>
+                {/* Medical Alerts Banner - Full Width */}
+                <AlertBanner
+                  allergies={allergies}
+                  medicalConditions={medicalConditions}
+                  medications={medications}
+                />
+
+                <div className="grid gap-6 lg:grid-cols-3">
+                  {/* Left Column - Patient Info + Visit History */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <Card padding="lg" tone="glass" className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-brand-500/30 border border-brand-300/40 flex items-center justify-center text-white font-semibold">
                       {patient.firstName?.[0]}
@@ -203,34 +244,74 @@ export default function PatientDetailsPage() {
                       <Field label="Notes" value={patient.notes} />
                     </div>
                   )}
-                  <div className="pt-4 border-t border-white/10">
-                    <Button
-                      variant="ghost"
-                      onClick={handleDelete}
-                      className="text-red-400 hover:text-red-300 hover:border-red-500/50"
-                    >
-                      Delete Patient
-                    </Button>
-                  </div>
-                </Card>
+                      <div className="pt-4 border-t border-white/10">
+                        <Button
+                          variant="ghost"
+                          onClick={handleDelete}
+                          className="text-red-400 hover:text-red-300 hover:border-red-500/50"
+                        >
+                          Delete Patient
+                        </Button>
+                      </div>
+                    </Card>
 
-                <Card padding="lg" tone="glass" className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-400">Next action</p>
-                      <p className="text-lg font-semibold text-white">Schedule visit</p>
-                    </div>
+                    {/* Visit History */}
+                    <VisitHistory
+                      visits={visits}
+                      patientId={patient.id}
+                      isLoading={appointmentsLoading}
+                    />
                   </div>
-                  <Button
-                    as={Link}
-                    to="/appointments/create"
-                    state={{ patientId: patient.id }}
-                    fullWidth
-                  >
-                    Create appointment
-                  </Button>
-                </Card>
-              </div>
+
+                  {/* Right Column - Quick Actions + Balance */}
+                  <div className="space-y-6">
+                    {/* Balance Card */}
+                    {balanceData && (
+                      <BalanceCard
+                        balance={balanceData}
+                        onCollectPayment={handleCollectPayment}
+                        isLoading={balanceLoading}
+                      />
+                    )}
+
+                    {/* Quick Actions Card */}
+                    <Card padding="lg" tone="glass" className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-400">Quick Actions</p>
+                          <p className="text-lg font-semibold text-white">Patient Management</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Button
+                          as={Link}
+                          to="/appointments/create"
+                          state={{ patientId: patient.id }}
+                          fullWidth
+                        >
+                          Schedule Appointment
+                        </Button>
+                        <Button
+                          as={Link}
+                          to={`/clinical/charting?patientId=${patient.id}`}
+                          variant="soft"
+                          fullWidth
+                        >
+                          View Clinical Chart
+                        </Button>
+                        <Button
+                          as={Link}
+                          to={`/clinical/treatment-plans?patientId=${patient.id}`}
+                          variant="soft"
+                          fullWidth
+                        >
+                          Treatment Plans
+                        </Button>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              </>
             )}
 
             {activeTab === 'timeline' && <Timeline items={timelineItems} />}

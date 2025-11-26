@@ -24,8 +24,9 @@ export function AppShell({ children, title, subtitle, actions }: Props) {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <SkipNav />
+      {/* Subtle teal gradient accent in corner */}
       <div
-        className="fixed inset-0 bg-[radial-gradient(circle_at_5%_10%,rgba(24,106,175,0.06),transparent_25%),radial-gradient(circle_at_90%_20%,rgba(84,179,215,0.08),transparent_25%)]"
+        className="fixed inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(13,148,136,0.04),transparent_30%)]"
         aria-hidden={true}
       />
 
@@ -52,19 +53,19 @@ export function AppShell({ children, title, subtitle, actions }: Props) {
             {(title || subtitle || actions) && (
               <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  {title && <h1 className="text-2xl font-semibold text-[var(--foreground)]">{title}</h1>}
-                  {subtitle && <p className="text-sm text-[var(--muted)] mt-1">{subtitle}</p>}
+                  {title && <h1 className="text-2xl font-semibold text-[var(--text)]">{title}</h1>}
+                  {subtitle && <p className="text-sm text-[var(--text-secondary)] mt-1">{subtitle}</p>}
                 </div>
                 <div className="flex items-center gap-3">
                   {actions}
                   <div className="hidden sm:flex items-center gap-2">
                     <div className="text-right leading-tight">
-                      <div className="text-[var(--foreground)] font-semibold">
+                      <div className="text-[var(--text)] font-semibold">
                         {user?.firstName && user?.lastName
                           ? `${user.firstName} ${user.lastName}`
                           : user?.email ?? 'Signed in'}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-[var(--text-tertiary)]">
                         {user?.roles?.[0] || 'User'} • {location.pathname.replace('/', '') || 'dashboard'}
                       </div>
                     </div>

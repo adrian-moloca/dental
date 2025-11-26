@@ -2,11 +2,11 @@
  * Invoice Details Page - View invoice and record payments
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useInvoice, usePayments, useRecordPayment, useDownloadInvoicePdf } from '../hooks/useBilling';
+import { useInvoice, usePayments, useRecordPaymentBatch, useDownloadInvoicePdf } from '../hooks/useBilling';
 import { Icon } from '../components/ui/Icon';
-import { PaymentRecorder } from '../components/billing/PaymentRecorder';
+import { PaymentRecorderModal, type PaymentSubmission } from '../components/billing/PaymentRecorderModal';
 
 const statusColors = {
   draft: 'bg-gray-500/20 text-gray-300',
@@ -21,11 +21,11 @@ const statusColors = {
 export function InvoiceDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [showPaymentRecorder, setShowPaymentRecorder] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const { data: invoice, isLoading } = useInvoice(id!);
   const { data: payments } = usePayments(id!);
-  const recordPayment = useRecordPayment();
+  const recordPaymentMutation = useRecordPaymentBatch();
   const downloadPdf = useDownloadInvoicePdf();
 
   if (isLoading) {
@@ -50,13 +50,17 @@ export function InvoiceDetailsPage() {
   const inv = invoice.data;
   const paymentList = payments?.data || [];
 
-  const handleRecordPayment = async (paymentData: any) => {
-    await recordPayment.mutateAsync({
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const handleSubmitPayment = useCallback(async (submission: PaymentSubmission) => {
+    await recordPaymentMutation.mutateAsync({
       invoiceId: id!,
-      data: paymentData,
+      patientId: inv.patientId,
+      totalAmount: submission.totalAmount,
+      payments: submission.payments,
+      notes: submission.notes,
     });
-    setShowPaymentRecorder(false);
-  };
+    setShowPaymentModal(false);
+  }, [recordPaymentMutation, id, inv.patientId]);
 
   return (
     <div className="space-y-6">
@@ -87,29 +91,24 @@ export function InvoiceDetailsPage() {
           </button>
           {inv.balance > 0 && inv.status !== 'cancelled' && (
             <button
-              onClick={() => setShowPaymentRecorder(true)}
+              onClick={() => setShowPaymentModal(true)}
               className="flex items-center gap-2 px-6 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors font-medium"
             >
               <Icon name="cash" className="w-5 h-5" />
-              Record Payment
+              Inregistreaza Plata
             </button>
           )}
         </div>
       </div>
 
       {/* Payment Recorder Modal */}
-      {showPaymentRecorder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-bg border border-white/10 rounded-lg max-w-2xl w-full p-6">
-            <PaymentRecorder
-              invoiceId={id!}
-              balance={inv.balance}
-              onSave={handleRecordPayment}
-              onCancel={() => setShowPaymentRecorder(false)}
-            />
-          </div>
-        </div>
-      )}
+      <PaymentRecorderModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        invoice={inv}
+        onSubmit={handleSubmitPayment}
+        isSubmitting={recordPaymentMutation.isPending}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}

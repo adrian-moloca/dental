@@ -45,14 +45,14 @@ export default function AppointmentsListPage() {
   if (isLoading) {
     return (
       <AppShell title="Appointments" subtitle="Checking chair availability...">
-        <div className="text-slate-300">Loading appointments...</div>
+        <div className="text-[var(--text-secondary)]">Loading appointments...</div>
       </AppShell>
     );
   }
   if (error) {
     return (
       <AppShell title="Appointments">
-        <Card tone="glass" padding="lg" className="text-red-300">
+        <Card tone="glass" padding="lg" className="text-[var(--danger)]">
           Error loading appointments: {(error as Error).message}
         </Card>
       </AppShell>
@@ -108,22 +108,22 @@ export default function AppointmentsListPage() {
             <Card key={appointment.id} padding="lg" tone="glass" className="space-y-3 card-hover animate-fade-in" style={{ animationDelay: `${idx * 0.05}s` }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Patient</p>
-                  <p className="text-sm font-semibold text-white">{appointment.patientId}</p>
+                  <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Patient</p>
+                  <p className="text-sm font-semibold text-[var(--text)]">{appointment.patientId}</p>
                 </div>
                 <Badge tone={appointment.status === 'confirmed' ? 'success' : appointment.status === 'cancelled' ? 'warning' : 'neutral'}>
                   {appointment.status}
                 </Badge>
               </div>
-              <div className="rounded-lg border border-white/5 bg-white/5 p-3">
-                <p className="text-xs uppercase tracking-[0.12em] text-slate-400">Schedule</p>
-                <p className="mt-1 text-sm text-white">
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-card)] p-3">
+                <p className="text-xs uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Schedule</p>
+                <p className="mt-1 text-sm text-[var(--text)]">
                   {new Date(appointment.start).toLocaleString()} — {new Date(appointment.end).toLocaleString()}
                 </p>
               </div>
-              <div className="flex items-center justify-between text-sm text-slate-300">
+              <div className="flex items-center justify-between text-sm text-[var(--text-secondary)]">
                 <span>Service: {appointment.serviceCode}</span>
-                <span className="text-slate-400">Provider: {appointment.providerId || '—'}</span>
+                <span className="text-[var(--text-tertiary)]">Provider: {appointment.providerId || '—'}</span>
               </div>
             </Card>
           ))}
@@ -249,9 +249,9 @@ function FiltersBar({
   };
 
   return (
-    <div className="rounded-xl border border-white/5 bg-white/5 p-4 shadow-soft flex flex-wrap items-center gap-3 justify-between">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-sm flex flex-wrap items-center gap-3 justify-between mb-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs uppercase tracking-[0.12em] text-slate-400">Providers</span>
+        <span className="text-xs uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Providers</span>
         {resources.map((r) => (
           <Button
             key={r.id}

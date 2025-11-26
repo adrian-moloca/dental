@@ -40,6 +40,8 @@ export interface CancelAppointmentDto {
   cancelledBy: string;
 }
 
+export type ConfirmationMethod = 'phone' | 'sms' | 'email' | 'portal';
+
 export interface QueryAppointmentsDto {
   patientId?: string;
   providerId?: string;
@@ -47,6 +49,7 @@ export interface QueryAppointmentsDto {
   status?: AppointmentStatus;
   startDate?: Date;
   endDate?: Date;
+  confirmed?: boolean;
   page?: number;
   limit?: number;
 }
@@ -65,6 +68,10 @@ export interface AppointmentDto {
   status: AppointmentStatus;
   riskScore?: number;
   bookingMetadata?: any;
+  confirmed?: boolean;
+  confirmedAt?: Date;
+  confirmationMethod?: ConfirmationMethod;
+  confirmedBy?: string;
   createdAt: Date;
   updatedAt: Date;
 }

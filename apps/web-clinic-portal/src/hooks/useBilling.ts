@@ -4,7 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { billingClient } from '../api/billingClient';
-import type { InvoiceDto, PaymentDto } from '../api/billingClient';
+import type { InvoiceDto, PaymentDto, RecordPaymentRequest, RecordPaymentResponse } from '../api/billingClient';
 import { toast } from 'react-hot-toast';
 
 // Query Keys
@@ -104,6 +104,80 @@ export function useRecordPayment() {
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Failed to record payment');
+    },
+  });
+}
+
+export function useRecordPaymentBatch() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: RecordPaymentRequest) => billingClient.recordPaymentBatch(data),
+    onMutate: async (variables) => {
+      // Optimistic update: reduce balance immediately
+      if (variables.invoiceId) {
+        await queryClient.cancelQueries({ queryKey: billingKeys.invoice(variables.invoiceId) });
+        const previousInvoice = queryClient.getQueryData<{ data: InvoiceDto }>(
+          billingKeys.invoice(variables.invoiceId)
+        );
+
+        if (previousInvoice?.data) {
+          queryClient.setQueryData(billingKeys.invoice(variables.invoiceId), {
+            ...previousInvoice,
+            data: {
+              ...previousInvoice.data,
+              amountPaid: previousInvoice.data.amountPaid + variables.totalAmount,
+              balance: Math.max(0, previousInvoice.data.balance - variables.totalAmount),
+              status: previousInvoice.data.balance - variables.totalAmount <= 0 ? 'paid' : 'partially_paid',
+            },
+          });
+        }
+
+        return { previousInvoice };
+      }
+
+      if (variables.patientId) {
+        await queryClient.cancelQueries({ queryKey: billingKeys.patientBalance(variables.patientId) });
+        const previousBalance = queryClient.getQueryData<{ data: { currentBalance: number } }>(
+          billingKeys.patientBalance(variables.patientId)
+        );
+
+        if (previousBalance?.data) {
+          queryClient.setQueryData(billingKeys.patientBalance(variables.patientId), {
+            ...previousBalance,
+            data: {
+              ...previousBalance.data,
+              currentBalance: Math.max(0, previousBalance.data.currentBalance - variables.totalAmount),
+            },
+          });
+        }
+
+        return { previousBalance };
+      }
+
+      return {};
+    },
+    onSuccess: (response, variables) => {
+      // Invalidate relevant queries
+      if (variables.invoiceId) {
+        queryClient.invalidateQueries({ queryKey: billingKeys.payments(variables.invoiceId) });
+        queryClient.invalidateQueries({ queryKey: billingKeys.invoice(variables.invoiceId) });
+      }
+      if (variables.patientId) {
+        queryClient.invalidateQueries({ queryKey: billingKeys.patientBalance(variables.patientId) });
+      }
+      queryClient.invalidateQueries({ queryKey: billingKeys.invoices() });
+      toast.success('Plata inregistrata cu succes');
+    },
+    onError: (error: any, variables, context) => {
+      // Rollback optimistic update
+      if (variables.invoiceId && context?.previousInvoice) {
+        queryClient.setQueryData(billingKeys.invoice(variables.invoiceId), context.previousInvoice);
+      }
+      if (variables.patientId && context?.previousBalance) {
+        queryClient.setQueryData(billingKeys.patientBalance(variables.patientId), context.previousBalance);
+      }
+      toast.error(error?.response?.data?.message || 'Eroare la inregistrarea platii');
     },
   });
 }

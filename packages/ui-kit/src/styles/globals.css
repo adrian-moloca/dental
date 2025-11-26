@@ -3,18 +3,46 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Background */
+    --bg-primary: #fafaf9;
+    --bg-surface: #f5f5f4;
+
+    /* Borders */
+    --border-default: #e7e5e4;
+    --border-subtle: #d6d3d1;
+
+    /* Text */
+    --text-primary: #292524;
+    --text-secondary: #57534e;
+    --text-tertiary: #78716c;
+
+    /* Brand Colors */
+    --color-primary: #0d9488;
+    --color-primary-hover: #14b8a6;
+    --color-primary-active: #0f766e;
+
+    --color-accent: #f97316;
+    --color-accent-text: #ea580c;
+
+    /* Semantic Colors */
+    --color-success: #059669;
+    --color-warning: #d97706;
+    --color-danger: #dc2626;
+  }
+
   * {
-    @apply border-neutral-300 dark:border-neutral-700;
+    @apply border-neutral-200;
   }
 
   body {
-    @apply bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-50;
+    @apply bg-neutral-50 text-neutral-800;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   /* Focus visible styles for accessibility */
   *:focus-visible {
-    @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-neutral-50 dark:ring-offset-neutral-950;
+    @apply outline-none ring-2 ring-primary-600 ring-offset-2 ring-offset-neutral-50;
   }
 
   /* Reduced motion support */

@@ -2,9 +2,9 @@ import clsx from 'clsx';
 import { type PropsWithChildren, type CSSProperties, type HTMLAttributes, forwardRef } from 'react';
 
 type Props = PropsWithChildren<{
-  padding?: 'md' | 'lg' | 'none';
+  padding?: 'sm' | 'md' | 'lg' | 'none';
   className?: string;
-  tone?: 'default' | 'glass';
+  tone?: 'default' | 'glass' | 'elevated';
   style?: CSSProperties;
 }>;
 
@@ -12,9 +12,15 @@ export function Card({ children, className, padding = 'md', tone = 'default', st
   return (
     <div
       className={clsx(
-        tone === 'glass' ? 'glass-panel' : 'surface-card',
-        'rounded-xl',
-        padding === 'lg' ? 'p-6' : padding === 'md' ? 'p-4' : '',
+        'rounded-xl transition-shadow duration-200',
+        // Tones
+        tone === 'glass' && 'glass-panel',
+        tone === 'default' && 'surface-card',
+        tone === 'elevated' && 'bg-[var(--surface)] border border-[var(--border)] shadow-lg',
+        // Padding
+        padding === 'sm' && 'p-3',
+        padding === 'md' && 'p-4',
+        padding === 'lg' && 'p-6',
         className,
       )}
       style={style}
@@ -40,7 +46,7 @@ export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadi
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={clsx('text-lg font-semibold leading-none tracking-tight', className)}
+      className={clsx('text-lg font-semibold leading-none tracking-tight text-[var(--text)]', className)}
       {...props}
     />
   )
@@ -51,7 +57,7 @@ export const CardDescription = forwardRef<HTMLParagraphElement, HTMLAttributes<H
   ({ className, ...props }, ref) => (
     <p
       ref={ref}
-      className={clsx('text-sm text-text-secondary', className)}
+      className={clsx('text-sm text-[var(--text-secondary)]', className)}
       {...props}
     />
   )

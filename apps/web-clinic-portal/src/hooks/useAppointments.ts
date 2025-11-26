@@ -61,3 +61,90 @@ export const useCancelAppointment = () => {
     },
   });
 };
+
+export const useCheckInAppointment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => schedulingClient.checkIn(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', id] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+};
+
+export const useStartAppointment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => schedulingClient.start(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', id] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+};
+
+export const useCompleteAppointment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      procedures,
+    }: {
+      id: string;
+      procedures?: Array<{
+        procedureId: string;
+        quantity: number;
+        price: number;
+        tooth?: string;
+        surfaces?: string[];
+      }>;
+    }) => schedulingClient.complete(id, procedures ? { procedures } : undefined),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+};
+
+export const useNoShowAppointment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => schedulingClient.recordNoShow(id),
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', id] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+    },
+  });
+};
+
+export const useConfirmAppointment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, method }: { id: string; method: 'phone' | 'sms' | 'email' | 'portal' }) =>
+      schedulingClient.confirm(id, method),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['appointments', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'appointments'] });
+    },
+  });
+};
+
+export const useBulkConfirmAppointments = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ ids, method }: { ids: string[]; method: 'phone' | 'sms' | 'email' | 'portal' }) =>
+      schedulingClient.bulkConfirm(ids, method),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', 'appointments'] });
+    },
+  });
+};

@@ -39,14 +39,14 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   return (
     <>
       <header
-        className="sticky top-0 z-20 border-b border-white/5 bg-ink-900/70 backdrop-blur"
+        className="sticky top-0 z-20 border-b border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-sm"
         role="banner"
       >
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             {/* Mobile menu button */}
             <Button
-              variant="soft"
+              variant="ghost"
               size="md"
               onClick={onMenuClick}
               className="lg:hidden"
@@ -56,32 +56,32 @@ export function Topbar({ onMenuClick }: TopbarProps) {
             </Button>
 
             <div className="hidden md:flex items-center gap-2">
-              <span className="text-sm uppercase tracking-[0.18em] text-slate-400">Dental OS</span>
-              <span className="text-white font-semibold">Clinic Portal</span>
+              <span className="text-sm uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Dental OS</span>
+              <span className="text-[var(--primary)] font-semibold">Clinic Portal</span>
             </div>
             <div className="relative w-64 hidden md:block">
               <Icon
                 name="search"
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 w-4 h-4"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] w-4 h-4"
                 aria-hidden={true}
               />
               <input
                 type="search"
                 placeholder="Search patients, appointments..."
-                className="w-full rounded-full border border-white/10 bg-white/5 pl-10 pr-12 py-2 text-sm text-white placeholder:text-slate-500 focus:border-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-300"
+                className="w-full rounded-full border border-[var(--border)] bg-[var(--surface-card)] pl-10 pr-12 py-2 text-sm text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30"
                 aria-label="Search patients and appointments"
                 onClick={() => setOpenCommand(true)}
                 onFocus={() => setOpenCommand(true)}
                 readOnly
               />
-              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-500 border border-white/10 px-1.5 py-0.5 rounded bg-white/5">
+              <kbd className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-[var(--text-tertiary)] border border-[var(--border)] px-1.5 py-0.5 rounded bg-[var(--surface)]">
                 ⌘K
               </kbd>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant="soft"
+              variant="ghost"
               size="md"
               onClick={() => setOpenNotifications(true)}
               className="relative"
@@ -90,13 +90,13 @@ export function Topbar({ onMenuClick }: TopbarProps) {
               <Icon name="bell" className="w-5 h-5" aria-hidden={true} />
               {hasUnreadNotifications && (
                 <span
-                  className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-400 animate-pulse"
+                  className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-[var(--accent)] animate-pulse"
                   aria-hidden={true}
                 />
               )}
             </Button>
             <Button
-              variant="soft"
+              variant="ghost"
               size="md"
               onClick={() => setOpenQuickActions(true)}
               aria-label="Open quick actions"
@@ -105,19 +105,19 @@ export function Topbar({ onMenuClick }: TopbarProps) {
               <span className="hidden sm:inline ml-1">Quick actions</span>
             </Button>
             <div
-              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2"
+              className="flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface-card)] px-3 py-2"
               role="status"
               aria-label="Current clinic: Central Clinic, Bucharest"
             >
               <div
-                className="h-7 w-7 rounded-full bg-brand-500/40 border border-brand-300/40 text-white text-sm font-semibold flex items-center justify-center"
+                className="h-7 w-7 rounded-full bg-[var(--primary)]/20 border border-[var(--primary)]/30 text-[var(--primary)] text-sm font-semibold flex items-center justify-center"
                 aria-hidden={true}
               >
                 CL
               </div>
               <div className="text-xs leading-tight hidden sm:block">
-                <div className="text-white font-semibold">Central Clinic</div>
-                <div className="text-slate-400">Bucharest</div>
+                <div className="text-[var(--text)] font-semibold">Central Clinic</div>
+                <div className="text-[var(--text-tertiary)]">Bucharest</div>
               </div>
             </div>
           </div>

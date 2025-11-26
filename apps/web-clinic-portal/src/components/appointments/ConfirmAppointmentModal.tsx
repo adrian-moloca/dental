@@ -1,0 +1,85 @@
+import { useState } from 'react';
+import { Modal } from '../overlay/Modal';
+import { Button } from '../ui/Button';
+import { ConfirmationMethodSelect } from './ConfirmationMethodSelect';
+import { useConfirmAppointment } from '../../hooks/useAppointments';
+import type { AppointmentDto, ConfirmationMethod } from '../../types/appointment.types';
+
+interface ConfirmAppointmentModalProps {
+  open: boolean;
+  onClose: () => void;
+  appointment: AppointmentDto | null;
+  onSuccess?: () => void;
+}
+
+export function ConfirmAppointmentModal({
+  open,
+  onClose,
+  appointment,
+  onSuccess,
+}: ConfirmAppointmentModalProps) {
+  const [method, setMethod] = useState<ConfirmationMethod>('phone');
+  const confirmMutation = useConfirmAppointment();
+
+  const handleConfirm = async () => {
+    if (!appointment) return;
+
+    try {
+      await confirmMutation.mutateAsync({
+        id: appointment.id,
+        method,
+      });
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error('Failed to confirm appointment:', error);
+    }
+  };
+
+  if (!appointment) return null;
+
+  return (
+    <Modal open={open} onClose={onClose} title="Confirm Appointment">
+      <div className="space-y-4">
+        <div className="p-4 bg-surface-hover rounded-lg border border-white/10">
+          <div className="text-sm text-foreground/60 mb-1">Patient</div>
+          <div className="text-foreground font-semibold">Patient #{appointment.patientId}</div>
+          <div className="text-sm text-foreground/60 mt-2">Date & Time</div>
+          <div className="text-foreground">
+            {new Date(appointment.start).toLocaleString('en-US', {
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+            })}
+          </div>
+        </div>
+
+        <ConfirmationMethodSelect
+          value={method}
+          onChange={setMethod}
+          disabled={confirmMutation.isPending}
+        />
+
+        {confirmMutation.isError && (
+          <div
+            className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"
+            role="alert"
+          >
+            Failed to confirm appointment. Please try again.
+          </div>
+        )}
+
+        <div className="flex gap-3 justify-end pt-2">
+          <Button variant="ghost" onClick={onClose} disabled={confirmMutation.isPending}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} loading={confirmMutation.isPending}>
+            Confirm Appointment
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}

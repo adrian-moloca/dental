@@ -68,7 +68,7 @@ export default function PatientsListPage() {
                 aria-label="Search patients"
               />
             </div>
-            <div className="text-sm text-slate-400" aria-live="polite" aria-atomic="true">
+            <div className="text-sm text-[var(--text-secondary)]" aria-live="polite" aria-atomic="true">
               {data ? `${data.total} patient${data.total !== 1 ? 's' : ''} total` : ''}
             </div>
           </div>
@@ -131,7 +131,7 @@ function PatientsTable({
       id: 'name',
       header: 'Patient',
       accessor: (row) => (
-        <Link to={`/patients/${row.id}`} className="text-white font-semibold hover:text-brand-200">
+        <Link to={`/patients/${row.id}`} className="text-[var(--text)] font-semibold hover:text-[var(--primary)]">
           {row.firstName} {row.lastName}
         </Link>
       ),
@@ -140,9 +140,9 @@ function PatientsTable({
       id: 'contact',
       header: 'Contact',
       accessor: (row) => (
-        <div className="text-slate-300">
+        <div className="text-[var(--text-secondary)]">
           <div>{row.emails?.[0]?.address ?? 'No email'}</div>
-          <div className="text-xs text-slate-500">{row.phones?.[0]?.number ?? 'No phone'}</div>
+          <div className="text-xs text-[var(--text-tertiary)]">{row.phones?.[0]?.number ?? 'No phone'}</div>
         </div>
       ),
     },
@@ -150,7 +150,7 @@ function PatientsTable({
       id: 'dob',
       header: 'DOB',
       accessor: (row) => (
-        <span className="text-slate-300">
+        <span className="text-[var(--text-secondary)]">
           {new Date(row.dateOfBirth).toLocaleDateString()}
         </span>
       ),
@@ -177,11 +177,11 @@ function PatientsTable({
     return (
       <Card tone="glass" padding="lg">
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="mb-4 p-4 rounded-full bg-brand-500/10 border border-brand-500/20">
-            <Icon name="users" className="w-12 h-12 text-brand-400" aria-hidden={true} />
+          <div className="mb-4 p-4 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20">
+            <Icon name="users" className="w-12 h-12 text-[var(--primary)]" aria-hidden={true} />
           </div>
-          <h3 className="text-slate-200 text-lg font-semibold mb-2">No patients found</h3>
-          <p className="text-slate-400 text-sm mb-6 max-w-md">
+          <h3 className="text-[var(--text)] text-lg font-semibold mb-2">No patients found</h3>
+          <p className="text-[var(--text-secondary)] text-sm mb-6 max-w-md">
             {searchQuery
               ? 'Try adjusting your search criteria or clear the search to see all patients'
               : 'Get started by adding your first patient to the system'}

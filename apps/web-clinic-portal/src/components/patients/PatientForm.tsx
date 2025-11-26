@@ -156,7 +156,7 @@ export function PatientForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-white">Personal Information</h3>
+        <h3 className="text-lg font-semibold text-[var(--text)]">Personal Information</h3>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
@@ -193,13 +193,13 @@ export function PatientForm({
             autoComplete="bday"
           />
           <div className="space-y-2">
-            <label className="block text-sm text-slate-200">
-              Gender <span className="text-red-400">*</span>
+            <label className="block text-sm text-[var(--text)] font-medium">
+              Gender <span className="text-[var(--danger)]">*</span>
             </label>
             <select
               value={formData.gender || ''}
               onChange={(e) => updateField('gender', (e.target.value || undefined) as PatientFormState['gender'])}
-              className={`w-full rounded-lg border ${errors.gender ? 'border-red-500' : 'border-slate-700/80'} bg-ink-800/60 px-3 py-2 text-white focus:border-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-300`}
+              className={`w-full rounded-lg border ${errors.gender ? 'border-[var(--danger)]' : 'border-[var(--border)]'} bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 transition-all duration-200`}
               required
             >
               <option value="">Select gender</option>
@@ -209,14 +209,14 @@ export function PatientForm({
               <option value="prefer_not_to_say">Prefer not to say</option>
             </select>
             {errors.gender && (
-              <p className="text-xs text-red-400 mt-1">{errors.gender}</p>
+              <p className="text-xs text-[var(--danger)] mt-1">{errors.gender}</p>
             )}
           </div>
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-white">Contact Information</h3>
+        <h3 className="text-lg font-semibold text-[var(--text)]">Contact Information</h3>
 
         <Input
           label="Email"
@@ -240,7 +240,7 @@ export function PatientForm({
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-white">Address</h3>
+        <h3 className="text-lg font-semibold text-[var(--text)]">Address</h3>
 
         <Input
           label="Street"
@@ -280,15 +280,15 @@ export function PatientForm({
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-white">Additional Information</h3>
+        <h3 className="text-lg font-semibold text-[var(--text)]">Additional Information</h3>
 
         <div className="space-y-2">
-          <label className="block text-sm text-slate-200">Notes</label>
+          <label className="block text-sm text-[var(--text)] font-medium">Notes</label>
           <textarea
             value={formData.notes || ''}
             onChange={(e) => updateField('notes', e.target.value)}
             rows={4}
-            className="w-full rounded-lg border border-slate-700/80 bg-ink-800/60 px-3 py-2 text-white placeholder:text-slate-500 focus:border-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-300"
+            className="w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] placeholder:text-[var(--text-tertiary)] focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30 transition-all duration-200"
             placeholder="Any additional notes or special instructions..."
           />
         </div>

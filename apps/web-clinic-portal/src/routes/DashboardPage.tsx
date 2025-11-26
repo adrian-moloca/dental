@@ -12,6 +12,7 @@ import {
   useOutstandingBalance,
   useLowStockItems,
 } from '../hooks/useDashboardStats';
+import { ConfirmationStatsWidget } from '../components/appointments/ConfirmationStatsWidget';
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -293,6 +294,9 @@ export function DashboardPage() {
           ))}
         </div>
       </div>
+
+      {/* Confirmation Widget */}
+      <ConfirmationStatsWidget />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}

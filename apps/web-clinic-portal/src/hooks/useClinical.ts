@@ -4,7 +4,14 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { clinicalClient } from '../api/clinicalClient';
-import type { ClinicalNoteDto, TreatmentPlanDto, ProcedureDto, OdontogramDto } from '../api/clinicalClient';
+import type {
+  ClinicalNoteDto,
+  TreatmentPlanDto,
+  ProcedureDto,
+  OdontogramDto,
+  SignNoteRequest,
+  AmendNoteRequest,
+} from '../api/clinicalClient';
 import { toast } from 'react-hot-toast';
 
 // Query Keys
@@ -15,6 +22,8 @@ export const clinicalKeys = {
   treatmentPlans: (patientId: string) => [...clinicalKeys.all, 'treatment-plans', patientId] as const,
   procedures: (patientId: string) => [...clinicalKeys.all, 'procedures', patientId] as const,
   odontogram: (patientId: string) => [...clinicalKeys.all, 'odontogram', patientId] as const,
+  procedureCatalog: (search?: string, category?: string) =>
+    [...clinicalKeys.all, 'catalog', search, category] as const,
 };
 
 // Clinical Notes
@@ -47,6 +56,54 @@ export function useCreateClinicalNote() {
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Failed to create clinical note');
+    },
+  });
+}
+
+export function useSignNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ noteId, data }: { noteId: string; data: SignNoteRequest }) =>
+      clinicalClient.signNote(noteId, data),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: clinicalKeys.all });
+      if (response.data?.note?.id) {
+        queryClient.invalidateQueries({ queryKey: clinicalKeys.note(response.data.note.id) });
+      }
+      toast.success('Clinical note signed successfully');
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to sign clinical note';
+      if (error?.response?.status === 401) {
+        toast.error('Invalid password. Please try again.');
+      } else {
+        toast.error(message);
+      }
+    },
+  });
+}
+
+export function useAmendNote() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ noteId, data }: { noteId: string; data: AmendNoteRequest }) =>
+      clinicalClient.amendNote(noteId, data),
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: clinicalKeys.all });
+      if (response.data?.note?.id) {
+        queryClient.invalidateQueries({ queryKey: clinicalKeys.note(response.data.note.id) });
+      }
+      toast.success('Amendment created and signed successfully');
+    },
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || 'Failed to create amendment';
+      if (error?.response?.status === 401) {
+        toast.error('Invalid password. Please try again.');
+      } else {
+        toast.error(message);
+      }
     },
   });
 }
@@ -154,5 +211,15 @@ export function useUpdateOdontogram() {
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Failed to update odontogram');
     },
+  });
+}
+
+// Procedure Catalog
+export function useProcedureCatalog(search?: string, category?: string) {
+  return useQuery({
+    queryKey: clinicalKeys.procedureCatalog(search, category),
+    queryFn: () => clinicalClient.getProcedureCatalog({ search, category, limit: 50 }),
+    enabled: search !== undefined && search.length >= 2,
+    staleTime: 5 * 60 * 1000,
   });
 }

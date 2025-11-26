@@ -1,7 +1,7 @@
 import { type AnchorHTMLAttributes, type ButtonHTMLAttributes, forwardRef, type ElementType } from 'react';
 import clsx from 'clsx';
 
-type Variant = 'primary' | 'ghost' | 'soft';
+type Variant = 'primary' | 'ghost' | 'soft' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> &
@@ -36,14 +36,21 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
       aria-disabled={disabled || loading ? 'true' : undefined}
       aria-busy={loading ? 'true' : undefined}
       className={clsx(
-        'inline-flex items-center justify-center rounded-lg font-semibold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-brand-400 focus-visible:ring-offset-[var(--bg)]',
+        'inline-flex items-center justify-center rounded-lg font-semibold transition-all duration-200',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-[var(--bg)]',
         {
-          'bg-[var(--brand)] hover:bg-[var(--brand-strong)] active:scale-95 text-white shadow-soft disabled:opacity-60 disabled:cursor-not-allowed':
+          // Primary: Teal with white text - 4.5:1 contrast
+          'bg-[var(--primary)] hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)] active:scale-[0.98] text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed':
             variant === 'primary',
-          'bg-[var(--surface-strong)] text-slate-200 border border-[var(--border)] hover:border-[var(--brand)] hover:text-white hover:bg-white/5':
+          // Ghost: Transparent with border, teal on hover
+          'bg-transparent text-[var(--text)] border border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--surface-hover)]':
             variant === 'ghost',
-          'bg-white/5 text-white border border-white/10 hover:border-[var(--brand)]/60 hover:bg-white/10':
+          // Soft: Light teal background with teal text
+          'bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 hover:bg-[var(--primary)]/20 hover:border-[var(--primary)]/40':
             variant === 'soft',
+          // Danger: Red for destructive actions
+          'bg-[var(--danger)] hover:bg-[#b91c1c] active:scale-[0.98] text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed':
+            variant === 'danger',
         },
         {
           'px-3 py-1.5 text-xs': size === 'sm',
@@ -51,7 +58,7 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
           'px-5 py-3 text-base': size === 'lg',
         },
         { 'w-full': fullWidth },
-        { 'opacity-60 cursor-not-allowed': disabled && !loading },
+        { 'opacity-50 cursor-not-allowed pointer-events-none': disabled && !loading },
         className,
       )}
       {...rest}

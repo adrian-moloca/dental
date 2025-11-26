@@ -72,4 +72,71 @@ export const schedulingClient = {
     const response = await schedulingApi.post(`/appointments/${id}/no-show`);
     return response.data;
   },
+
+  /**
+   * POST /appointments/:id/check-in
+   * Check in a patient for their appointment
+   */
+  async checkIn(id: string): Promise<AppointmentDto> {
+    const response = await schedulingApi.post(`/appointments/${id}/check-in`);
+    return response.data;
+  },
+
+  /**
+   * POST /appointments/:id/start
+   * Start appointment (mark as in progress)
+   */
+  async start(id: string): Promise<AppointmentDto> {
+    const response = await schedulingApi.post(`/appointments/${id}/start`);
+    return response.data;
+  },
+
+  /**
+   * POST /appointments/:id/complete
+   * Complete appointment with procedures
+   */
+  async complete(
+    id: string,
+    payload?: {
+      procedures?: Array<{
+        procedureId: string;
+        quantity: number;
+        price: number;
+        tooth?: string;
+        surfaces?: string[];
+      }>;
+    }
+  ): Promise<{
+    appointment: AppointmentDto;
+    invoice?: {
+      id: string;
+      invoiceNumber: string;
+      status: string;
+      total: number;
+    };
+  }> {
+    const response = await schedulingApi.post(`/appointments/${id}/complete`, payload);
+    return response.data;
+  },
+
+  /**
+   * POST /appointments/:id/confirm
+   * Confirm an appointment
+   */
+  async confirm(id: string, method: 'phone' | 'sms' | 'email' | 'portal'): Promise<AppointmentDto> {
+    const response = await schedulingApi.post(`/appointments/${id}/confirm`, { method });
+    return response.data;
+  },
+
+  /**
+   * POST /appointments/bulk-confirm
+   * Confirm multiple appointments
+   */
+  async bulkConfirm(
+    ids: string[],
+    method: 'phone' | 'sms' | 'email' | 'portal'
+  ): Promise<{ confirmed: string[]; failed: string[] }> {
+    const response = await schedulingApi.post('/appointments/bulk-confirm', { ids, method });
+    return response.data;
+  },
 };

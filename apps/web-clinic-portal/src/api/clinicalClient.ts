@@ -7,10 +7,38 @@ import { env } from '../config/env';
 
 const client = createApiClient(env.CLINICAL_API_URL);
 
+export type NoteStatus = 'draft' | 'signed' | 'amended';
+
+export interface NoteSignature {
+  signedBy: string;
+  signedByName: string;
+  signedByCredentials: string;
+  signedAt: string;
+}
+
+export interface NoteAmendment {
+  id: string;
+  version: number;
+  amendedBy: string;
+  amendedByName: string;
+  amendedAt: string;
+  reason: string;
+  soap?: {
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+  };
+  content?: string;
+  signature?: NoteSignature;
+}
+
 export interface ClinicalNoteDto {
   id: string;
   patientId: string;
   providerId: string;
+  providerName?: string;
+  providerCredentials?: string;
   type: 'soap' | 'progress' | 'consult' | 'emergency' | 'operative';
   title: string;
   encounterDate: string;
@@ -23,11 +51,46 @@ export interface ClinicalNoteDto {
   content?: string;
   isFinalized: boolean;
   isSigned: boolean;
+  status: NoteStatus;
+  signature?: NoteSignature;
+  amendments?: NoteAmendment[];
+  version: number;
   attachments: Array<{
     fileId: string;
     filename: string;
     category: string;
   }>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SignNoteRequest {
+  password: string;
+}
+
+export interface SignNoteResponse {
+  success: boolean;
+  note: ClinicalNoteDto;
+  message: string;
+}
+
+export interface AmendNoteRequest {
+  password: string;
+  reason: string;
+  soap?: {
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+  };
+  content?: string;
+}
+
+export interface AmendNoteResponse {
+  success: boolean;
+  note: ClinicalNoteDto;
+  amendment: NoteAmendment;
+  message: string;
 }
 
 export interface TreatmentPlanDto {
@@ -75,6 +138,21 @@ export interface OdontogramDto {
   }>;
 }
 
+export interface ProcedureCatalogItem {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  category: string;
+  defaultPrice: number;
+  estimatedDuration?: number;
+}
+
+export interface ProcedureCatalogResponse {
+  data: ProcedureCatalogItem[];
+  total: number;
+}
+
 export const clinicalClient = {
   // Clinical Notes
   createNote: (data: Partial<ClinicalNoteDto>) =>
@@ -85,6 +163,12 @@ export const clinicalClient = {
 
   getNote: (id: string) =>
     client.get<ClinicalNoteDto>(`/clinical/notes/${id}`),
+
+  signNote: (noteId: string, data: SignNoteRequest) =>
+    client.post<SignNoteResponse>(`/clinical-notes/${noteId}/sign`, data),
+
+  amendNote: (noteId: string, data: AmendNoteRequest) =>
+    client.post<AmendNoteResponse>(`/clinical-notes/${noteId}/amend`, data),
 
   // Treatment Plans
   createTreatmentPlan: (patientId: string, data: Partial<TreatmentPlanDto>) =>
@@ -105,6 +189,10 @@ export const clinicalClient = {
 
   completeProcedure: (procedureId: string) =>
     client.post(`/clinical/procedures/${procedureId}/complete`),
+
+  // Procedure Catalog
+  getProcedureCatalog: (params?: { search?: string; category?: string; limit?: number }) =>
+    client.get<ProcedureCatalogResponse>('/clinical/procedures/catalog', { params }),
 
   // Odontogram
   getOdontogram: (patientId: string) =>

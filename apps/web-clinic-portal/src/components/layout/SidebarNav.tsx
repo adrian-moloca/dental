@@ -26,14 +26,14 @@ export function SidebarNav() {
 
   return (
     <aside
-      className="hidden w-64 flex-shrink-0 lg:block border-r border-white/5 bg-ink-900/60 backdrop-blur"
+      className="hidden w-64 flex-shrink-0 lg:block border-r border-[var(--border)] bg-[var(--surface)]"
       aria-label="Main navigation"
     >
-      <div className="p-6 border-b border-white/5">
-        <div className="text-sm uppercase tracking-[0.2em] text-slate-400">Dental OS</div>
-        <div className="mt-2 text-xl font-semibold text-white">Clinic Portal</div>
+      <div className="p-6 border-b border-[var(--border)]">
+        <div className="text-sm uppercase tracking-[0.2em] text-[var(--text-tertiary)]">Dental OS</div>
+        <div className="mt-2 text-xl font-semibold text-[var(--primary)]">Clinic Portal</div>
       </div>
-      <nav className="p-4 space-y-2" role="navigation" aria-label="Primary">
+      <nav className="p-4 space-y-1" role="navigation" aria-label="Primary">
         {navItems.map((item) => {
           const active = location.pathname.startsWith(item.href);
           const isDisabled = item.disabled;
@@ -43,8 +43,8 @@ export function SidebarNav() {
               <div
                 key={item.href}
                 className={clsx(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium',
-                  'text-slate-500 border border-transparent opacity-50 cursor-not-allowed'
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
+                  'text-[var(--text-tertiary)] border border-transparent opacity-50 cursor-not-allowed'
                 )}
                 aria-disabled="true"
                 title={`${item.label} - Coming soon`}
@@ -52,7 +52,7 @@ export function SidebarNav() {
                 <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" aria-hidden={true} />
                 <span className="flex-1">{item.label}</span>
                 {item.badge && (
-                  <span className="text-[11px] rounded-full bg-white/10 px-2 py-0.5 text-slate-200 border border-white/10">
+                  <span className="text-[11px] rounded-full bg-[var(--surface-card)] px-2 py-0.5 text-[var(--text-tertiary)] border border-[var(--border)]">
                     {item.badge}
                   </span>
                 )}
@@ -65,17 +65,17 @@ export function SidebarNav() {
               key={item.href}
               to={item.href}
               className={clsx(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                 active
-                  ? 'bg-brand-500/20 text-white border border-brand-300/40 shadow-soft'
-                  : 'text-slate-300 hover:bg-white/5 hover:text-white hover:border-white/10 border border-transparent',
+                  ? 'bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20'
+                  : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text)] border border-transparent',
               )}
               aria-current={active ? 'page' : undefined}
             >
               <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" aria-hidden={true} />
               <span className="flex-1">{item.label}</span>
               {item.badge && (
-                <span className="text-[11px] rounded-full bg-white/10 px-2 py-0.5 text-slate-200 border border-white/10" aria-label={`${item.badge} notifications`}>
+                <span className="text-[11px] rounded-full bg-[var(--accent)]/15 px-2 py-0.5 text-[var(--accent)] border border-[var(--accent)]/30" aria-label={`${item.badge} notifications`}>
                   {item.badge}
                 </span>
               )}

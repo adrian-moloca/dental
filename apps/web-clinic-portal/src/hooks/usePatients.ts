@@ -4,6 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { patientsClient } from '../api/patientsClient';
+import { billingClient } from '../api/billingClient';
 import type { CreatePatientDto, UpdatePatientDto, SearchPatientDto } from '../types/patient.types';
 
 export const usePatients = (searchParams: SearchPatientDto = {}) => {
@@ -53,5 +54,13 @@ export const useDeletePatient = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     },
+  });
+};
+
+export const usePatientBalance = (patientId: string | undefined) => {
+  return useQuery({
+    queryKey: ['patient-balance', patientId],
+    queryFn: () => billingClient.getPatientBalance(patientId!),
+    enabled: !!patientId,
   });
 };

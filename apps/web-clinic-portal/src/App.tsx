@@ -23,6 +23,7 @@ import PatientDetailsPage from './routes/PatientDetailsPage';
 import CreatePatientPage from './routes/CreatePatientPage';
 import CreateAppointmentPage from './routes/CreateAppointmentPage';
 import AppointmentsListPage from './routes/AppointmentsListPage';
+import ReceptionQueuePage from './routes/ReceptionQueuePage';
 import { DashboardPage } from './routes/DashboardPage';
 import { BillingPage } from './routes/BillingPage';
 import { CreateInvoicePage } from './routes/CreateInvoicePage';
@@ -125,6 +126,14 @@ function AppContent() {
                 element={
                   <ProtectedRoute>
                     <CreateAppointmentPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/reception"
+                element={
+                  <ProtectedRoute>
+                    <ReceptionQueuePage />
                   </ProtectedRoute>
                 }
               />
