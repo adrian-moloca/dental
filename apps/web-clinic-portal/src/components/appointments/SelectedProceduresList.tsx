@@ -4,7 +4,6 @@
  */
 
 import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
 import type { SelectedProcedure } from './CompleteAppointmentModal';
 
 interface SelectedProceduresListProps {

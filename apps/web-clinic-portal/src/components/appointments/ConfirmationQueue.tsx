@@ -197,7 +197,7 @@ export function ConfirmationQueue() {
                     <Button
                       variant="soft"
                       size="sm"
-                      onClick={(e) => {
+                      onClick={(e: React.MouseEvent) => {
                         e.stopPropagation();
                         setModalAppointment(appointment);
                       }}

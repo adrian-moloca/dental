@@ -42,6 +42,7 @@ export interface AuthResponseDto {
 
 export interface RefreshTokenDto {
   refreshToken: string;
+  organizationId?: string;
 }
 
 export interface SessionDto {

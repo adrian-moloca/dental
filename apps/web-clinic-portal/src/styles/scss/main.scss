@@ -1,0 +1,39 @@
+// DentalOS Web Clinic Portal - Main Stylesheet
+// Preclinic Design System Implementation
+
+// 1. Variables & Design Tokens
+@import "variables";
+
+// 2. Base Styles
+@import "base/reset";
+@import "base/typography";
+
+// 3. Structure/Layout
+@import "structure/layout";
+@import "structure/sidebar";
+@import "structure/header";
+
+// 4. Components
+@import "components/buttons";
+@import "components/cards";
+@import "components/forms";
+@import "components/badges";
+@import "components/tables";
+@import "components/modals";
+
+// 5. Utilities
+@import "utils/helpers";
+@import "utils/animations";
+
+// 6. Third-party Plugins
+// @import "plugins/calendar";
+// @import "plugins/charts";
+// @import "plugins/datepicker";
+// @import "plugins/select";
+
+// 7. Page-specific Styles
+// @import "pages/dashboard";
+@import "pages/auth";
+// @import "pages/patients";
+// @import "pages/appointments";
+// @import "pages/billing";

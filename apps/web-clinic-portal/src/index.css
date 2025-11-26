@@ -69,43 +69,6 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-.fc .fc-toolbar-title {
-  color: #fff;
-  font-weight: 700;
-}
-.fc .fc-button {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--border);
-  color: #e2e8f0;
-}
-.fc .fc-button-primary:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-.fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid {
-  border-color: rgba(255, 255, 255, 0.05);
-}
-.fc .fc-timegrid-slot {
-  height: 2.5rem;
-}
-.fc .fc-resource {
-  color: #e2e8f0;
-}
-.fc-event.fc-status-confirmed {
-  background: rgba(16, 185, 129, 0.25);
-  border: 1px solid rgba(16, 185, 129, 0.6);
-  color: #e2e8f0;
-}
-.fc-event.fc-status-cancelled {
-  background: rgba(251, 146, 60, 0.2);
-  border: 1px solid rgba(251, 146, 60, 0.6);
-  color: #e2e8f0;
-}
-.fc-event.fc-status-default {
-  background: rgba(99, 102, 241, 0.25);
-  border: 1px solid rgba(99, 102, 241, 0.6);
-  color: #e2e8f0;
-}
-
 a {
   color: inherit;
   text-decoration: none;
@@ -169,26 +132,6 @@ a {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.24);
-}
-
-/* Enhanced calendar styling */
-.fc {
-  font-family: 'Inter', sans-serif;
-}
-
-.fc-event {
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.fc-event:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 10;
-}
-
-.fc-timegrid-slot:hover {
-  background: var(--surface-hover);
 }
 
 /* Card hover effects */

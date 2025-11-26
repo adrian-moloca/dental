@@ -15,6 +15,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { SidebarProvider } from './contexts/SidebarContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import LoginPage from './routes/LoginPage';
+import RegisterPage from './routes/RegisterPage';
 import ForgotPasswordPage from './routes/ForgotPasswordPage';
 import ResetPasswordPage from './routes/ResetPasswordPage';
 import SelectOrganizationPage from './routes/SelectOrganizationPage';
@@ -33,6 +34,9 @@ import { InventoryPage } from './routes/InventoryPage';
 import { ImagingPage } from './routes/ImagingPage';
 import SettingsSessionsPage from './routes/SettingsSessionsPage';
 import SettingsSecurityPage from './routes/SettingsSecurityPage';
+import SettingsProfilePage from './routes/SettingsProfilePage';
+import SettingsClinicPage from './routes/SettingsClinicPage';
+import { ReportsPage } from './routes/ReportsPage';
 import { DevTools } from './components/DevTools';
 
 function AppContent() {
@@ -72,6 +76,7 @@ function AppContent() {
             />
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
               <Route path="/login/select-org" element={<SelectOrganizationPage />} />
@@ -202,12 +207,26 @@ function AppContent() {
                 }
               />
 
-              {/* Settings */}
+              {/* Reports */}
               <Route
-                path="/settings/sessions"
+                path="/reports"
                 element={
                   <ProtectedRoute>
-                    <SettingsSessionsPage />
+                    <ReportsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Settings */}
+              <Route
+                path="/settings"
+                element={<Navigate to="/settings/profile" replace />}
+              />
+              <Route
+                path="/settings/profile"
+                element={
+                  <ProtectedRoute>
+                    <SettingsProfilePage />
                   </ProtectedRoute>
                 }
               />
@@ -216,6 +235,22 @@ function AppContent() {
                 element={
                   <ProtectedRoute>
                     <SettingsSecurityPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings/clinic"
+                element={
+                  <ProtectedRoute>
+                    <SettingsClinicPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings/sessions"
+                element={
+                  <ProtectedRoute>
+                    <SettingsSessionsPage />
                   </ProtectedRoute>
                 }
               />

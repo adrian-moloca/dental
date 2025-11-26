@@ -1,91 +1,64 @@
-import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useAuthStore } from '../../store/authStore';
-import { SidebarNav } from './SidebarNav';
-import { Topbar } from './Topbar';
-import { MobileMenu } from './MobileMenu';
-import { Button } from '../ui/Button';
-import { SkipNav } from '../a11y/SkipNav';
-import { Icon } from '../ui/Icon';
+/**
+ * AppShell Component
+ *
+ * Main application layout wrapper that includes:
+ * - Sidebar navigation
+ * - Header/Topbar
+ * - Page content area
+ * - Responsive behavior
+ *
+ * Based on Preclinic template design.
+ */
 
-type Props = {
-  children: React.ReactNode;
+import type { ReactNode } from 'react';
+import { useSidebar } from '@/contexts/SidebarContext';
+import { Sidebar } from './Sidebar';
+import { Header } from './Header';
+import clsx from 'clsx';
+
+interface AppShellProps {
+  children: ReactNode;
+  /** Page title displayed in the header area */
   title?: string;
+  /** Subtitle displayed below the title */
   subtitle?: string;
-  actions?: React.ReactNode;
-};
+  /** Action buttons displayed in the header area */
+  actions?: ReactNode;
+}
 
-export function AppShell({ children, title, subtitle, actions }: Props) {
-  const logout = useAuthStore((state) => state.logout);
-  const user = useAuthStore((state) => state.user);
-  const location = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+export function AppShell({ children, title, subtitle, actions }: AppShellProps) {
+  const { isMiniSidebar, isSidebarHidden } = useSidebar();
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-      <SkipNav />
-      {/* Subtle teal gradient accent in corner */}
-      <div
-        className="fixed inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(13,148,136,0.04),transparent_30%)]"
-        aria-hidden={true}
-      />
-
-      {/* Mobile Menu */}
-      <MobileMenu
-        isOpen={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
-        onLogout={logout}
-        userEmail={user?.email}
-      />
-
-      <div className="relative flex min-h-screen">
-        <SidebarNav />
-
-        <div className="flex-1">
-          <Topbar onMenuClick={() => setMobileMenuOpen(true)} />
-
-          <main
-            id="main-content"
-            className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8"
-            role="main"
-            aria-label="Main content"
-          >
+    <div
+      className={clsx('main-wrapper', {
+        'mini-sidebar': isMiniSidebar,
+        'hidden-layout': isSidebarHidden,
+      })}
+    >
+      <Sidebar />
+      <div className="page-wrapper">
+        <Header />
+        <main className="page-content">
+          <div className="page-container">
+            {/* Page Header (optional) */}
             {(title || subtitle || actions) && (
-              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  {title && <h1 className="text-2xl font-semibold text-[var(--text)]">{title}</h1>}
-                  {subtitle && <p className="text-sm text-[var(--text-secondary)] mt-1">{subtitle}</p>}
+              <div className="page-header">
+                <div className="page-title">
+                  {title && <h4>{title}</h4>}
+                  {subtitle && <p>{subtitle}</p>}
                 </div>
-                <div className="flex items-center gap-3">
-                  {actions}
-                  <div className="hidden sm:flex items-center gap-2">
-                    <div className="text-right leading-tight">
-                      <div className="text-[var(--text)] font-semibold">
-                        {user?.firstName && user?.lastName
-                          ? `${user.firstName} ${user.lastName}`
-                          : user?.email ?? 'Signed in'}
-                      </div>
-                      <div className="text-xs text-[var(--text-tertiary)]">
-                        {user?.roles?.[0] || 'User'} • {location.pathname.replace('/', '') || 'dashboard'}
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="md"
-                      onClick={() => logout()}
-                      aria-label="Logout from application"
-                    >
-                      <Icon name="logout" className="w-4 h-4 sm:mr-1" aria-hidden={true} />
-                      <span className="hidden sm:inline">Logout</span>
-                    </Button>
-                  </div>
-                </div>
+                {actions && <div className="page-actions">{actions}</div>}
               </div>
             )}
+
+            {/* Page Content */}
             {children}
-          </main>
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   );
 }
+
+export default AppShell;

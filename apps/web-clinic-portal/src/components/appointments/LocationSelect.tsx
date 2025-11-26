@@ -7,6 +7,7 @@
 
 import { useLocations } from '../../hooks/useEnterprise';
 import { Icon } from '../ui/Icon';
+import type { ClinicLocation } from '../../api/enterpriseClient';
 import clsx from 'clsx';
 
 interface LocationSelectProps {
@@ -33,15 +34,15 @@ export function LocationSelect({
   const { data: locationsData, isLoading, isError } = useLocations(clinicId);
 
   // Filter locations by type if specified
-  const locations = filterType
-    ? locationsData?.filter((loc) => loc.type === filterType)
-    : locationsData;
+  const locations: ClinicLocation[] = filterType
+    ? (locationsData || []).filter((loc) => loc.type === filterType)
+    : locationsData || [];
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange(e.target.value);
   };
 
-  const formatLocationName = (location: typeof locationsData extends (infer T)[] ? T : never) => {
+  const formatLocationName = (location: ClinicLocation) => {
     let name = location.name;
     if (location.floor) {
       name += ` (Floor ${location.floor})`;

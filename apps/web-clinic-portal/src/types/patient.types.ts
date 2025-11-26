@@ -74,19 +74,131 @@ export interface CreatePatientDto {
 
 export interface UpdatePatientDto extends Partial<CreatePatientDto> {}
 
+/** Photo URLs for patient profile */
+export interface PhotoDto {
+  url: string;
+  thumbnail: string;
+}
+
+/** Person information nested in PatientDto */
+export interface PersonDto {
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  preferredName?: string;
+  dateOfBirth: Date;
+  gender: string;
+  ssn?: string;
+  cnp?: string;
+  photo?: PhotoDto;
+}
+
+/** Allergy information */
+export interface AllergyDto {
+  allergen: string;
+  severity?: string;
+  reaction?: string;
+}
+
+/** Medical condition information */
+export interface MedicalConditionDto {
+  condition: string;
+  icd10Code?: string;
+  status?: string;
+}
+
+/** Medication information */
+export interface MedicationDto {
+  name: string;
+  dosage?: string;
+  frequency?: string;
+}
+
+/** Alert information for patient safety */
+export interface AlertsDto {
+  allergies: AllergyDto[];
+  medicalConditions: MedicalConditionDto[];
+  medications: MedicationDto[];
+  flags?: string[];
+}
+
+/** Insurance coverage details */
+export interface InsuranceCoverageDto {
+  annual_max?: number;
+  remaining?: number;
+  deductible?: number;
+}
+
+/** Insurance information */
+export interface InsuranceDto {
+  provider?: string;
+  policyNumber?: string;
+  coverage?: InsuranceCoverageDto;
+}
+
+/** Family member information */
+export interface FamilyMemberDto {
+  patientId?: string;
+  name?: string;
+  relationship?: string;
+  isPrimaryContact?: boolean;
+}
+
+/** Family structure */
+export interface FamilyDto {
+  isHead?: boolean;
+  headId?: string;
+  members: FamilyMemberDto[];
+}
+
+/** Emergency contact information */
+export interface EmergencyContactDto {
+  name: string;
+  relationship: string;
+  phone: string;
+}
+
 export interface PatientDto {
   id: string;
+
+  // Patient identification
+  patientNumber?: string;
+
+  // Person information (nested structure matching backend)
+  person?: PersonDto;
+
+  // Legacy flat fields (kept for backward compatibility)
   firstName: string;
   lastName: string;
   dateOfBirth: Date;
   gender?: string;
+
+  // Contact information
   phones?: PhoneDto[];
   emails?: EmailDto[];
   address?: AddressDto;
-  emergencyContact?: any;
-  medicalHistory?: Record<string, any>;
+  emergencyContact?: EmergencyContactDto;
+
+  // Clinical alerts
+  alerts?: AlertsDto;
+
+  // Insurance information (array of insurance policies)
+  insurance?: InsuranceDto[];
+
+  // Legacy insurance field (kept for backward compatibility)
   insuranceInfo?: Record<string, any>;
+
+  // Family relationships
+  family?: FamilyDto;
+
+  // Medical history
+  medicalHistory?: Record<string, any>;
+
+  // Additional fields
   notes?: string;
+  tags?: string[];
+
+  // Audit fields
   createdAt: Date;
   updatedAt: Date;
 }
@@ -94,6 +206,8 @@ export interface PatientDto {
 export interface SearchPatientDto {
   /** Search term for name, email, or phone (backend field name is 'search') */
   search?: string;
+  /** Alias for search - for backward compatibility */
+  query?: string;
   firstName?: string;
   lastName?: string;
   email?: string;
@@ -109,4 +223,9 @@ export interface PatientListResponse {
   total: number;
   page: number;
   limit: number;
+}
+
+/** Patient balance information */
+export interface PatientBalanceDto {
+  balance: number;
 }

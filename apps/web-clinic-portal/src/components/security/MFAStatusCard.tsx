@@ -88,7 +88,7 @@ export function MFAStatusCard({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Multi-Factor Authentication</CardTitle>
-          <Badge variant={enabled ? 'success' : 'secondary'}>
+          <Badge tone={enabled ? 'success' : 'neutral'}>
             {enabled ? 'Enabled' : 'Disabled'}
           </Badge>
         </div>

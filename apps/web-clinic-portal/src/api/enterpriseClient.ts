@@ -93,7 +93,7 @@ export const enterpriseClient = {
     try {
       const response = await enterpriseApi.get(`/enterprise/organizations/${orgId}/providers`);
       return response.data;
-    } catch (error) {
+    } catch {
       // Fallback to mock data for development
       console.warn('Provider endpoint not available, using fallback');
       return [];
@@ -108,7 +108,7 @@ export const enterpriseClient = {
     try {
       const response = await enterpriseApi.get(`/enterprise/clinics/${clinicId}/providers`);
       return response.data;
-    } catch (error) {
+    } catch {
       // Fallback to mock data for development
       console.warn('Clinic providers endpoint not available, using fallback');
       return [];

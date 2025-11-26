@@ -6,7 +6,7 @@
  */
 
 import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
+import { Badge } from '../ui-new/Badge';
 import { Icon } from '../ui/Icon';
 import type { PatientDto } from '../../types/patient.types';
 
@@ -52,7 +52,7 @@ export function PatientSummaryCard({ patient }: PatientSummaryCardProps) {
               <>
                 <span className="text-slate-600">•</span>
                 <Badge
-                  variant="secondary"
+                  variant="soft-secondary"
                   size="sm"
                   className="capitalize"
                 >
@@ -72,7 +72,7 @@ export function PatientSummaryCard({ patient }: PatientSummaryCardProps) {
               <Icon name="phone" className="w-4 h-4 text-slate-400" aria-hidden="true" />
               <span className="text-[#F4EFF0]">{primaryPhone.number}</span>
               {primaryPhone.type && (
-                <Badge variant="outline" size="sm" className="ml-auto">
+                <Badge variant="outline-secondary" size="sm" className="ml-auto">
                   {primaryPhone.type}
                 </Badge>
               )}

@@ -1,8 +1,10 @@
 /**
  * Theme Context - Dark/Light Mode with System Preference
+ *
+ * Supports Bootstrap's data-bs-theme attribute for the Preclinic design system.
  */
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 type ResolvedTheme = 'light' | 'dark';
@@ -11,17 +13,21 @@ interface ThemeContextType {
   theme: Theme;
   resolvedTheme: ResolvedTheme;
   setTheme: (theme: Theme) => void;
+  /** Toggle between light and dark modes */
+  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'dental-os-theme';
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    const stored = localStorage.getItem('dental-os-theme');
-    return (stored as Theme) || 'system';
+    const stored = localStorage.getItem(STORAGE_KEY);
+    return (stored as Theme) || 'light';
   });
 
-  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('dark');
+  const [resolvedTheme, setResolvedTheme] = useState<ResolvedTheme>('light');
 
   useEffect(() => {
     const root = document.documentElement;
@@ -36,9 +42,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const resolved = getResolvedTheme();
     setResolvedTheme(resolved);
 
+    // Update class for legacy CSS
     root.classList.remove('light', 'dark');
     root.classList.add(resolved);
+
+    // Update data attributes for both old and Bootstrap styles
     root.setAttribute('data-theme', resolved);
+    root.setAttribute('data-bs-theme', resolved);
   }, [theme]);
 
   useEffect(() => {
@@ -47,9 +57,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (theme === 'system') {
         const resolved = mediaQuery.matches ? 'dark' : 'light';
         setResolvedTheme(resolved);
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(resolved);
-        document.documentElement.setAttribute('data-theme', resolved);
+        const root = document.documentElement;
+        root.classList.remove('light', 'dark');
+        root.classList.add(resolved);
+        root.setAttribute('data-theme', resolved);
+        root.setAttribute('data-bs-theme', resolved);
       }
     };
 
@@ -57,13 +69,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [theme]);
 
-  const setTheme = (newTheme: Theme) => {
+  const setTheme = useCallback((newTheme: Theme) => {
     setThemeState(newTheme);
-    localStorage.setItem('dental-os-theme', newTheme);
-  };
+    localStorage.setItem(STORAGE_KEY, newTheme);
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    // Toggle between light and dark (skipping system when toggling)
+    setThemeState((current) => {
+      const newTheme = current === 'dark' ? 'light' : 'dark';
+      localStorage.setItem(STORAGE_KEY, newTheme);
+      return newTheme;
+    });
+  }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme }}>
+    <ThemeContext.Provider value={{ theme, resolvedTheme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

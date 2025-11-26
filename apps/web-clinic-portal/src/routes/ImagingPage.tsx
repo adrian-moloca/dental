@@ -1,315 +1,640 @@
 /**
- * Imaging Page - X-rays, DICOM studies, and AI analysis
+ * Imaging Page - Radiografii si Studii Imagistice
+ *
+ * Gestionare completa a studiilor imagistice dentare:
+ * - Radiografii panoramice, periapicale, CBCT
+ * - Fotografii intraorale
+ * - Analiza AI pentru detectie carii si evaluare parodontala
+ * - Organizare si vizualizare studii
  */
 
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useImagingStudies, useImagingStudy, useUploadImagingFile, useAIResults, useRequestAIAnalysis } from '../hooks/useImaging';
-import { Icon } from '../components/ui/Icon';
+import { format } from 'date-fns';
+import { ro } from 'date-fns/locale';
+import { AppShell } from '../components/layout/AppShell';
+import { Card, CardHeader, CardBody } from '../components/ui-new/Card';
+import { Button } from '../components/ui-new/Button';
+import { Badge } from '../components/ui-new/Badge';
+import { Modal } from '../components/ui-new/Modal';
+import { Input, SearchInput, Textarea } from '../components/ui-new/Input';
 
-type ModalityType = 'PA' | 'PANO' | 'CEPH' | 'CBCT' | '3D' | '';
+// Types
+type ModalityType = 'toate' | 'panoramic' | 'periapical' | 'cbct' | 'foto';
+
+interface ImagingStudy {
+  id: string;
+  patientName: string;
+  patientId: string;
+  studyType: ModalityType;
+  dateTaken: Date;
+  provider: string;
+  thumbnailUrl?: string;
+  hasAIAnalysis: boolean;
+  aiFindings?: AIFinding[];
+  notes?: string;
+}
+
+interface AIFinding {
+  id: string;
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  confidence: number;
+  tooth?: string;
+}
+
+// Mock Data
+const MOCK_STUDIES: ImagingStudy[] = [
+  {
+    id: '1',
+    patientName: 'Popescu Maria',
+    patientId: 'P-2024-001',
+    studyType: 'panoramic',
+    dateTaken: new Date(2025, 10, 20),
+    provider: 'Dr. Ion Vasilescu',
+    hasAIAnalysis: true,
+    aiFindings: [
+      {
+        id: 'f1',
+        description: 'Carie dentara detectata',
+        severity: 'high',
+        confidence: 0.92,
+        tooth: '16',
+      },
+      {
+        id: 'f2',
+        description: 'Pierdere osoasa marginala',
+        severity: 'medium',
+        confidence: 0.85,
+        tooth: '26',
+      },
+    ],
+    notes: 'Radiografie panoramica de rutina',
+  },
+  {
+    id: '2',
+    patientName: 'Ionescu Alexandru',
+    patientId: 'P-2024-002',
+    studyType: 'periapical',
+    dateTaken: new Date(2025, 10, 19),
+    provider: 'Dr. Elena Marinescu',
+    hasAIAnalysis: false,
+    notes: 'Radiografie periapicala zona 3.6',
+  },
+  {
+    id: '3',
+    patientName: 'Georgescu Ana',
+    patientId: 'P-2024-003',
+    studyType: 'cbct',
+    dateTaken: new Date(2025, 10, 18),
+    provider: 'Dr. Ion Vasilescu',
+    hasAIAnalysis: true,
+    aiFindings: [
+      {
+        id: 'f3',
+        description: 'Densitate osoasa adecvata pentru implant',
+        severity: 'low',
+        confidence: 0.88,
+      },
+    ],
+    notes: 'CBCT pentru planificare implant mandibular',
+  },
+  {
+    id: '4',
+    patientName: 'Dumitrescu Mihai',
+    patientId: 'P-2024-004',
+    studyType: 'foto',
+    dateTaken: new Date(2025, 10, 17),
+    provider: 'Dr. Elena Marinescu',
+    hasAIAnalysis: false,
+    notes: 'Fotografii intraorale pre-tratament ortodontic',
+  },
+  {
+    id: '5',
+    patientName: 'Stan Cristina',
+    patientId: 'P-2024-005',
+    studyType: 'panoramic',
+    dateTaken: new Date(2025, 10, 15),
+    provider: 'Dr. Ion Vasilescu',
+    hasAIAnalysis: true,
+    aiFindings: [
+      {
+        id: 'f4',
+        description: 'Dintii de minte inclusi',
+        severity: 'medium',
+        confidence: 0.94,
+        tooth: '38, 48',
+      },
+    ],
+  },
+  {
+    id: '6',
+    patientName: 'Radu Elena',
+    patientId: 'P-2024-006',
+    studyType: 'periapical',
+    dateTaken: new Date(2025, 10, 14),
+    provider: 'Dr. Elena Marinescu',
+    hasAIAnalysis: false,
+    notes: 'Control post-tratament endodontic',
+  },
+];
 
 export function ImagingPage() {
-  const { patientId } = useParams<{ patientId?: string }>();
-  const [modalityFilter, setModalityFilter] = useState<ModalityType>('');
-  const [selectedStudyId, setSelectedStudyId] = useState<string | null>(null);
+  // State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [modalityFilter, setModalityFilter] = useState<ModalityType>('toate');
+  const [selectedStudy, setSelectedStudy] = useState<ImagingStudy | null>(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
-  const { data, isLoading } = useImagingStudies({
-    patientId: patientId || undefined,
-    modality: modalityFilter || undefined,
+  // Upload form state
+  const [uploadForm, setUploadForm] = useState({
+    patientSearch: '',
+    selectedPatient: null as { id: string; name: string } | null,
+    modality: 'panoramic' as ModalityType,
+    notes: '',
+    files: [] as File[],
   });
 
-  const { data: selectedStudy } = useImagingStudy(selectedStudyId || '');
-  const { data: aiResults } = useAIResults(selectedStudyId || '');
-  const uploadFile = useUploadImagingFile();
-  const requestAI = useRequestAIAnalysis();
+  // Filter studies
+  const filteredStudies = MOCK_STUDIES.filter((study) => {
+    const matchesSearch =
+      study.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      study.patientId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      study.id.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const studies = data?.data?.data || [];
+    const matchesModality =
+      modalityFilter === 'toate' || study.studyType === modalityFilter;
 
-  const modalityOptions = [
-    { value: '', label: 'All Modalities' },
-    { value: 'PA', label: 'Periapical' },
-    { value: 'PANO', label: 'Panoramic' },
-    { value: 'CEPH', label: 'Cephalometric' },
-    { value: 'CBCT', label: 'CBCT' },
-    { value: '3D', label: '3D Scan' },
-  ];
+    return matchesSearch && matchesModality;
+  });
 
-  const handleFileUpload = async (studyId: string, file: File) => {
-    await uploadFile.mutateAsync({ studyId, file });
+  // Modality labels
+  const modalityLabels: Record<ModalityType, string> = {
+    toate: 'Toate',
+    panoramic: 'Panoramic',
+    periapical: 'Periapical',
+    cbct: 'CBCT',
+    foto: 'Foto Intraorale',
   };
 
-  const handleRequestAIAnalysis = async (analysisType: string) => {
-    if (!selectedStudyId) return;
-    await requestAI.mutateAsync({ studyId: selectedStudyId, analysisType });
+  // Severity labels
+  const severityLabels = {
+    low: 'Scazut',
+    medium: 'Mediu',
+    high: 'Ridicat',
+  };
+
+  // Handle file selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setUploadForm((prev) => ({ ...prev, files }));
+  };
+
+  // Handle upload submission
+  const handleUploadSubmit = () => {
+    // TODO: Implement actual upload logic
+    console.log('Upload study:', uploadForm);
+    setShowUploadModal(false);
+    // Reset form
+    setUploadForm({
+      patientSearch: '',
+      selectedPatient: null,
+      modality: 'panoramic',
+      notes: '',
+      files: [],
+    });
+  };
+
+  // Get modality icon
+  const getModalityIcon = (type: ModalityType) => {
+    switch (type) {
+      case 'panoramic':
+        return 'ti ti-dental';
+      case 'periapical':
+        return 'ti ti-dental-broken';
+      case 'cbct':
+        return 'ti ti-3d-cube-sphere';
+      case 'foto':
+        return 'ti ti-camera';
+      default:
+        return 'ti ti-photo';
+    }
+  };
+
+  // Get severity badge variant
+  const getSeverityVariant = (severity: 'low' | 'medium' | 'high') => {
+    switch (severity) {
+      case 'low':
+        return 'soft-success';
+      case 'medium':
+        return 'soft-warning';
+      case 'high':
+        return 'soft-danger';
+    }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Imaging & Radiology</h1>
-          <p className="text-sm text-foreground/60 mt-1">
-            X-rays, DICOM studies, and AI-powered analysis
-          </p>
-        </div>
-        <button className="flex items-center gap-2 px-6 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors font-medium">
-          <Icon name="plus" className="w-5 h-5" />
-          New Study
-        </button>
-      </div>
+    <AppShell
+      title="Imagistica"
+      subtitle="Radiografii si studii imagistice"
+      actions={
+        <Button icon="ti ti-upload" onClick={() => setShowUploadModal(true)}>
+          Incarca Imagine
+        </Button>
+      }
+    >
+      <div className="row">
+        {/* Filter Bar */}
+        <div className="col-12 mb-4">
+          <Card>
+            <CardBody>
+              <div className="row g-3 align-items-end">
+                {/* Search */}
+                <div className="col-lg-4 col-md-6">
+                  <SearchInput
+                    placeholder="Cauta pacient sau ID studiu..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onClear={() => setSearchQuery('')}
+                  />
+                </div>
 
-      {/* Modality Filter */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {modalityOptions.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => setModalityFilter(option.value as ModalityType)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-              modalityFilter === option.value
-                ? 'bg-brand text-white'
-                : 'bg-surface-hover text-foreground/70 hover:bg-surface-hover/80'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Studies Grid */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Icon name="loading" className="w-8 h-8 text-brand animate-spin" />
-        </div>
-      ) : studies.length === 0 ? (
-        <div className="p-12 text-center">
-          <Icon name="document" className="w-16 h-16 text-foreground/20 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground/60 mb-2">No imaging studies found</h3>
-          <p className="text-sm text-foreground/40">
-            {modalityFilter ? 'Try adjusting your filter' : 'Upload your first study to get started'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {studies.map((study) => (
-            <div
-              key={study.id}
-              onClick={() => setSelectedStudyId(study.id)}
-              className={`p-6 bg-surface rounded-lg border transition-all cursor-pointer ${
-                selectedStudyId === study.id
-                  ? 'border-brand ring-2 ring-brand/50'
-                  : 'border-white/10 hover:border-white/20'
-              }`}
-            >
-              {/* Study Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="text-sm font-medium text-foreground">{study.studyId}</div>
-                  <div className="text-xs text-foreground/50 mt-1">
-                    {new Date(study.studyDate).toLocaleDateString()}
+                {/* Modality Filters */}
+                <div className="col-lg-8 col-md-6">
+                  <div className="d-flex flex-wrap gap-2">
+                    {(Object.keys(modalityLabels) as ModalityType[]).map((type) => (
+                      <Button
+                        key={type}
+                        size="sm"
+                        variant={modalityFilter === type ? 'primary' : 'outline-primary'}
+                        onClick={() => setModalityFilter(type)}
+                        icon={type !== 'toate' ? getModalityIcon(type) : undefined}
+                      >
+                        {modalityLabels[type]}
+                      </Button>
+                    ))}
                   </div>
                 </div>
-                <span className={`px-2 py-1 rounded text-xs font-medium ${
-                  study.status === 'available' ? 'bg-green-500/20 text-green-300' :
-                  study.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' :
-                  'bg-gray-500/20 text-gray-400'
-                }`}>
-                  {study.status}
-                </span>
               </div>
+            </CardBody>
+          </Card>
+        </div>
 
-              {/* Modality Badge */}
-              <div className="inline-flex items-center px-3 py-1 bg-brand/20 text-brand rounded-full text-xs font-medium mb-3">
-                {study.modality}
-              </div>
+        {/* Studies Grid */}
+        {filteredStudies.length === 0 ? (
+          <div className="col-12">
+            <Card>
+              <CardBody>
+                <div className="text-center py-5">
+                  <div className="mb-4">
+                    <i className="ti ti-photo-off display-1 text-muted opacity-50"></i>
+                  </div>
+                  <h4 className="text-muted mb-2">Niciun studiu gasit</h4>
+                  <p className="text-muted mb-4">
+                    {searchQuery || modalityFilter !== 'toate'
+                      ? 'Incercati sa ajustati filtrele de cautare'
+                      : 'Incarcati prima imagine pentru a incepe'}
+                  </p>
+                  {!searchQuery && modalityFilter === 'toate' && (
+                    <Button icon="ti ti-upload" onClick={() => setShowUploadModal(true)}>
+                      Incarca Prima Imagine
+                    </Button>
+                  )}
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        ) : (
+          filteredStudies.map((study) => (
+            <div key={study.id} className="col-xl-3 col-lg-4 col-md-6 col-sm-12">
+              <Card hoverable onClick={() => setSelectedStudy(study)}>
+                <CardBody>
+                  {/* Thumbnail */}
+                  <div
+                    className="mb-3 rounded d-flex align-items-center justify-content-center bg-light"
+                    style={{ height: '180px', cursor: 'pointer' }}
+                  >
+                    {study.thumbnailUrl ? (
+                      <img
+                        src={study.thumbnailUrl}
+                        alt={study.patientName}
+                        className="img-fluid rounded"
+                      />
+                    ) : (
+                      <i
+                        className={`${getModalityIcon(study.studyType)} display-1 text-muted opacity-25`}
+                      ></i>
+                    )}
+                  </div>
 
-              {/* Description */}
-              {study.studyDescription && (
-                <p className="text-sm text-foreground/70 mb-4">{study.studyDescription}</p>
-              )}
+                  {/* Patient Name */}
+                  <h6 className="mb-1">{study.patientName}</h6>
+                  <p className="text-muted small mb-2">{study.patientId}</p>
 
-              {/* Files */}
-              <div className="flex items-center gap-2 text-xs text-foreground/50">
-                <Icon name="document" className="w-4 h-4" />
-                {study.files.length} file{study.files.length !== 1 ? 's' : ''}
+                  {/* Study Type & Date */}
+                  <div className="d-flex align-items-center justify-content-between mb-3">
+                    <Badge variant="soft-primary" icon={getModalityIcon(study.studyType)}>
+                      {modalityLabels[study.studyType]}
+                    </Badge>
+                    <span className="text-muted small">
+                      {format(study.dateTaken, 'dd MMM yyyy', { locale: ro })}
+                    </span>
+                  </div>
+
+                  {/* AI Analysis Badge */}
+                  {study.hasAIAnalysis && (
+                    <Badge variant="soft-purple" icon="ti ti-sparkles" size="sm">
+                      Analiza AI
+                    </Badge>
+                  )}
+                </CardBody>
+              </Card>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Study Detail Modal */}
+      {selectedStudy && (
+        <Modal
+          open={!!selectedStudy}
+          onClose={() => setSelectedStudy(null)}
+          title={`Studiu ${selectedStudy.id}`}
+          icon="ti ti-photo"
+          size="xl"
+          footer={
+            <div className="d-flex justify-content-between w-100">
+              <Button
+                variant="outline-primary"
+                icon="ti ti-download"
+                onClick={() => console.log('Download', selectedStudy.id)}
+              >
+                Descarca
+              </Button>
+              <Button variant="light" onClick={() => setSelectedStudy(null)}>
+                Inchide
+              </Button>
+            </div>
+          }
+        >
+          <div className="row g-4">
+            {/* Image Viewer */}
+            <div className="col-lg-8">
+              <div
+                className="bg-dark rounded d-flex align-items-center justify-content-center"
+                style={{ minHeight: '500px' }}
+              >
+                {selectedStudy.thumbnailUrl ? (
+                  <img
+                    src={selectedStudy.thumbnailUrl}
+                    alt={selectedStudy.patientName}
+                    className="img-fluid rounded"
+                    style={{ maxHeight: '500px' }}
+                  />
+                ) : (
+                  <div className="text-center">
+                    <i
+                      className={`${getModalityIcon(selectedStudy.studyType)} display-1 text-white opacity-25`}
+                    ></i>
+                    <p className="text-white-50 mt-3">Previzualizare imagine</p>
+                  </div>
+                )}
               </div>
             </div>
-          ))}
-        </div>
+
+            {/* Study Metadata */}
+            <div className="col-lg-4">
+              <Card>
+                <CardHeader title="Detalii Studiu" icon="ti ti-info-circle" />
+                <CardBody>
+                  <div className="mb-3">
+                    <label className="form-label text-muted small mb-1">Pacient</label>
+                    <p className="mb-0 fw-semibold">{selectedStudy.patientName}</p>
+                    <p className="text-muted small mb-0">{selectedStudy.patientId}</p>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label text-muted small mb-1">Tip Studiu</label>
+                    <div>
+                      <Badge variant="soft-primary" icon={getModalityIcon(selectedStudy.studyType)}>
+                        {modalityLabels[selectedStudy.studyType]}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label text-muted small mb-1">Data</label>
+                    <p className="mb-0">
+                      {format(selectedStudy.dateTaken, 'dd MMMM yyyy, HH:mm', { locale: ro })}
+                    </p>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label text-muted small mb-1">Doctor</label>
+                    <p className="mb-0">{selectedStudy.provider}</p>
+                  </div>
+
+                  {selectedStudy.notes && (
+                    <div>
+                      <label className="form-label text-muted small mb-1">Notite</label>
+                      <p className="mb-0 small">{selectedStudy.notes}</p>
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+
+              {/* AI Analysis Results */}
+              {selectedStudy.hasAIAnalysis && selectedStudy.aiFindings && (
+                <Card className="mt-3">
+                  <CardHeader title="Rezultate Analiza AI" icon="ti ti-sparkles" />
+                  <CardBody>
+                    {selectedStudy.aiFindings.length === 0 ? (
+                      <div className="text-center py-3">
+                        <i className="ti ti-robot-off text-muted opacity-50 display-4"></i>
+                        <p className="text-muted small mt-2 mb-0">
+                          Niciun rezultat disponibil
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {selectedStudy.aiFindings.map((finding) => (
+                          <div key={finding.id} className="border-bottom pb-3 mb-3 last:border-0">
+                            <div className="d-flex align-items-start justify-content-between mb-2">
+                              <div className="flex-grow-1">
+                                <p className="mb-1 fw-medium">{finding.description}</p>
+                                {finding.tooth && (
+                                  <p className="text-muted small mb-0">Dinte: {finding.tooth}</p>
+                                )}
+                              </div>
+                              <Badge variant={getSeverityVariant(finding.severity)} size="sm">
+                                {severityLabels[finding.severity]}
+                              </Badge>
+                            </div>
+                            <div className="d-flex align-items-center">
+                              <div className="flex-grow-1 me-2">
+                                <div className="progress" style={{ height: '6px' }}>
+                                  <div
+                                    className="progress-bar bg-primary"
+                                    role="progressbar"
+                                    style={{ width: `${finding.confidence * 100}%` }}
+                                    aria-valuenow={finding.confidence * 100}
+                                    aria-valuemin={0}
+                                    aria-valuemax={100}
+                                  ></div>
+                                </div>
+                              </div>
+                              <span className="text-muted small">
+                                {(finding.confidence * 100).toFixed(0)}%
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardBody>
+                </Card>
+              )}
+            </div>
+          </div>
+        </Modal>
       )}
 
-      {/* Study Details Modal */}
-      {selectedStudyId && selectedStudy?.data && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-bg border border-white/10 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="sticky top-0 bg-bg border-b border-white/10 p-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">{selectedStudy.data.studyId}</h2>
-                <p className="text-sm text-foreground/60 mt-1">
-                  {selectedStudy.data.modality} • {new Date(selectedStudy.data.studyDate).toLocaleDateString()}
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedStudyId(null)}
-                className="p-2 text-foreground/60 hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors"
-              >
-                <Icon name="x" className="w-6 h-6" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {/* Description */}
-              {selectedStudy.data.studyDescription && (
+      {/* Upload Modal */}
+      <Modal
+        open={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        title="Incarca Imagine Noua"
+        icon="ti ti-upload"
+        size="lg"
+        footer={
+          <div className="d-flex justify-content-end gap-2 w-100">
+            <Button variant="light" onClick={() => setShowUploadModal(false)}>
+              Anuleaza
+            </Button>
+            <Button
+              variant="primary"
+              icon="ti ti-upload"
+              onClick={handleUploadSubmit}
+              disabled={!uploadForm.selectedPatient || uploadForm.files.length === 0}
+            >
+              Incarca
+            </Button>
+          </div>
+        }
+      >
+        <div className="row g-4">
+          {/* Patient Search */}
+          <div className="col-12">
+            <Input
+              label="Pacient"
+              placeholder="Cauta si selecteaza pacient..."
+              icon="ti ti-user"
+              value={uploadForm.patientSearch}
+              onChange={(e) =>
+                setUploadForm((prev) => ({ ...prev, patientSearch: e.target.value }))
+              }
+              required
+            />
+            {uploadForm.selectedPatient && (
+              <div className="alert alert-success mt-2 d-flex align-items-center justify-content-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">Description</h3>
-                  <p className="text-foreground/70">{selectedStudy.data.studyDescription}</p>
+                  <i className="ti ti-check me-2"></i>
+                  <strong>{uploadForm.selectedPatient.name}</strong> selectat
                 </div>
-              )}
-
-              {/* Files */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">Files</h3>
-                  <label className="flex items-center gap-2 px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand/90 transition-colors cursor-pointer text-sm font-medium">
-                    <Icon name="plus" className="w-4 h-4" />
-                    Upload File
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*,.dcm"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleFileUpload(selectedStudyId, file);
-                      }}
-                    />
-                  </label>
-                </div>
-
-                {selectedStudy.data.files.length === 0 ? (
-                  <div className="p-8 text-center text-foreground/40 border border-dashed border-white/20 rounded-lg">
-                    No files uploaded yet
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    {selectedStudy.data.files.map((file) => (
-                      <div key={file.fileId} className="p-4 bg-surface rounded-lg border border-white/10">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-medium text-foreground truncate">
-                              {file.filename}
-                            </div>
-                            <div className="text-xs text-foreground/50 mt-1">
-                              {(file.fileSize / 1024 / 1024).toFixed(2)} MB
-                            </div>
-                          </div>
-                          <button className="text-brand hover:text-brand/80 text-xs font-medium ml-2">
-                            View
-                          </button>
-                        </div>
-                        <div className="text-xs text-foreground/40">
-                          {new Date(file.uploadedAt).toLocaleString()}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setUploadForm((prev) => ({ ...prev, selectedPatient: null }))}
+                ></button>
               </div>
+            )}
+          </div>
 
-              {/* AI Analysis */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-foreground">AI Analysis</h3>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleRequestAIAnalysis('caries_detection')}
-                      className="px-4 py-2 bg-purple-500/20 text-purple-300 rounded-lg hover:bg-purple-500/30 transition-colors text-sm"
-                    >
-                      Detect Caries
-                    </button>
-                    <button
-                      onClick={() => handleRequestAIAnalysis('periodontal_assessment')}
-                      className="px-4 py-2 bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-colors text-sm"
-                    >
-                      Periodontal
-                    </button>
-                    <button
-                      onClick={() => handleRequestAIAnalysis('bone_level')}
-                      className="px-4 py-2 bg-cyan-500/20 text-cyan-300 rounded-lg hover:bg-cyan-500/30 transition-colors text-sm"
-                    >
-                      Bone Level
-                    </button>
-                  </div>
-                </div>
+          {/* Modality Select */}
+          <div className="col-md-6">
+            <div className="form-group">
+              <label className="form-label">
+                Tip Studiu <span className="required">*</span>
+              </label>
+              <select
+                className="form-select"
+                value={uploadForm.modality}
+                onChange={(e) =>
+                  setUploadForm((prev) => ({
+                    ...prev,
+                    modality: e.target.value as ModalityType,
+                  }))
+                }
+              >
+                <option value="panoramic">Panoramic</option>
+                <option value="periapical">Periapical</option>
+                <option value="cbct">CBCT</option>
+                <option value="foto">Foto Intraorale</option>
+              </select>
+            </div>
+          </div>
 
-                {!aiResults?.data || aiResults.data.length === 0 ? (
-                  <div className="p-8 text-center text-foreground/40 border border-dashed border-white/20 rounded-lg">
-                    <Icon name="lightning" className="w-12 h-12 text-foreground/20 mx-auto mb-3" />
-                    <p className="text-sm">No AI analysis results yet</p>
-                    <p className="text-xs mt-1">Request an analysis to get started</p>
-                  </div>
+          {/* File Upload */}
+          <div className="col-12">
+            <div className="form-group">
+              <label className="form-label">
+                Fisiere <span className="required">*</span>
+              </label>
+              <div
+                className="border border-2 border-dashed rounded p-4 text-center"
+                style={{ cursor: 'pointer' }}
+                onClick={() => document.getElementById('file-upload')?.click()}
+              >
+                {uploadForm.files.length === 0 ? (
+                  <>
+                    <i className="ti ti-cloud-upload display-4 text-primary mb-2"></i>
+                    <p className="mb-1">Click pentru a selecta fisiere</p>
+                    <p className="text-muted small mb-0">sau gliseaza fisierele aici</p>
+                    <p className="text-muted small mt-2">
+                      Formate acceptate: JPG, PNG, DICOM (.dcm)
+                    </p>
+                  </>
                 ) : (
-                  <div className="space-y-4">
-                    {aiResults.data.map((result) => (
-                      <div key={result.resultId} className="p-4 bg-surface rounded-lg border border-white/10">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <div className="text-sm font-medium text-foreground capitalize">
-                              {result.analysisType.replace('_', ' ')}
-                            </div>
-                            <div className="text-xs text-foreground/50 mt-1">
-                              {new Date(result.analysisDate).toLocaleString()}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Overall Assessment */}
-                        <div className="mb-3 p-3 bg-surface-hover rounded-lg">
-                          <div className="text-xs text-foreground/50 mb-1">Overall Assessment</div>
-                          <p className="text-sm text-foreground">{result.overallAssessment}</p>
-                        </div>
-
-                        {/* Findings */}
-                        {result.findings.length > 0 && (
-                          <div>
-                            <div className="text-xs text-foreground/50 mb-2">Findings</div>
-                            <div className="space-y-2">
-                              {result.findings.map((finding, idx) => (
-                                <div key={idx} className="flex items-start gap-3 text-sm">
-                                  <span className="px-2 py-1 bg-brand/20 text-brand rounded text-xs font-medium">
-                                    Tooth {finding.tooth}
-                                  </span>
-                                  <div className="flex-1">
-                                    <div className="text-foreground">{finding.finding}</div>
-                                    <div className="text-foreground/50 text-xs mt-1">
-                                      {finding.surface} • Confidence: {(finding.confidence * 100).toFixed(0)}%
-                                      {finding.severity && ` • ${finding.severity}`}
-                                    </div>
-                                  </div>
-                                  {finding.severity && (
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                                      finding.severity === 'severe' ? 'bg-red-500/20 text-red-300' :
-                                      finding.severity === 'moderate' ? 'bg-yellow-500/20 text-yellow-300' :
-                                      'bg-green-500/20 text-green-300'
-                                    }`}>
-                                      {finding.severity}
-                                    </span>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                  <div>
+                    <i className="ti ti-file-check display-4 text-success mb-2"></i>
+                    <p className="mb-1">
+                      <strong>{uploadForm.files.length}</strong> fisier(e) selectat(e)
+                    </p>
+                    <ul className="list-unstyled small text-start mt-2">
+                      {uploadForm.files.map((file, idx) => (
+                        <li key={idx} className="mb-1">
+                          <i className="ti ti-file me-2"></i>
+                          {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 )}
+                <input
+                  id="file-upload"
+                  type="file"
+                  multiple
+                  accept="image/*,.dcm"
+                  onChange={handleFileSelect}
+                  className="d-none"
+                />
               </div>
             </div>
           </div>
+
+          {/* Notes */}
+          <div className="col-12">
+            <Textarea
+              label="Notite (optional)"
+              placeholder="Adauga notite despre studiu..."
+              rows={3}
+              value={uploadForm.notes}
+              onChange={(e) => setUploadForm((prev) => ({ ...prev, notes: e.target.value }))}
+            />
+          </div>
         </div>
-      )}
-    </div>
+      </Modal>
+    </AppShell>
   );
 }
+
+export default ImagingPage;

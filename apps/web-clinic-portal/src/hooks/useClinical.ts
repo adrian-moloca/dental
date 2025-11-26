@@ -218,7 +218,10 @@ export function useUpdateOdontogram() {
 export function useProcedureCatalog(search?: string, category?: string) {
   return useQuery({
     queryKey: clinicalKeys.procedureCatalog(search, category),
-    queryFn: () => clinicalClient.getProcedureCatalog({ search, category, limit: 50 }),
+    queryFn: async () => {
+      const response = await clinicalClient.getProcedureCatalog({ search, category, limit: 50 });
+      return response.data; // Unwrap axios response to get ProcedureCatalogResponse
+    },
     enabled: search !== undefined && search.length >= 2,
     staleTime: 5 * 60 * 1000,
   });

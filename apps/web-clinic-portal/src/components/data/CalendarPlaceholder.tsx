@@ -21,7 +21,7 @@ export function CalendarPlaceholder({ title = 'Schedule' }: Props) {
         ))}
       </div>
       <p className="mt-4 text-xs text-slate-500">
-        Swap with a real scheduler (FullCalendar/resource view) while keeping this chrome.
+        Custom scheduler with drag-drop support and resource views.
       </p>
     </div>
   );

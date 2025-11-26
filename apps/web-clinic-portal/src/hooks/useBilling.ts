@@ -4,7 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { billingClient } from '../api/billingClient';
-import type { InvoiceDto, PaymentDto, RecordPaymentRequest, RecordPaymentResponse } from '../api/billingClient';
+import type { InvoiceDto, PaymentDto, RecordPaymentRequest } from '../api/billingClient';
 import { toast } from 'react-hot-toast';
 
 // Query Keys

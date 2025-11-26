@@ -7,6 +7,7 @@
 export type AppointmentStatus =
   | 'pending'
   | 'confirmed'
+  | 'checked_in'
   | 'in_progress'
   | 'completed'
   | 'cancelled'
@@ -74,6 +75,20 @@ export interface AppointmentDto {
   confirmedBy?: string;
   createdAt: Date;
   updatedAt: Date;
+
+  // Additional fields for UI/pages
+  startTime: string; // ISO date string
+  endTime: string; // ISO date string
+  notes?: string;
+  reasonForVisit?: string;
+  providerName?: string;
+  appointmentType?: {
+    name: string;
+  };
+  provider?: {
+    firstName?: string;
+    lastName?: string;
+  };
 }
 
 export interface AppointmentListResponse {

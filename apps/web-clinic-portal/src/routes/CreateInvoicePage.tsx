@@ -1,33 +1,35 @@
 /**
- * Create Invoice Page
+ * Create Invoice Page - Preclinic-style
  *
- * Complete workflow for creating new patient invoices with:
- * - Patient selection
- * - Line item management
- * - Automatic tax calculation (19% VAT for Romania)
- * - Discount options
- * - Payment terms
- * - Preview before submission
+ * Wizard for creating new patient invoices with line items,
+ * tax calculation, and payment terms.
  */
 
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateInvoice } from '../hooks/useBilling';
+import { AppShell } from '../components/layout/AppShell';
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  Button,
+} from '../components/ui-new';
 import { InvoiceFormWizard } from '../components/billing/InvoiceFormWizard';
-import { Icon } from '../components/ui/Icon';
+import toast from 'react-hot-toast';
 
 export function CreateInvoicePage() {
   const navigate = useNavigate();
   const createInvoiceMutation = useCreateInvoice();
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data: Record<string, unknown>) => {
     try {
       const result = await createInvoiceMutation.mutateAsync(data);
       const invoiceId = result.data.id;
+      toast.success('Factura creata cu succes!');
       navigate(`/billing/invoices/${invoiceId}`);
     } catch (error) {
-      // Error already handled by mutation (toast)
       console.error('Failed to create invoice:', error);
+      toast.error('Eroare la crearea facturii');
     }
   };
 
@@ -36,36 +38,38 @@ export function CreateInvoicePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b border-white/10 bg-surface">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleCancel}
-              className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
-              aria-label="Back to billing"
-            >
-              <Icon name="arrow-left" className="w-5 h-5 text-foreground/60" />
-            </button>
+    <AppShell
+      title="Factura Noua"
+      subtitle="Creeaza o factura pentru pacient"
+      actions={
+        <Button variant="outline-secondary" onClick={handleCancel}>
+          <i className="ti ti-arrow-left me-1"></i>
+          Inapoi la Facturare
+        </Button>
+      }
+    >
+      <Card className="shadow-sm">
+        <CardHeader>
+          <div className="d-flex align-items-center gap-2">
+            <div className="avatar avatar-sm bg-primary-transparent rounded">
+              <i className="ti ti-file-invoice text-primary"></i>
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Create Invoice</h1>
-              <p className="text-sm text-foreground/60 mt-1">
-                Create a new invoice for a patient
-              </p>
+              <h5 className="card-title mb-0">Detalii Factura</h5>
+              <small className="text-muted">Completeaza informatiile pentru a genera factura</small>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <InvoiceFormWizard
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-          isSubmitting={createInvoiceMutation.isPending}
-        />
-      </div>
-    </div>
+        </CardHeader>
+        <CardBody>
+          <InvoiceFormWizard
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            isSubmitting={createInvoiceMutation.isPending}
+          />
+        </CardBody>
+      </Card>
+    </AppShell>
   );
 }
+
+export default CreateInvoicePage;

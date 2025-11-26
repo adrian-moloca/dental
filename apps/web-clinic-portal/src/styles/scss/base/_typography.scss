@@ -1,0 +1,383 @@
+// Typography Styles
+// Headings, text styles, and font utilities
+
+// Headings
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: $font-family-base;
+  font-weight: $font-weight-semibold;
+  color: var(--heading-color);
+  line-height: 1.3;
+  margin-bottom: 0.5rem;
+}
+
+h1, .h1 {
+  font-size: 2rem;
+  font-weight: $font-weight-bold;
+
+  @media (max-width: 767.98px) {
+    font-size: 1.75rem;
+  }
+}
+
+h2, .h2 {
+  font-size: 1.75rem;
+
+  @media (max-width: 767.98px) {
+    font-size: 1.5rem;
+  }
+}
+
+h3, .h3 {
+  font-size: 1.5rem;
+
+  @media (max-width: 767.98px) {
+    font-size: 1.25rem;
+  }
+}
+
+h4, .h4 {
+  font-size: 1.25rem;
+}
+
+h5, .h5 {
+  font-size: 1.125rem;
+}
+
+h6, .h6 {
+  font-size: 1rem;
+}
+
+// Paragraphs
+p {
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Lead text
+.lead {
+  font-size: 1.125rem;
+  font-weight: $font-weight-normal;
+  line-height: 1.6;
+}
+
+// Small text
+.small, small {
+  font-size: 0.8125rem;
+}
+
+// Extra small text
+.x-small {
+  font-size: 0.75rem;
+}
+
+// Display Headings
+.display-1 {
+  font-size: 5rem;
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+}
+
+.display-2 {
+  font-size: 4.5rem;
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+}
+
+.display-3 {
+  font-size: 4rem;
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+}
+
+.display-4 {
+  font-size: 3.5rem;
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+}
+
+.display-5 {
+  font-size: 3rem;
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+}
+
+.display-6 {
+  font-size: 2.5rem;
+  font-weight: $font-weight-bold;
+  line-height: 1.1;
+}
+
+// Text Muted
+.text-muted {
+  color: var(--gray-500);
+}
+
+// Blockquote
+blockquote, .blockquote {
+  padding: 1rem 1.5rem;
+  margin: 1rem 0;
+  border-left: 4px solid var(--primary);
+  background: var(--light-900);
+  border-radius: 0 8px 8px 0;
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--gray-700);
+  }
+
+  .blockquote-footer {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    font-style: normal;
+
+    &::before {
+      content: "— ";
+    }
+  }
+}
+
+// Lists
+.list-styled {
+  padding-left: 1.5rem;
+  list-style-type: disc;
+
+  li {
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  &.list-styled-primary {
+    li::marker {
+      color: var(--primary);
+    }
+  }
+}
+
+.list-numbered {
+  padding-left: 1.5rem;
+  list-style-type: decimal;
+
+  li {
+    margin-bottom: 0.5rem;
+    padding-left: 0.5rem;
+  }
+}
+
+// Definition List
+dl {
+  dt {
+    font-weight: $font-weight-semibold;
+    color: var(--heading-color);
+    margin-bottom: 0.25rem;
+  }
+
+  dd {
+    margin-bottom: 1rem;
+    color: var(--gray-600);
+  }
+}
+
+// Horizontal Definition List
+.dl-horizontal {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.5rem 1rem;
+
+  dt {
+    grid-column: 1;
+    margin-bottom: 0;
+  }
+
+  dd {
+    grid-column: 2;
+    margin-bottom: 0;
+  }
+}
+
+// Code
+code {
+  font-size: 0.875em;
+  padding: 0.2em 0.4em;
+  background-color: var(--light-900);
+  border-radius: 4px;
+  color: var(--danger);
+}
+
+pre {
+  display: block;
+  margin: 1rem 0;
+  padding: 1rem;
+  font-size: 0.875rem;
+  background-color: var(--gray-900);
+  color: var(--light);
+  border-radius: 8px;
+  overflow-x: auto;
+
+  code {
+    font-size: inherit;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    border-radius: 0;
+  }
+}
+
+kbd {
+  padding: 0.2em 0.4em;
+  font-size: 0.875em;
+  background-color: var(--gray-900);
+  color: var(--white);
+  border-radius: 4px;
+}
+
+// Mark/Highlight
+mark, .mark {
+  padding: 0.1em 0.3em;
+  background-color: var(--warning-transparent);
+  border-radius: 2px;
+}
+
+// Abbreviation
+abbr[title] {
+  text-decoration: underline dotted;
+  cursor: help;
+  border-bottom: 0;
+}
+
+// Address
+address {
+  font-style: normal;
+  line-height: 1.6;
+}
+
+// Initialism (Small Caps)
+.initialism {
+  font-size: 0.875em;
+  text-transform: uppercase;
+}
+
+// Text Colors (Semantic)
+.text-primary { color: var(--primary) !important; }
+.text-secondary { color: var(--secondary) !important; }
+.text-success { color: var(--success) !important; }
+.text-danger { color: var(--danger) !important; }
+.text-warning { color: var(--warning) !important; }
+.text-info { color: var(--info) !important; }
+.text-light { color: var(--gray-300) !important; }
+.text-dark { color: var(--gray-900) !important; }
+.text-body { color: var(--body-color) !important; }
+
+// Link Styles
+.link-primary {
+  color: var(--primary);
+
+  &:hover {
+    color: var(--primary-hover);
+  }
+}
+
+.link-secondary {
+  color: var(--secondary);
+
+  &:hover {
+    color: var(--secondary-hover);
+  }
+}
+
+.link-danger {
+  color: var(--danger);
+
+  &:hover {
+    color: var(--danger-hover);
+  }
+}
+
+.link-muted {
+  color: var(--gray-500);
+
+  &:hover {
+    color: var(--gray-700);
+  }
+}
+
+// Stretched Link
+.stretched-link::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  content: "";
+}
+
+// Icon Text Combo
+.icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i {
+    font-size: 1.125em;
+    flex-shrink: 0;
+  }
+}
+
+// Label Text (for data displays)
+.label-text {
+  font-size: 0.75rem;
+  font-weight: $font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-500);
+  margin-bottom: 0.25rem;
+}
+
+.value-text {
+  font-size: 1rem;
+  font-weight: $font-weight-semibold;
+  color: var(--heading-color);
+}
+
+// Number Display
+.number-display {
+  font-size: 2rem;
+  font-weight: $font-weight-bold;
+  color: var(--heading-color);
+  line-height: 1.2;
+
+  &.number-sm {
+    font-size: 1.5rem;
+  }
+
+  &.number-lg {
+    font-size: 2.5rem;
+  }
+
+  &.number-xl {
+    font-size: 3rem;
+  }
+}
+
+// Currency Display
+.currency {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+// Responsive Typography
+@media (max-width: 575.98px) {
+  .display-1 { font-size: 3rem; }
+  .display-2 { font-size: 2.75rem; }
+  .display-3 { font-size: 2.5rem; }
+  .display-4 { font-size: 2.25rem; }
+  .display-5 { font-size: 2rem; }
+  .display-6 { font-size: 1.75rem; }
+}

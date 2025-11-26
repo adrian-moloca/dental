@@ -21,11 +21,12 @@ interface AuthState {
   isInitializing: boolean;
   error: string | null;
 
-  login: (email: string, password: string) => Promise<LoginSmartResponseDto>;
+  login: (email: string, password: string, rememberMe?: boolean) => Promise<LoginSmartResponseDto>;
   loginSelectOrg: (
     email: string,
     password: string,
-    organizationId: string
+    organizationId: string,
+    rememberMe?: boolean
   ) => Promise<void>;
   logout: () => Promise<void>;
   loadUserFromStorage: () => Promise<void>;
@@ -43,11 +44,12 @@ export const useAuthStore = create<AuthState>((set) => ({
    * Smart login with email and password only
    * Returns response indicating if org selection is needed
    */
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string, rememberMe: boolean = false) => {
     set({ isLoading: true, error: null });
     try {
       console.log('=== AUTH STORE - login CALLED ===');
       console.log('Email:', email);
+      console.log('Remember Me:', rememberMe);
 
       const response: LoginSmartResponseDto = await authClient.loginSmart({
         email,
@@ -64,9 +66,9 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       // If single org: complete login immediately
       if (!response.needsOrgSelection && response.accessToken && response.user) {
-        tokenStorage.setAccessToken(response.accessToken);
-        tokenStorage.setRefreshToken(response.refreshToken!);
-        tokenStorage.setUser(response.user);
+        tokenStorage.setAccessToken(response.accessToken, rememberMe);
+        tokenStorage.setRefreshToken(response.refreshToken!, rememberMe);
+        tokenStorage.setUser(response.user, rememberMe);
 
         set({
           user: response.user,
@@ -97,7 +99,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   loginSelectOrg: async (
     email: string,
     password: string,
-    organizationId: string
+    organizationId: string,
+    rememberMe: boolean = false
   ) => {
     set({ isLoading: true, error: null });
     try {
@@ -107,9 +110,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         organizationId,
       });
 
-      tokenStorage.setAccessToken(response.accessToken);
-      tokenStorage.setRefreshToken(response.refreshToken);
-      tokenStorage.setUser(response.user);
+      tokenStorage.setAccessToken(response.accessToken, rememberMe);
+      tokenStorage.setRefreshToken(response.refreshToken, rememberMe);
+      tokenStorage.setUser(response.user, rememberMe);
 
       set({
         user: response.user,
@@ -173,9 +176,11 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
           const response = await authClient.refresh({ refreshToken });
 
-          tokenStorage.setAccessToken(response.accessToken);
-          tokenStorage.setRefreshToken(response.refreshToken);
-          tokenStorage.setUser(response.user);
+          // Determine if user was using rememberMe (if tokens were in localStorage)
+          const wasRemembered = !!localStorage.getItem('dentalos_access_token');
+          tokenStorage.setAccessToken(response.accessToken, wasRemembered);
+          tokenStorage.setRefreshToken(response.refreshToken, wasRemembered);
+          tokenStorage.setUser(response.user, wasRemembered);
 
           set({
             user: response.user,

@@ -5,7 +5,7 @@ import clsx from 'clsx';
 type Toast = {
   id: string;
   message: string;
-  tone?: 'success' | 'error' | 'info';
+  tone?: 'success' | 'error' | 'info' | 'warning';
 };
 
 type ToastContextValue = {
@@ -39,6 +39,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 'rounded-lg px-4 py-3 text-sm shadow-soft border',
                 t.tone === 'success' && 'bg-emerald-600 text-white border-emerald-400',
                 t.tone === 'error' && 'bg-red-600 text-white border-red-400',
+                t.tone === 'warning' && 'bg-amber-600 text-white border-amber-400',
                 (!t.tone || t.tone === 'info') && 'bg-ink-800 text-white border-white/10',
               )}
             >

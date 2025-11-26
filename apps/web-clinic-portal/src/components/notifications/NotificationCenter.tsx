@@ -4,7 +4,6 @@
 
 import { useState, useMemo } from 'react';
 import { Icon } from '../ui/Icon';
-import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import clsx from 'clsx';
 

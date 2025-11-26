@@ -4,7 +4,7 @@
  * Security settings page with MFA management
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { NewAppShell } from '../components/layout/NewAppShell';
@@ -58,8 +58,8 @@ export default function SettingsSecurityPage() {
     onSuccess: (data) => {
       setEnrollmentData(data);
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Failed to start MFA enrollment');
+    onError: () => {
+      toast.error('Failed to start MFA enrollment');
       setShowSetupModal(false);
     },
   });
@@ -72,8 +72,8 @@ export default function SettingsSecurityPage() {
       toast.success('Two-factor authentication has been enabled');
       queryClient.invalidateQueries({ queryKey: ['mfa', 'status'] });
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Invalid verification code. Please try again.');
+    onError: () => {
+      toast.error('Invalid verification code. Please try again.');
     },
   });
 
@@ -85,8 +85,8 @@ export default function SettingsSecurityPage() {
       setShowDisableModal(false);
       queryClient.invalidateQueries({ queryKey: ['mfa', 'status'] });
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Failed to disable MFA. Check your password.');
+    onError: () => {
+      toast.error('Failed to disable MFA. Check your password.');
     },
   });
 
@@ -97,8 +97,8 @@ export default function SettingsSecurityPage() {
       toast.success('New backup codes generated');
       queryClient.setQueryData(['mfa', 'backup-codes'], data);
     },
-    onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Failed to regenerate backup codes');
+    onError: () => {
+      toast.error('Failed to regenerate backup codes');
     },
   });
 

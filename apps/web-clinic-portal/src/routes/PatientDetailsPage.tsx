@@ -1,333 +1,780 @@
 /**
- * Patient Details Page
+ * Patient Details Page - Modern Preclinic Design
+ *
+ * Comprehensive patient profile with medical alerts, stats, tabbed content, and quick actions.
  */
 
-import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { usePatient, useUpdatePatient, useDeletePatient, usePatientBalance } from '../hooks/usePatients';
+import { useParams, useNavigate } from 'react-router-dom';
+import { usePatient, usePatientBalance, useDeletePatient } from '../hooks/usePatients';
 import { useAppointments } from '../hooks/useAppointments';
 import { AppShell } from '../components/layout/AppShell';
-import { Card } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
-import { Button } from '../components/ui/Button';
-import { Tabs } from '../components/ui/Tabs';
-import { Timeline } from '../components/data/Timeline';
-import { DocumentList } from '../components/data/DocumentList';
-import { PatientForm } from '../components/patients/PatientForm';
-import { AlertBanner } from '../components/patients/AlertBanner';
-import { BalanceCard } from '../components/patients/BalanceCard';
-import { VisitHistory } from '../components/patients/VisitHistory';
-import type { CreatePatientDto } from '../types/patient.types';
+import {
+  Card,
+  CardHeader,
+  CardBody,
+  Button,
+  Badge,
+  StatusBadge,
+  StatsCard,
+} from '../components/ui-new';
+import { format } from 'date-fns';
+import { ro } from 'date-fns/locale';
+import toast from 'react-hot-toast';
+
+type TabType = 'overview' | 'timeline' | 'documents';
+
+// Type definitions for nested data structures
+interface Allergy {
+  allergen: string;
+  severity?: string;
+  reaction?: string;
+}
+
+interface MedicalCondition {
+  condition?: string;
+}
+
+interface Medication {
+  name?: string;
+  dosage?: string;
+}
+
+interface InsuranceInfo {
+  provider?: string;
+  policyNumber?: string;
+  coverage?: {
+    annual_max?: number;
+    remaining?: number;
+  };
+}
+
+interface FamilyMember {
+  name?: string;
+  relationship?: string;
+  isPrimaryContact?: boolean;
+}
+
+interface AppointmentItem {
+  id: string;
+  status: string;
+  startTime: string;
+  appointmentType?: {
+    name: string;
+  };
+  provider?: {
+    firstName?: string;
+    lastName?: string;
+  };
+  providerName?: string;
+  notes?: string;
+  reasonForVisit?: string;
+}
 
 export default function PatientDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data, isLoading, error } = usePatient(id);
-  const { data: balanceData, isLoading: balanceLoading } = usePatientBalance(id);
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+
+  // Fetch patient data
+  const { data: patientData, isLoading, error } = usePatient(id);
+  const { data: balanceData } = usePatientBalance(id);
   const { data: appointmentsData, isLoading: appointmentsLoading } = useAppointments({
     patientId: id,
-    status: 'completed',
-    limit: 3,
+    limit: 10,
   });
-  const updatePatient = useUpdatePatient();
   const deletePatient = useDeletePatient();
-  const [activeTab, setActiveTab] = useState<'overview' | 'timeline' | 'documents'>('overview');
-  const [isEditing, setIsEditing] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
 
-  const handleUpdate = async (formData: CreatePatientDto) => {
-    if (!id) return;
+  const patient = patientData?.data;
 
-    try {
-      setErrorMessage('');
-      await updatePatient.mutateAsync({ id, data: formData });
-      setIsEditing(false);
-    } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || error.message || 'Failed to update patient');
-    }
+  // Calculate stats
+  const totalVisits = appointmentsData?.data?.filter((a: { status: string }) => a.status === 'completed')?.length || 0;
+  const outstandingBalance = balanceData?.data?.currentBalance || 0;
+  const lastVisit = appointmentsData?.data?.find((a: { status: string }) => a.status === 'completed');
+  const nextAppointment = appointmentsData?.data?.find(
+    (a: { status: string }) => a.status === 'scheduled' || a.status === 'confirmed'
+  );
+
+  // Format currency
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('ro-RO', {
+      style: 'currency',
+      currency: 'RON',
+      minimumFractionDigits: 2,
+    }).format(amount);
   };
 
+  // Handle delete
   const handleDelete = async () => {
     if (!id) return;
-    if (!confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
+    if (!window.confirm('Esti sigur ca vrei sa stergi acest pacient? Aceasta actiune nu poate fi anulata.')) {
       return;
     }
 
     try {
       await deletePatient.mutateAsync(id);
+      toast.success('Pacient sters cu succes');
       navigate('/patients');
-    } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || error.message || 'Failed to delete patient');
+    } catch {
+      toast.error('Eroare la stergerea pacientului');
     }
   };
 
-  const handleCollectPayment = () => {
-    navigate(`/billing/payments/new?patientId=${id}`);
-  };
-
+  // Loading state
   if (isLoading) {
     return (
-      <AppShell title="Patient details">
-        <Card tone="glass" padding="lg">
-          <div className="flex items-center justify-center py-12">
-            <div className="flex flex-col items-center gap-3">
-              <div className="animate-spin h-8 w-8 border-4 border-brand-300 border-t-transparent rounded-full" />
-              <p className="text-slate-300">Loading patient details...</p>
+      <AppShell title="Detalii Pacient">
+        <Card className="shadow-sm">
+          <CardBody>
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Se incarca...</span>
+              </div>
+              <p className="text-muted mt-3">Se incarca detaliile pacientului...</p>
             </div>
-          </div>
+          </CardBody>
         </Card>
       </AppShell>
     );
   }
 
-  if (error) {
+  // Error state
+  if (error || !patient) {
     return (
-      <AppShell title="Patient details">
-        <Card tone="glass" padding="lg" className="text-red-300 border border-red-500/30">
-          <h3 className="font-semibold mb-2">Error loading patient</h3>
-          <p className="text-sm">{(error as Error).message}</p>
+      <AppShell title="Detalii Pacient">
+        <Card className="shadow-sm border-danger">
+          <CardBody className="text-center py-5">
+            <div className="avatar avatar-xl bg-danger-transparent rounded-circle mx-auto mb-3">
+              <i className="ti ti-alert-circle fs-32 text-danger"></i>
+            </div>
+            <h5 className="fw-bold mb-2">Eroare la incarcarea pacientului</h5>
+            <p className="text-muted mb-4">
+              {error ? (error as Error).message : 'Pacientul nu a fost gasit'}
+            </p>
+            <div className="d-flex gap-2 justify-content-center">
+              <Button variant="outline-primary" onClick={() => window.location.reload()}>
+                <i className="ti ti-refresh me-1"></i>
+                Reincearca
+              </Button>
+              <Button variant="outline-secondary" onClick={() => navigate('/patients')}>
+                <i className="ti ti-arrow-left me-1"></i>
+                Inapoi la Pacienti
+              </Button>
+            </div>
+          </CardBody>
         </Card>
       </AppShell>
     );
   }
 
-  if (!data) {
-    return (
-      <AppShell title="Patient details">
-        <Card tone="glass" padding="lg">
-          <p className="text-slate-300">Patient not found</p>
-        </Card>
-      </AppShell>
-    );
-  }
-
-  const patient = data.data;
-
-  // Extract medical alerts from patient data
-  const allergies = patient.medicalHistory?.allergies;
-  const medicalConditions = patient.medicalHistory?.conditions;
-  const medications = patient.medicalHistory?.medications;
-
-  // Transform appointments to visits
-  const visits = appointmentsData?.data?.map((apt: any) => ({
-    id: apt.id,
-    appointmentDate: apt.startTime,
-    appointmentType: apt.appointmentType?.name || 'General Visit',
-    status: apt.status === 'completed' ? 'completed' : apt.status === 'no_show' ? 'no_show' : 'cancelled',
-    providerName: apt.providerName || apt.provider?.name,
-    proceduresSummary: apt.notes || apt.reasonForVisit,
-    notes: apt.internalNotes,
-  })) || [];
-
-  const timelineItems = [
-    { id: 't1', title: 'Appointment completed', detail: 'Prophylaxis + fluoride', time: 'Today 10:30', tone: 'success' as const },
-    { id: 't2', title: 'Treatment plan accepted', detail: 'Ortho aligners phase 1', time: 'Yesterday', tone: 'info' as const },
-    { id: 't3', title: 'Invoice issued', detail: 'INV-204 • RON 320', time: '3 days ago', tone: 'info' as const },
-  ];
-  const documents = [
-    { id: 'd1', name: 'Panoramic X-Ray.pdf', type: 'X-Ray', uploadedAt: new Date().toISOString(), size: '1.2 MB' },
-    { id: 'd2', name: 'Consent Form.pdf', type: 'Consent', uploadedAt: new Date().toISOString(), size: '220 KB' },
-  ];
+  // Extract medical alerts
+  const allergies = (patient.medicalHistory?.allergies || []) as Allergy[];
+  const medicalConditions = (patient.medicalHistory?.conditions || []) as (MedicalCondition | string)[];
+  const medications = (patient.medicalHistory?.medications || []) as (Medication | string)[];
+  const hasAlerts = allergies.length > 0 || medicalConditions.length > 0 || medications.length > 0;
 
   return (
     <AppShell
-      title={`${patient.firstName} ${patient.lastName}`}
-      subtitle="Patient profile, contacts, and next actions."
+      title="Detalii Pacient"
+      subtitle="Profil complet, contact si istoricul pacientului"
       actions={
-        <div className="flex gap-2">
-          {!isEditing && (
-            <>
-              <Button
-                variant="ghost"
-                onClick={() => setIsEditing(true)}
-              >
-                Edit Patient
-              </Button>
-              <Button
-                as={Link}
-                to="/patients"
-                variant="ghost"
-              >
-                Back to patients
-              </Button>
-            </>
-          )}
+        <div className="d-flex gap-2">
+          <Button variant="outline-secondary" onClick={() => navigate('/patients')}>
+            <i className="ti ti-arrow-left me-1"></i>
+            Inapoi
+          </Button>
         </div>
       }
     >
-      <div className="space-y-6">
-        {errorMessage && (
-          <Card tone="glass" padding="lg" className="text-red-300 border border-red-500/30">
-            {errorMessage}
-          </Card>
-        )}
-
-        {isEditing ? (
-          <Card tone="glass" padding="lg">
-            <PatientForm
-              initialData={{
-                ...patient,
-                gender: patient.gender as 'male' | 'female' | 'other' | undefined,
-              }}
-              onSubmit={handleUpdate}
-              onCancel={() => {
-                setIsEditing(false);
-                setErrorMessage('');
-              }}
-              isSubmitting={updatePatient.isPending}
-              mode="edit"
-            />
-          </Card>
-        ) : (
-          <>
-            <div className="flex flex-wrap items-center gap-3">
-              <Tabs
-                tabs={[
-                  { id: 'overview', label: 'Overview' },
-                  { id: 'timeline', label: 'Timeline', badge: timelineItems.length },
-                  { id: 'documents', label: 'Documents', badge: documents.length },
-                ]}
-                defaultTab="overview"
-                onChange={(id) => setActiveTab(id as 'overview' | 'timeline' | 'documents')}
-              />
-              <Button
-                as={Link}
-                to="/appointments/create"
-                state={{ patientId: patient.id }}
-              >
-                Create appointment
-              </Button>
-            </div>
-
-            {activeTab === 'overview' && (
-              <>
-                {/* Medical Alerts Banner - Full Width */}
-                <AlertBanner
-                  allergies={allergies}
-                  medicalConditions={medicalConditions}
-                  medications={medications}
-                />
-
-                <div className="grid gap-6 lg:grid-cols-3">
-                  {/* Left Column - Patient Info + Visit History */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <Card padding="lg" tone="glass" className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-brand-500/30 border border-brand-300/40 flex items-center justify-center text-white font-semibold">
-                      {patient.firstName?.[0]}
-                      {patient.lastName?.[0]}
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-300">Patient information</p>
-                      <p className="text-lg font-semibold text-white">
-                        {patient.firstName} {patient.lastName}
-                      </p>
-                    </div>
-                    <Badge tone="neutral">Active</Badge>
+      {/* Patient Header Section */}
+      <Card className="shadow-sm mb-4">
+        <CardBody>
+          <div className="row align-items-center">
+            {/* Avatar and Name */}
+            <div className="col-md-6 mb-3 mb-md-0">
+              <div className="d-flex align-items-center gap-3">
+                <div
+                  className="avatar avatar-xxl rounded-circle bg-primary-transparent d-flex align-items-center justify-content-center"
+                  style={{ fontSize: 32, fontWeight: 600 }}
+                >
+                  {patient.firstName?.[0]}
+                  {patient.lastName?.[0]}
+                </div>
+                <div>
+                  <h3 className="mb-1 fw-bold">
+                    {patient.firstName} {patient.lastName}
+                  </h3>
+                  <div className="d-flex align-items-center gap-2 mb-2">
+                    <Badge variant="soft-secondary" size="sm">
+                      ID: {patient.patientNumber || patient.id?.slice(0, 8)}
+                    </Badge>
+                    <StatusBadge status="active">Activ</StatusBadge>
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Date of birth" value={new Date(patient.dateOfBirth).toLocaleDateString()} />
-                    <Field label="Gender" value={patient.gender || 'Not specified'} />
-                    <Field label="Email" value={patient.emails?.[0]?.address || 'N/A'} />
-                    <Field label="Phone" value={patient.phones?.[0]?.number || 'N/A'} />
-                  </div>
-                  {patient.address && (
-                    <div>
-                      <Field
-                        label="Address"
-                        value={`${patient.address.street || ''}, ${patient.address.city || ''}, ${patient.address.state || ''} ${patient.address.postalCode || ''}`.trim() || 'N/A'}
-                      />
-                    </div>
-                  )}
-                  {patient.notes && (
-                    <div>
-                      <Field label="Notes" value={patient.notes} />
-                    </div>
-                  )}
-                      <div className="pt-4 border-t border-white/10">
-                        <Button
-                          variant="ghost"
-                          onClick={handleDelete}
-                          className="text-red-400 hover:text-red-300 hover:border-red-500/50"
-                        >
-                          Delete Patient
-                        </Button>
-                      </div>
-                    </Card>
-
-                    {/* Visit History */}
-                    <VisitHistory
-                      visits={visits}
-                      patientId={patient.id}
-                      isLoading={appointmentsLoading}
-                    />
-                  </div>
-
-                  {/* Right Column - Quick Actions + Balance */}
-                  <div className="space-y-6">
-                    {/* Balance Card */}
-                    {balanceData && (
-                      <BalanceCard
-                        balance={balanceData}
-                        onCollectPayment={handleCollectPayment}
-                        isLoading={balanceLoading}
-                      />
+                  <div className="text-muted small">
+                    <i className="ti ti-calendar me-1"></i>
+                    {patient.dateOfBirth &&
+                      format(new Date(patient.dateOfBirth), 'dd MMMM yyyy', { locale: ro })}
+                    {' • '}
+                    {patient.gender && (
+                      <>
+                        <i className="ti ti-user me-1"></i>
+                        {patient.gender === 'male' ? 'Barbat' : patient.gender === 'female' ? 'Femeie' : 'Altul'}
+                      </>
                     )}
-
-                    {/* Quick Actions Card */}
-                    <Card padding="lg" tone="glass" className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-slate-400">Quick Actions</p>
-                          <p className="text-lg font-semibold text-white">Patient Management</p>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Button
-                          as={Link}
-                          to="/appointments/create"
-                          state={{ patientId: patient.id }}
-                          fullWidth
-                        >
-                          Schedule Appointment
-                        </Button>
-                        <Button
-                          as={Link}
-                          to={`/clinical/charting?patientId=${patient.id}`}
-                          variant="soft"
-                          fullWidth
-                        >
-                          View Clinical Chart
-                        </Button>
-                        <Button
-                          as={Link}
-                          to={`/clinical/treatment-plans?patientId=${patient.id}`}
-                          variant="soft"
-                          fullWidth
-                        >
-                          Treatment Plans
-                        </Button>
-                      </div>
-                    </Card>
                   </div>
                 </div>
-              </>
-            )}
+              </div>
+            </div>
 
-            {activeTab === 'timeline' && <Timeline items={timelineItems} />}
-            {activeTab === 'documents' && <DocumentList items={documents} />}
-          </>
-        )}
+            {/* Quick Action Buttons */}
+            <div className="col-md-6">
+              <div className="d-flex flex-wrap gap-2 justify-content-md-end">
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => navigate(`/patients/${id}/edit`)}
+                >
+                  <i className="ti ti-edit me-1"></i>
+                  Editeaza
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() =>
+                    navigate('/appointments/create', { state: { patientId: patient.id } })
+                  }
+                >
+                  <i className="ti ti-calendar-plus me-1"></i>
+                  Programeaza
+                </Button>
+                <Button
+                  variant="soft-info"
+                  size="sm"
+                  onClick={() => navigate(`/clinical/charting?patientId=${patient.id}`)}
+                >
+                  <i className="ti ti-dental me-1"></i>
+                  Fisa Clinica
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+
+      {/* Medical Alerts Banner */}
+      {hasAlerts && (
+        <Card className="shadow-sm mb-4 border-danger">
+          <CardHeader className="bg-danger-transparent">
+            <h5 className="mb-0 text-danger">
+              <i className="ti ti-alert-triangle me-2"></i>
+              Alerte Medicale
+            </h5>
+          </CardHeader>
+          <CardBody>
+            <div className="row g-3">
+              {/* Allergies */}
+              {allergies.length > 0 && (
+                <div className="col-md-4">
+                  <div className="d-flex align-items-start gap-2">
+                    <i className="ti ti-alert-circle text-danger mt-1"></i>
+                    <div>
+                      <h6 className="mb-1 fw-bold text-danger">Alergii</h6>
+                      <ul className="list-unstyled mb-0 small">
+                        {allergies.map((allergy, idx) => (
+                          <li key={idx}>
+                            • {allergy.allergen}{' '}
+                            {allergy.severity && (
+                              <Badge variant="soft-danger" size="sm">
+                                {allergy.severity}
+                              </Badge>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Medical Conditions */}
+              {medicalConditions.length > 0 && (
+                <div className="col-md-4">
+                  <div className="d-flex align-items-start gap-2">
+                    <i className="ti ti-heart-rate-monitor text-warning mt-1"></i>
+                    <div>
+                      <h6 className="mb-1 fw-bold text-warning">Conditii Medicale</h6>
+                      <ul className="list-unstyled mb-0 small">
+                        {medicalConditions.map((condition, idx) => (
+                          <li key={idx}>• {typeof condition === 'string' ? condition : condition.condition}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Medications */}
+              {medications.length > 0 && (
+                <div className="col-md-4">
+                  <div className="d-flex align-items-start gap-2">
+                    <i className="ti ti-pill text-info mt-1"></i>
+                    <div>
+                      <h6 className="mb-1 fw-bold text-info">Medicamente Curente</h6>
+                      <ul className="list-unstyled mb-0 small">
+                        {medications.map((med, idx) => (
+                          <li key={idx}>
+                            • {typeof med === 'string' ? med : med.name}{' '}
+                            {typeof med !== 'string' && med.dosage && <span className="text-muted">({med.dosage})</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardBody>
+        </Card>
+      )}
+
+      {/* Stats Row */}
+      <div className="row g-3 mb-4">
+        <div className="col-sm-6 col-xl-3">
+          <StatsCard
+            value={totalVisits}
+            label="Vizite Totale"
+            icon="ti ti-calendar-check"
+            iconColor="primary"
+          />
+        </div>
+        <div className="col-sm-6 col-xl-3">
+          <StatsCard
+            value={formatCurrency(outstandingBalance)}
+            label="Sold Restant"
+            icon="ti ti-currency-lei"
+            iconColor={outstandingBalance > 0 ? 'warning' : 'success'}
+            footer={
+              outstandingBalance > 0 ? (
+                <Button
+                  variant="soft-warning"
+                  size="sm"
+                  block
+                  onClick={() => navigate(`/billing/payments/new?patientId=${id}`)}
+                >
+                  <i className="ti ti-cash me-1"></i>
+                  Incaseaza
+                </Button>
+              ) : undefined
+            }
+          />
+        </div>
+        <div className="col-sm-6 col-xl-3">
+          <StatsCard
+            value={
+              lastVisit?.startTime
+                ? format(new Date(lastVisit.startTime), 'dd MMM yyyy', { locale: ro })
+                : 'N/A'
+            }
+            label="Ultima Vizita"
+            icon="ti ti-history"
+            iconColor="info"
+          />
+        </div>
+        <div className="col-sm-6 col-xl-3">
+          <StatsCard
+            value={
+              nextAppointment?.startTime
+                ? format(new Date(nextAppointment.startTime), 'dd MMM yyyy', { locale: ro })
+                : 'Niciuna'
+            }
+            label="Urmatoarea Programare"
+            icon="ti ti-calendar-event"
+            iconColor="success"
+            footer={
+              !nextAppointment ? (
+                <Button
+                  variant="soft-success"
+                  size="sm"
+                  block
+                  onClick={() =>
+                    navigate('/appointments/create', { state: { patientId: patient.id } })
+                  }
+                >
+                  <i className="ti ti-plus me-1"></i>
+                  Programeaza
+                </Button>
+              ) : undefined
+            }
+          />
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <ul className="nav nav-tabs nav-tabs-header mb-4" role="tablist">
+        <li className="nav-item" role="presentation">
+          <button
+            className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+            type="button"
+          >
+            <i className="ti ti-user me-2"></i>
+            Prezentare Generala
+          </button>
+        </li>
+        <li className="nav-item" role="presentation">
+          <button
+            className={`nav-link ${activeTab === 'timeline' ? 'active' : ''}`}
+            onClick={() => setActiveTab('timeline')}
+            type="button"
+          >
+            <i className="ti ti-timeline me-2"></i>
+            Istoric Vizite
+            {totalVisits > 0 && (
+              <Badge variant="soft-primary" size="sm" className="ms-2">
+                {totalVisits}
+              </Badge>
+            )}
+          </button>
+        </li>
+        <li className="nav-item" role="presentation">
+          <button
+            className={`nav-link ${activeTab === 'documents' ? 'active' : ''}`}
+            onClick={() => setActiveTab('documents')}
+            type="button"
+          >
+            <i className="ti ti-file me-2"></i>
+            Documente
+          </button>
+        </li>
+      </ul>
+
+      {/* Tab Content */}
+      <div className="row">
+        {/* Main Content */}
+        <div className="col-xl-8">
+          {activeTab === 'overview' && (
+            <>
+              {/* Contact Information */}
+              <Card className="shadow-sm mb-4">
+                <CardHeader title="Informatii Contact" icon="ti ti-address-book" />
+                <CardBody>
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label text-muted small mb-1">Email</label>
+                      <div className="d-flex align-items-center gap-2">
+                        <i className="ti ti-mail text-primary"></i>
+                        <span>{patient.emails?.[0]?.address || 'N/A'}</span>
+                      </div>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label text-muted small mb-1">Telefon</label>
+                      <div className="d-flex align-items-center gap-2">
+                        <i className="ti ti-phone text-primary"></i>
+                        <span>{patient.phones?.[0]?.number || 'N/A'}</span>
+                      </div>
+                    </div>
+                    {patient.address && (
+                      <div className="col-12">
+                        <label className="form-label text-muted small mb-1">Adresa</label>
+                        <div className="d-flex align-items-start gap-2">
+                          <i className="ti ti-map-pin text-primary mt-1"></i>
+                          <span>
+                            {[
+                              patient.address.street,
+                              patient.address.city,
+                              patient.address.state,
+                              patient.address.postalCode,
+                            ]
+                              .filter(Boolean)
+                              .join(', ') || 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {patient.notes && (
+                      <div className="col-12">
+                        <label className="form-label text-muted small mb-1">Note</label>
+                        <div className="alert alert-soft-info mb-0">
+                          <i className="ti ti-note me-2"></i>
+                          {patient.notes}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardBody>
+              </Card>
+
+              {/* Insurance Information */}
+              {patient.insurance && Array.isArray(patient.insurance) && patient.insurance.length > 0 && (
+                <Card className="shadow-sm mb-4">
+                  <CardHeader title="Asigurare Medicala" icon="ti ti-shield-check" />
+                  <CardBody>
+                    {patient.insurance.map((ins: InsuranceInfo, idx: number) => (
+                      <div
+                        key={idx}
+                        className={`${idx > 0 ? 'border-top pt-3 mt-3' : ''}`}
+                      >
+                        <div className="row g-3">
+                          <div className="col-md-6">
+                            <label className="form-label text-muted small mb-1">Furnizor</label>
+                            <div>{ins.provider || 'N/A'}</div>
+                          </div>
+                          <div className="col-md-6">
+                            <label className="form-label text-muted small mb-1">
+                              Numar Polita
+                            </label>
+                            <div>{ins.policyNumber || 'N/A'}</div>
+                          </div>
+                          {ins.coverage && (
+                            <div className="col-12">
+                              <label className="form-label text-muted small mb-1">
+                                Acoperire
+                              </label>
+                              <div className="small">
+                                Maxim anual: {formatCurrency(ins.coverage.annual_max || 0)} •
+                                Ramas: {formatCurrency(ins.coverage.remaining || 0)}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </CardBody>
+                </Card>
+              )}
+
+              {/* Family Members */}
+              {patient.family?.members && Array.isArray(patient.family.members) && patient.family.members.length > 0 && (
+                <Card className="shadow-sm mb-4">
+                  <CardHeader title="Membrii Familiei" icon="ti ti-users-group" />
+                  <CardBody>
+                    <div className="list-group list-group-flush">
+                      {patient.family.members.map((member: FamilyMember, idx: number) => (
+                        <div
+                          key={idx}
+                          className="list-group-item d-flex justify-content-between align-items-center px-0"
+                        >
+                          <div className="d-flex align-items-center gap-3">
+                            <div className="avatar avatar-sm bg-secondary-transparent rounded-circle">
+                              <i className="ti ti-user"></i>
+                            </div>
+                            <div>
+                              <div className="fw-medium">{member.name || 'N/A'}</div>
+                              <small className="text-muted">{member.relationship || ''}</small>
+                            </div>
+                          </div>
+                          {member.isPrimaryContact && (
+                            <Badge variant="soft-primary" size="sm">
+                              Contact Principal
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </CardBody>
+                </Card>
+              )}
+            </>
+          )}
+
+          {activeTab === 'timeline' && (
+            <Card className="shadow-sm">
+              <CardHeader title="Istoric Vizite" icon="ti ti-timeline" />
+              <CardBody>
+                {appointmentsLoading ? (
+                  <div className="text-center py-4">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Se incarca...</span>
+                    </div>
+                  </div>
+                ) : appointmentsData?.data && appointmentsData.data.length > 0 ? (
+                  <div className="timeline">
+                    {appointmentsData.data.map((appointment: AppointmentItem) => (
+                      <div key={appointment.id} className="timeline-item">
+                        <div className="timeline-marker">
+                          <div
+                            className={`avatar avatar-sm rounded-circle ${
+                              appointment.status === 'completed'
+                                ? 'bg-success-transparent'
+                                : appointment.status === 'cancelled'
+                                ? 'bg-danger-transparent'
+                                : 'bg-primary-transparent'
+                            }`}
+                          >
+                            <i
+                              className={`ti ${
+                                appointment.status === 'completed'
+                                  ? 'ti-check'
+                                  : appointment.status === 'cancelled'
+                                  ? 'ti-x'
+                                  : 'ti-calendar'
+                              }`}
+                            ></i>
+                          </div>
+                        </div>
+                        <div className="timeline-content">
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                              <h6 className="mb-1 fw-bold">
+                                {appointment.appointmentType?.name || 'Consultatie Generala'}
+                              </h6>
+                              <div className="text-muted small">
+                                <i className="ti ti-calendar me-1"></i>
+                                {format(new Date(appointment.startTime), 'dd MMMM yyyy, HH:mm', {
+                                  locale: ro,
+                                })}
+                                {(appointment.providerName || (appointment.provider?.firstName && appointment.provider?.lastName)) && (
+                                  <>
+                                    {' • '}
+                                    <i className="ti ti-user-md me-1"></i>
+                                    {appointment.providerName || `${appointment.provider?.firstName} ${appointment.provider?.lastName}`}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            {appointment.status === 'completed' ? (
+                              <StatusBadge status="completed">Finalizata</StatusBadge>
+                            ) : appointment.status === 'cancelled' ? (
+                              <StatusBadge status="cancelled">Anulata</StatusBadge>
+                            ) : appointment.status === 'confirmed' ? (
+                              <StatusBadge status="confirmed">Confirmata</StatusBadge>
+                            ) : (
+                              <StatusBadge status="scheduled">Programata</StatusBadge>
+                            )}
+                          </div>
+                          {appointment.notes && (
+                            <p className="mb-0 small text-muted">{appointment.notes}</p>
+                          )}
+                          {appointment.reasonForVisit && (
+                            <div className="mt-2 small">
+                              <span className="text-muted">Motiv: </span>
+                              {appointment.reasonForVisit}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-5">
+                    <i className="ti ti-calendar-off fs-48 text-muted"></i>
+                    <p className="text-muted mt-3 mb-0">Nicio vizita inregistrata</p>
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          )}
+
+          {activeTab === 'documents' && (
+            <Card className="shadow-sm">
+              <CardHeader
+                title="Documente"
+                icon="ti ti-file"
+                actions={
+                  <Button variant="soft-primary" size="sm">
+                    <i className="ti ti-upload me-1"></i>
+                    Incarca
+                  </Button>
+                }
+              />
+              <CardBody>
+                <div className="text-center py-5">
+                  <i className="ti ti-file-off fs-48 text-muted"></i>
+                  <p className="text-muted mt-3 mb-0">Niciun document disponibil</p>
+                  <p className="text-muted small">
+                    Urca documente cum ar fi consimtaminte, radiografii sau rapoarte
+                  </p>
+                </div>
+              </CardBody>
+            </Card>
+          )}
+        </div>
+
+        {/* Sidebar */}
+        <div className="col-xl-4">
+          {/* Quick Actions */}
+          <Card className="shadow-sm mb-4 sticky-top" style={{ top: 80 }}>
+            <CardHeader title="Actiuni Rapide" icon="ti ti-bolt" />
+            <CardBody>
+              <div className="d-grid gap-2">
+                <Button
+                  variant="primary"
+                  onClick={() =>
+                    navigate('/appointments/create', { state: { patientId: patient.id } })
+                  }
+                >
+                  <i className="ti ti-calendar-plus me-2"></i>
+                  Programeaza Vizita
+                </Button>
+                <Button
+                  variant="soft-info"
+                  onClick={() => navigate(`/clinical/charting?patientId=${patient.id}`)}
+                >
+                  <i className="ti ti-dental me-2"></i>
+                  Fisa Clinica
+                </Button>
+                <Button
+                  variant="soft-warning"
+                  onClick={() => navigate(`/clinical/treatment-plans?patientId=${patient.id}`)}
+                >
+                  <i className="ti ti-file-description me-2"></i>
+                  Plan Tratament
+                </Button>
+                <Button
+                  variant="soft-success"
+                  onClick={() => navigate(`/billing/invoices/new?patientId=${patient.id}`)}
+                >
+                  <i className="ti ti-file-invoice me-2"></i>
+                  Factura Noua
+                </Button>
+                <Button
+                  variant="soft-secondary"
+                  onClick={() => navigate(`/patients/${id}/edit`)}
+                >
+                  <i className="ti ti-edit me-2"></i>
+                  Editeaza Profil
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card className="shadow-sm mb-4">
+            <CardHeader title="Activitate Recenta" icon="ti ti-activity" />
+            <CardBody>
+              <div className="text-center py-4">
+                <i className="ti ti-history fs-48 text-muted"></i>
+                <p className="text-muted mt-3 mb-0 small">Nicio activitate recenta</p>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Danger Zone */}
+          <Card className="shadow-sm border-danger">
+            <CardHeader className="bg-danger-transparent">
+              <h6 className="mb-0 text-danger">
+                <i className="ti ti-alert-triangle me-2"></i>
+                Zona Periculoasa
+              </h6>
+            </CardHeader>
+            <CardBody>
+              <p className="text-muted small mb-3">
+                Stergerea acestui pacient va elimina permanent toate datele asociate.
+              </p>
+              <Button
+                variant="outline-danger"
+                size="sm"
+                block
+                onClick={handleDelete}
+                loading={deletePatient.isPending}
+              >
+                <i className="ti ti-trash me-2"></i>
+                Sterge Pacient
+              </Button>
+            </CardBody>
+          </Card>
+        </div>
       </div>
     </AppShell>
-  );
-}
-
-function Field({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="rounded-lg border border-white/5 bg-white/5 px-3 py-3">
-      <p className="text-xs uppercase tracking-[0.1em] text-slate-400">{label}</p>
-      <div className="mt-1 text-sm text-white">{value}</div>
-    </div>
   );
 }

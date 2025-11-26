@@ -3,9 +3,7 @@
  * Displays appointment with quick action buttons
  */
 
-import { Card } from '../ui/Card';
-import { Badge } from '../ui/Badge';
-import { Button } from '../ui/Button';
+import { Card } from '../ui-new/Card';
 import { AppointmentStatusBadge } from './AppointmentStatusBadge';
 import { AppointmentQuickActions } from './AppointmentQuickActions';
 import { WaitTimeBadge } from './WaitTimeBadge';

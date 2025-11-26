@@ -120,7 +120,7 @@ export function PatientSelector({ selectedPatientId, onSelect }: PatientSelector
                       )}
                     </div>
                   </div>
-                  <Icon name="chevron-right" className="w-5 h-5 text-foreground/40 mt-1" />
+                  <Icon name="chevronRight" className="w-5 h-5 text-foreground/40 mt-1" />
                 </div>
               </button>
             ))

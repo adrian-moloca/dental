@@ -4,7 +4,7 @@
  * Modal dialog for disabling MFA with password confirmation
  */
 
-import { useState, FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import {
   Dialog,
   DialogContent,

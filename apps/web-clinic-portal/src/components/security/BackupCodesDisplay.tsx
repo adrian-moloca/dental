@@ -252,7 +252,7 @@ export function BackupCodesDisplay({
                     </p>
                   )}
                 </div>
-                <Badge variant="warning">Save These</Badge>
+                <Badge tone="warning">Save These</Badge>
               </div>
 
               <div className="grid grid-cols-2 gap-2 font-mono text-sm mb-3">

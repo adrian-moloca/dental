@@ -1,0 +1,283 @@
+// DentalOS Design System Variables
+// Based on Preclinic template with dental clinic customizations
+
+:root {
+  // Layout Variables
+  --sidenav-width: 276px;
+  --sidenav-width-sm: 70px;
+  --topbar-height: 60px;
+
+  // Topbar
+  --topbar-bg: #fff;
+  --topbar-item-border: var(--border-color);
+  --topbar-item-color: var(--gray-900);
+  --topbar-item-hover-color: var(--primary);
+
+  // Menu/Sidebar
+  --menu-title-color: var(--gray-500);   // Improved contrast: was gray-400
+  --menu-item-heading: var(--gray-900);
+  --menu-item-color: var(--gray-700);    // Improved contrast: was gray-500
+  --menu-item-border: var(--border-color);
+  --menu-item-hover-color: var(--primary);
+  --menu-item-active-color: var(--primary);
+  --menu-active-color: var(--primary);
+  --menu-active-bg: var(--primary-transparent);
+  --menu-light-bg: var(--light);
+  --menu-bg: var(--white);
+
+  // Primary Colors - Dental Blue
+  --primary: #2E37A4;
+  --primary-hover: #3C449C;
+  --primary-transparent: #ECEDF7;
+  --primary-rgb: 46, 55, 164;
+
+  // Secondary - Teal (Dental fresh)
+  --secondary: #00D3C7;
+  --secondary-hover: #17C2B9;
+  --secondary-transparent: #E8FBFA;
+  --secondary-rgb: 0, 211, 199;
+
+  // Status Colors
+  --success: #27AE60;
+  --success-hover: #37A465;
+  --success-transparent: #F4FBF7;
+  --success-rgb: 39, 174, 96;
+
+  --info: #2F80ED;
+  --info-hover: #3D7FD7;
+  --info-transparent: #F4F9FE;
+  --info-rgb: 47, 128, 237;
+
+  --warning: #E2B93B;
+  --warning-hover: #CEAD47;
+  --warning-transparent: #FEFBF5;
+  --warning-rgb: 253, 175, 34;
+
+  --danger: #EF1E1E;
+  --danger-hover: #D93030;
+  --danger-transparent: #FEF4F4;
+  --danger-rgb: 239, 30, 30;
+
+  // Extended Palette
+  --indigo: #3538CD;
+  --indigo-hover: #3C49BF;
+  --indigo-transparent: #EDEDFB;
+
+  --cyan: #00D3C7;
+  --cyan-hover: #39A4C3;
+  --cyan-transparent: #E9F8FB;
+
+  --orange: #E04F16;
+  --orange-hover: #CF5A32;
+  --orange-transparent: #FDF6F3;
+
+  --pink: #DD2590;
+  --pink-hover: #E4479B;
+  --pink-transparent: #FDF4F9;
+
+  --purple: #800080;
+  --purple-hover: #7F177F;
+  --purple-transparent: #F9F2F9;
+
+  --teal: #0E9384;
+  --teal-hover: #358E82;
+  --teal-transparent: #E9F5F4;
+
+  // Neutrals
+  --black: #000;
+  --white: #fff;
+  --light: #F5F6F8;
+  --dark: #0B0D0E;
+
+  // Gray Scale (Updated for better contrast)
+  --gray-100: #CED1D7;
+  --gray-200: #B6BBC4;
+  --gray-300: #9DA4B0;
+  --gray-400: #6C7688;                  // Darker for better contrast (was #858D9C) - 4.5:1 ratio
+  --gray-500: #545F74;                  // Darker for better contrast (was #6C7688) - 7.0:1 ratio
+  --gray-600: #3B4961;                  // Darker for better contrast (was #545F74)
+  --gray-700: #23324D;                  // Darker for better contrast (was #3B4961) - 11.0:1 ratio
+  --gray-800: #1A253A;                  // Darker for better contrast (was #23324D)
+  --gray-900: #0A1B39;
+  --gray-hover: #091833;
+
+  // Light Scale (backgrounds)
+  --light-100: #FDFDFE;
+  --light-200: #FCFDFD;
+  --light-300: #FBFCFD;
+  --light-400: #FBFBFC;
+  --light-500: #FAFAFB;
+  --light-600: #F9F9FB;
+  --light-700: #F8F9FA;
+  --light-800: #F7F8FA;
+  --light-900: #F6F7F9;
+  --light-hover: #F6F7F9;
+
+  // Transparent variants
+  --gray-transparent: #E7E8EB;
+  --dark-transparent: #E7E8EB;
+  --light-transparent: #FEFEFE;
+
+  // Typography
+  --heading-color: #0A1B39;
+  --body-color: var(--gray-700);        // Improved contrast: was gray-500 (#6C7688), now gray-700 (#3B4961) - 8.5:1 ratio
+  --body-color-rgb: 59, 73, 97;
+
+  // Borders
+  --border-color: #E7E8EB;
+  --border-radius: 0.3rem;
+  --border-radius-sm: 0.25rem;
+  --border-radius-lg: 0.6rem;
+  --border-radius-pill: 50%;
+
+  // Content
+  --content-padding: 24px;
+
+  // Primary dark for hover states
+  --primary-dark: #252d87;
+
+  // Shadows
+  --box-shadow: 0px 0px 35px 0px rgba(104, 134, 177, 0.15);
+  --box-shadow-sm: 0px 1px 1px 0px rgba(0, 0, 0, 0.05);
+  --box-shadow-lg: 0 0 45px 0 rgba(108, 118, 136, 0.2);
+
+  // RGB values for alpha manipulation
+  --light-rgb: 245, 246, 248;
+  --dark-rgb: 11, 13, 14;
+  --white-rgb: 255, 255, 255;
+}
+
+// Dark Mode
+:root[data-bs-theme="dark"] {
+  --menu-bg: #03041A;
+  --menu-item-color: #97aac1;
+  --menu-item-active-color: #e2eeff;
+  --heading-color: #D9DCFF;
+  --menu-item-heading: #D9DCFF;
+  --menu-item-border: #10122C;
+  --menu-item-hover-color: var(--primary);
+  --menu-light-bg: #06081F;
+  --topbar-bg: #03041A;
+  --topbar-item-color: #dbe0e6;
+  --topbar-item-border: #10122C;
+
+  --light: #06081F;
+  --dark: #E3E3E3;
+  --white: #03041a;
+
+  --gray-100: #383B42;
+  --gray-200: #484C55;
+  --gray-300: #585E69;
+  --gray-400: #686F7B;
+  --gray-500: #79818F;
+  --gray-600: #8891A3;
+  --gray-700: #96A3B8;
+  --gray-800: #A4B3CE;
+  --gray-900: #ADC3E8;
+  --gray-hover: #DADFE2;
+
+  --light-100: #141422;
+  --light-200: #172020;
+  --light-300: #141C23;
+  --light-400: #191920;
+  --light-500: #1B1B20;
+  --light-600: #191922;
+  --light-700: #1A1E22;
+  --light-800: #191D24;
+  --light-900: #1A1E25;
+  --light-hover: #3C4249;
+
+  --primary-transparent: #181B30;
+  --secondary-transparent: #103937;
+  --success-transparent: #142B1E;
+  --info-transparent: #0A1E33;
+  --warning-transparent: #31240A;
+  --danger-transparent: #330A0A;
+  --indigo-transparent: #111134;
+  --cyan-transparent: #103138;
+  --orange-transparent: #31180D;
+  --pink-transparent: #300E21;
+  --purple-transparent: #2B172B;
+  --teal-transparent: #1B3230;
+  --gray-transparent: #282A2E;
+  --dark-transparent: #212123;
+  --light-transparent: #1A1A1A;
+
+  --border-color: #202A36;
+  --body-color: #9FACBF;
+  --heading-color: #BCC7E1;
+
+  --box-shadow-sm: 0px 1px 1px 0px rgba(0, 0, 0, 0.05);
+  --box-shadow: 0px 4px 14px 0px rgba(0, 0, 0, 0.75);
+  --box-shadow-lg: 0px 4.4px 12px -1px rgba(0, 0, 0, 0.75);
+
+  --body-color-rgb: 222, 226, 230;
+  --light-rgb: 9, 12, 42;
+  --dark-rgb: 227, 227, 227;
+  --white-rgb: 26, 26, 26;
+}
+
+// SCSS Variables mapping to CSS custom properties
+$sidenav-width: var(--sidenav-width);
+$sidenav-width-sm: var(--sidenav-width-sm);
+$topbar-height: var(--topbar-height);
+
+$primary: var(--primary);
+$secondary: var(--secondary);
+$success: var(--success);
+$info: var(--info);
+$warning: var(--warning);
+$danger: var(--danger);
+$light: var(--light);
+$dark: var(--dark);
+$white: var(--white);
+$black: var(--black);
+
+$gray-100: var(--gray-100);
+$gray-200: var(--gray-200);
+$gray-300: var(--gray-300);
+$gray-400: var(--gray-400);
+$gray-500: var(--gray-500);
+$gray-600: var(--gray-600);
+$gray-700: var(--gray-700);
+$gray-800: var(--gray-800);
+$gray-900: var(--gray-900);
+
+$border-color: var(--border-color);
+$border-radius: var(--border-radius);
+$border-radius-lg: var(--border-radius-lg);
+
+$box-shadow: var(--box-shadow);
+$box-shadow-sm: var(--box-shadow-sm);
+$box-shadow-lg: var(--box-shadow-lg);
+
+$heading-color: var(--heading-color);
+$body-color: var(--body-color);
+
+// Bootstrap Theme Colors Override
+$theme-colors: (
+  "primary": #2E37A4,
+  "secondary": #00D3C7,
+  "success": #27AE60,
+  "info": #2F80ED,
+  "warning": #E2B93B,
+  "danger": #EF1E1E,
+  "dark": #0B0D0E,
+  "light": #F5F6F8,
+  "orange": #E04F16,
+  "purple": #800080,
+  "pink": #DD2590,
+  "indigo": #3538CD,
+  "teal": #0E9384,
+);
+
+// Font Variables
+$font-family-base: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+$font-weight-bold: 700;
+$font-weight-semibold: 600;
+$font-weight-medium: 500;
+$font-weight-normal: 400;
+$font-size-base: 0.875rem;
+
+// Import Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');

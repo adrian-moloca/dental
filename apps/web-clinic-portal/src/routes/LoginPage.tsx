@@ -1,13 +1,14 @@
 /**
- * Login Page
+ * Login Page - Preclinic-style Cover Login
+ *
+ * Split-screen login with branding on the left and form on the right.
  */
 
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { Card } from '../components/ui/Card';
-import { Input } from '../components/ui/Input';
-import { Button } from '../components/ui/Button';
+import { Button, Input, PasswordInput } from '../components/ui-new';
+import dentalClinicImage from '../assets/dental-clinic-future.png';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,11 +16,12 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const result = await login(email, password);
+      const result = await login(email, password, rememberMe);
 
       // If needs org selection, navigate to selector
       if (result?.needsOrgSelection) {
@@ -27,6 +29,7 @@ export default function LoginPage() {
           state: {
             email,
             password,
+            rememberMe,
             organizations: result.organizations,
           },
         });
@@ -41,108 +44,210 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--bg)] text-[var(--text)]">
-      <div className="relative w-full max-w-lg animate-fade-in">
-        <div className="absolute inset-0 blur-3xl bg-gradient-to-br from-brand-400/15 to-accent-400/12 animate-pulse-glow" aria-hidden={true} />
-        <Card padding="lg" tone="glass" className="relative">
-          <div className="mb-6 text-center space-y-2">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <svg
-                className="w-8 h-8 text-brand-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden={true}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                />
-              </svg>
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Dental OS</p>
-            </div>
-            <h1 className="text-3xl font-bold text-[var(--foreground)]">Clinic Portal</h1>
-            <p className="text-sm text-[var(--muted)]">Modern practice management at your fingertips</p>
-          </div>
-          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <Input
-              type="email"
-              id="email"
-              name="email"
-              label="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="you@clinic.com"
-              fullWidth
-              autoComplete="email"
-              autoFocus
-            />
-            <Input
-              type="password"
-              id="password"
-              name="password"
-              label="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              fullWidth
-              autoComplete="current-password"
-            />
-            {error && (
-              <div
-                className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm"
-                role="alert"
-              >
-                <svg
-                  className="w-5 h-5 flex-shrink-0"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden={true}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+    <div className="auth-wrapper">
+      <div className="auth-container">
+        <div className="row g-0 min-vh-100">
+          {/* Left Side - Branding */}
+          <div className="col-lg-6 d-none d-lg-flex">
+            <div className="auth-cover bg-primary">
+              <div className="auth-cover-content">
+                <div className="text-center">
+                  <h1 className="text-white fw-bold mb-3">
+                    Gestionare eficienta <br /> pentru clinica ta dentara
+                  </h1>
+                  <p className="text-light opacity-75">
+                    Experienta moderna de management pentru cabinetele stomatologice.
+                    Programari, pacienti, facturare si rapoarte - totul intr-un singur loc.
+                  </p>
+                </div>
+                <div className="auth-cover-illustration mt-5">
+                  <img
+                    src={dentalClinicImage}
+                    alt="Modern Dental Clinic"
+                    className="img-fluid rounded-3"
+                    style={{ maxWidth: '100%', height: 'auto' }}
                   />
-                </svg>
-                {error}
+                </div>
               </div>
-            )}
-            <div className="flex items-center justify-end">
-              <Link
-                to="/forgot-password"
-                className="text-sm text-brand-400 hover:text-brand-300 transition-colors focus:outline-none focus:underline"
-              >
-                Forgot password?
-              </Link>
+              {/* Decorative elements */}
+              <div className="auth-cover-bg"></div>
             </div>
-            <Button
-              type="submit"
-              fullWidth
-              loading={isLoading}
-              disabled={isLoading || !email || !password}
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </Button>
-          </form>
-          <div className="mt-6 text-center">
-            <p className="text-sm text-slate-400">
-              Don't have an account?{' '}
-              <Link
-                to="/register"
-                className="text-brand-400 hover:text-brand-300 font-semibold transition-colors focus:outline-none focus:underline"
-              >
-                Sign up
-              </Link>
-            </p>
           </div>
-        </Card>
+
+          {/* Right Side - Login Form */}
+          <div className="col-lg-6 col-12">
+            <div className="auth-form-wrapper">
+              <div className="auth-form-content">
+                {/* Logo */}
+                <div className="text-center mb-4">
+                  <div className="auth-logo mb-3">
+                    <div className="d-flex align-items-center justify-content-center gap-2">
+                      <div className="logo-icon bg-primary rounded-2 p-2">
+                        <i className="ti ti-dental fs-28 text-white"></i>
+                      </div>
+                      <span className="logo-text fw-bold fs-24 text-heading">
+                        Dental<span className="text-primary">OS</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Card */}
+                <div className="card border shadow-sm">
+                  <div className="card-body p-4 p-lg-5">
+                    <div className="text-center mb-4">
+                      <h4 className="fw-bold mb-1">Autentificare</h4>
+                      <p className="text-muted mb-0">
+                        Introduceti datele pentru a accesa platforma
+                      </p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} noValidate>
+                      {/* Email Field */}
+                      <div className="mb-3">
+                        <Input
+                          type="email"
+                          id="email"
+                          name="email"
+                          label="Adresa de Email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          placeholder="exemplu@clinica.ro"
+                          icon="ti ti-mail"
+                          autoComplete="email"
+                          autoFocus
+                        />
+                      </div>
+
+                      {/* Password Field */}
+                      <div className="mb-3">
+                        <PasswordInput
+                          id="password"
+                          name="password"
+                          label="Parola"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          required
+                          placeholder="Introduceti parola"
+                          autoComplete="current-password"
+                        />
+                      </div>
+
+                      {/* Remember Me & Forgot Password */}
+                      <div className="d-flex align-items-center justify-content-between mb-4">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="rememberMe"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                          />
+                          <label
+                            className="form-check-label text-muted"
+                            htmlFor="rememberMe"
+                          >
+                            Tine-ma minte
+                          </label>
+                        </div>
+                        <Link
+                          to="/forgot-password"
+                          className="text-primary fw-medium"
+                        >
+                          Ai uitat parola?
+                        </Link>
+                      </div>
+
+                      {/* Error Message */}
+                      {error && (
+                        <div
+                          className="alert alert-danger d-flex align-items-center gap-2 py-2 mb-3"
+                          role="alert"
+                        >
+                          <i className="ti ti-alert-circle"></i>
+                          <span>{error}</span>
+                        </div>
+                      )}
+
+                      {/* Submit Button */}
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        className="w-100"
+                        loading={isLoading}
+                        disabled={isLoading || !email || !password}
+                      >
+                        {isLoading ? 'Se autentifica...' : 'Autentificare'}
+                      </Button>
+                    </form>
+
+                    {/* Divider */}
+                    <div className="auth-divider my-4">
+                      <span>SAU</span>
+                    </div>
+
+                    {/* Social Login */}
+                    <div className="d-flex gap-2 mb-4">
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary border flex-fill position-relative"
+                        disabled
+                        title="In curand"
+                        style={{
+                          opacity: 0.7,
+                          cursor: 'not-allowed',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <i className="ti ti-brand-google me-2 text-danger"></i>
+                        <span className="text-muted">Google</span>
+                        <small className="position-absolute top-0 end-0 badge bg-primary rounded-pill"
+                               style={{ fontSize: '0.6rem', transform: 'translate(25%, -25%)' }}>
+                          Curand
+                        </small>
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary border flex-fill position-relative"
+                        disabled
+                        title="In curand"
+                        style={{
+                          opacity: 0.7,
+                          cursor: 'not-allowed',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <i className="ti ti-brand-apple me-2 text-dark"></i>
+                        <span className="text-muted">Apple</span>
+                        <small className="position-absolute top-0 end-0 badge bg-primary rounded-pill"
+                               style={{ fontSize: '0.6rem', transform: 'translate(25%, -25%)' }}>
+                          Curand
+                        </small>
+                      </button>
+                    </div>
+
+                    {/* Register Link */}
+                    <div className="text-center">
+                      <p className="text-muted mb-0">
+                        Nu ai cont?{' '}
+                        <Link to="/register" className="text-primary fw-semibold">
+                          Inregistreaza-te
+                        </Link>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <p className="text-muted text-center mt-4 mb-0">
+                  &copy; {new Date().getFullYear()} DentalOS. Toate drepturile rezervate.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

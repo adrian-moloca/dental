@@ -14,6 +14,7 @@ import type { OrganizationSummaryDto } from '../types/auth.types';
 interface LocationState {
   email: string;
   password: string;
+  rememberMe?: boolean;
   organizations: OrganizationSummaryDto[];
 }
 
@@ -38,7 +39,7 @@ export default function SelectOrganizationPage() {
     if (!state || !selectedOrgId) return;
 
     try {
-      await loginSelectOrg(state.email, state.password, selectedOrgId);
+      await loginSelectOrg(state.email, state.password, selectedOrgId, state.rememberMe);
       navigate('/dashboard');
     } catch (err) {
       console.error('Organization selection failed:', err);
@@ -137,7 +138,7 @@ export default function SelectOrganizationPage() {
 
           <div className="flex gap-3">
             <Button
-              variant="outline"
+              variant="outline-secondary"
               fullWidth
               onClick={() => navigate('/login')}
               disabled={isLoading}

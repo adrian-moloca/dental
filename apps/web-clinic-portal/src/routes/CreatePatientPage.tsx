@@ -24,8 +24,8 @@ export default function CreatePatientPage() {
       if (result.success && result.data?.id) {
         navigate(`/patients/${result.data.id}`);
       }
-    } catch (error: any) {
-      setErrorMessage(error.response?.data?.message || error.message || 'Failed to create patient');
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to create patient');
     }
   };
 

@@ -13,7 +13,7 @@ import { useAuthStore } from '../store/authStore';
 const REFRESH_BUFFER = 5 * 60 * 1000; // Refresh 5 minutes before expiry
 
 export function useTokenRefresh() {
-  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const logout = useAuthStore((state) => state.logout);
 

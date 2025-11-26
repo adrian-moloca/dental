@@ -1,7 +1,9 @@
 /**
  * Token Storage Utility
  *
- * Manages JWT token persistence in localStorage with fallback to sessionStorage.
+ * Manages JWT token persistence with rememberMe support.
+ * - If rememberMe: stores in localStorage (persistent)
+ * - If not rememberMe: stores in sessionStorage (expires on browser close)
  */
 
 import type { UserDto } from '../types/auth.types';
@@ -15,16 +17,28 @@ export const tokenStorage = {
     return localStorage.getItem(ACCESS_TOKEN_KEY) || sessionStorage.getItem(ACCESS_TOKEN_KEY);
   },
 
-  setAccessToken(token: string): void {
-    localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  setAccessToken(token: string, rememberMe: boolean = true): void {
+    if (rememberMe) {
+      localStorage.setItem(ACCESS_TOKEN_KEY, token);
+      sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+    } else {
+      sessionStorage.setItem(ACCESS_TOKEN_KEY, token);
+      localStorage.removeItem(ACCESS_TOKEN_KEY);
+    }
   },
 
   getRefreshToken(): string | null {
     return localStorage.getItem(REFRESH_TOKEN_KEY) || sessionStorage.getItem(REFRESH_TOKEN_KEY);
   },
 
-  setRefreshToken(token: string): void {
-    localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  setRefreshToken(token: string, rememberMe: boolean = true): void {
+    if (rememberMe) {
+      localStorage.setItem(REFRESH_TOKEN_KEY, token);
+      sessionStorage.removeItem(REFRESH_TOKEN_KEY);
+    } else {
+      sessionStorage.setItem(REFRESH_TOKEN_KEY, token);
+      localStorage.removeItem(REFRESH_TOKEN_KEY);
+    }
   },
 
   getUser(): UserDto | null {
@@ -37,8 +51,14 @@ export const tokenStorage = {
     }
   },
 
-  setUser(user: UserDto): void {
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  setUser(user: UserDto, rememberMe: boolean = true): void {
+    if (rememberMe) {
+      localStorage.setItem(USER_KEY, JSON.stringify(user));
+      sessionStorage.removeItem(USER_KEY);
+    } else {
+      sessionStorage.setItem(USER_KEY, JSON.stringify(user));
+      localStorage.removeItem(USER_KEY);
+    }
   },
 
   clear(): void {

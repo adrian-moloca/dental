@@ -1,10 +1,10 @@
 /**
- * Dashboard Page - Overview and key metrics
+ * Dashboard Page - Preclinic-style Admin Dashboard
+ *
+ * Overview and key metrics for the dental clinic.
  */
 
-import { Icon } from '../components/ui/Icon';
-import { Skeleton } from '../components/ui/Skeleton';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import {
   useTotalPatientsCount,
@@ -12,7 +12,17 @@ import {
   useOutstandingBalance,
   useLowStockItems,
 } from '../hooks/useDashboardStats';
-import { ConfirmationStatsWidget } from '../components/appointments/ConfirmationStatsWidget';
+import { Card, CardHeader, CardBody, Button, Badge } from '../components/ui-new';
+
+// Loading skeleton component
+function StatSkeleton() {
+  return (
+    <div className="placeholder-glow">
+      <span className="placeholder col-6 mb-2" style={{ height: 20 }}></span>
+      <span className="placeholder col-8" style={{ height: 32 }}></span>
+    </div>
+  );
+}
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -23,33 +33,33 @@ export function DashboardPage() {
     data: patientsCount,
     isLoading: patientsLoading,
     isError: patientsError,
-    refetch: refetchPatients
+    refetch: refetchPatients,
   } = useTotalPatientsCount();
 
   const {
     data: appointmentsData,
     isLoading: appointmentsLoading,
     isError: appointmentsError,
-    refetch: refetchAppointments
+    refetch: refetchAppointments,
   } = useTodaysAppointments();
 
   const {
     data: balanceData,
     isLoading: balanceLoading,
     isError: balanceError,
-    refetch: refetchBalance
+    refetch: refetchBalance,
   } = useOutstandingBalance();
 
   const {
     data: inventoryData,
     isLoading: inventoryLoading,
     isError: inventoryError,
-    refetch: refetchInventory
+    refetch: refetchInventory,
   } = useLowStockItems();
 
   // Format currency
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
+  const formatCurrency = (amount: number, currency: string = 'RON') => {
+    return new Intl.NumberFormat('ro-RO', {
       style: 'currency',
       currency,
       minimumFractionDigits: 0,
@@ -59,352 +69,569 @@ export function DashboardPage() {
 
   // Format number with commas
   const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num);
+    return new Intl.NumberFormat('ro-RO').format(num);
   };
 
-  const stats = [
+  // Mock data for demo sections (will be replaced with real data)
+  const upcomingAppointments = [
     {
-      label: 'Total Patients',
-      value: patientsLoading ? null : patientsError ? 'Error' : formatNumber(patientsCount || 0),
-      change: patientsLoading ? null : 'Active patients',
-      trend: 'neutral' as const,
-      icon: 'users' as const,
-      color: 'bg-blue-500/20 text-blue-300',
-      href: '/patients',
-      isLoading: patientsLoading,
-      isError: patientsError,
-      refetch: refetchPatients,
+      id: '1',
+      patient: 'Maria Popescu',
+      time: '09:00',
+      type: 'Consultatie',
+      provider: 'Dr. Ionescu',
+      status: 'confirmed',
     },
     {
-      label: "Today's Appointments",
-      value: appointmentsLoading ? null : appointmentsError ? 'Error' : String(appointmentsData?.total || 0),
-      change: appointmentsLoading ? null : appointmentsData?.pending ? `${appointmentsData.pending} pending` : 'All confirmed',
-      trend: appointmentsData?.pending && appointmentsData.pending > 0 ? 'neutral' : 'up',
-      icon: 'calendar' as const,
-      color: 'bg-purple-500/20 text-purple-300',
-      href: '/appointments',
-      isLoading: appointmentsLoading,
-      isError: appointmentsError,
-      refetch: refetchAppointments,
+      id: '2',
+      patient: 'Ion Georgescu',
+      time: '10:30',
+      type: 'Tratament Canal',
+      provider: 'Dr. Marinescu',
+      status: 'pending',
     },
     {
-      label: 'Outstanding Balance',
-      value: balanceLoading ? null : balanceError ? 'Error' : formatCurrency(balanceData?.total || 0, balanceData?.currency),
-      change: balanceLoading ? null : balanceData?.overdueCount ? `${balanceData.overdueCount} overdue` : 'All current',
-      trend: balanceData?.overdueCount && balanceData.overdueCount > 0 ? 'warning' : 'up',
-      icon: 'cash' as const,
-      color: 'bg-green-500/20 text-green-300',
-      href: '/billing',
-      isLoading: balanceLoading,
-      isError: balanceError,
-      refetch: refetchBalance,
-    },
-    {
-      label: 'Low Stock Items',
-      value: inventoryLoading ? null : inventoryError ? 'Error' : String(inventoryData?.count || 0),
-      change: inventoryLoading ? null : inventoryData?.criticalCount ? `${inventoryData.criticalCount} critical` : inventoryData?.count ? 'Action needed' : 'All stocked',
-      trend: inventoryData?.criticalCount ? 'warning' : inventoryData?.count ? 'neutral' : 'up',
-      icon: 'exclamation' as const,
-      color: 'bg-red-500/20 text-red-300',
-      href: '/inventory',
-      isLoading: inventoryLoading,
-      isError: inventoryError,
-      refetch: refetchInventory,
-    },
-  ];
-
-  const quickActions = [
-    {
-      label: 'New Patient',
-      description: 'Register a new patient',
-      icon: 'plus',
-      color: 'bg-brand',
-      action: () => navigate('/patients/new'),
-    },
-    {
-      label: 'Schedule Appointment',
-      description: 'Book a new appointment',
-      icon: 'calendar',
-      color: 'bg-purple-500',
-      action: () => navigate('/appointments/create'),
-    },
-    {
-      label: 'Create Invoice',
-      description: 'Generate a new invoice',
-      icon: 'document',
-      color: 'bg-green-500',
-      action: () => navigate('/billing'),
-    },
-    {
-      label: 'Upload X-Ray',
-      description: 'Add imaging study',
-      icon: 'document',
-      color: 'bg-cyan-500',
-      action: () => navigate('/imaging'),
+      id: '3',
+      patient: 'Elena Dumitrescu',
+      time: '14:00',
+      type: 'Detartraj',
+      provider: 'Dr. Ionescu',
+      status: 'confirmed',
     },
   ];
 
   const recentActivity = [
     {
       type: 'appointment',
-      title: 'Appointment completed',
-      description: 'John Smith - Teeth Cleaning',
-      time: '10 minutes ago',
-      icon: 'check',
-      color: 'bg-green-500/20 text-green-300',
+      title: 'Programare finalizata',
+      description: 'Maria Popescu - Consultatie',
+      time: 'Acum 10 minute',
+      icon: 'ti ti-check',
+      color: 'success',
     },
     {
       type: 'payment',
-      title: 'Payment received',
-      description: '$450.00 from Sarah Johnson',
-      time: '25 minutes ago',
-      icon: 'cash',
-      color: 'bg-blue-500/20 text-blue-300',
+      title: 'Plata primita',
+      description: '450 RON de la Ion Georgescu',
+      time: 'Acum 25 minute',
+      icon: 'ti ti-cash',
+      color: 'primary',
     },
     {
       type: 'patient',
-      title: 'New patient registered',
-      description: 'Michael Brown',
-      time: '1 hour ago',
-      icon: 'users',
-      color: 'bg-purple-500/20 text-purple-300',
+      title: 'Pacient nou inregistrat',
+      description: 'Alexandru Popa',
+      time: 'Acum 1 ora',
+      icon: 'ti ti-user-plus',
+      color: 'info',
     },
     {
       type: 'inventory',
-      title: 'Low stock alert',
-      description: 'Composite Resin - 2 units left',
-      time: '2 hours ago',
-      icon: 'exclamation',
-      color: 'bg-red-500/20 text-red-300',
-    },
-  ];
-
-  const upcomingAppointments = [
-    {
-      id: '1',
-      patient: 'Emma Wilson',
-      time: '09:00 AM',
-      type: 'Consultation',
-      provider: 'Dr. Smith',
-    },
-    {
-      id: '2',
-      patient: 'David Martinez',
-      time: '10:30 AM',
-      type: 'Root Canal',
-      provider: 'Dr. Johnson',
-    },
-    {
-      id: '3',
-      patient: 'Lisa Anderson',
-      time: '02:00 PM',
-      type: 'Cleaning',
-      provider: 'Dr. Smith',
+      title: 'Alerta stoc scazut',
+      description: 'Compozit A2 - 2 unitati ramase',
+      time: 'Acum 2 ore',
+      icon: 'ti ti-alert-triangle',
+      color: 'warning',
     },
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">
-          Welcome, {user?.firstName} {user?.lastName}
-        </h1>
-        <p className="text-sm text-foreground/60 mt-1">
-          {user?.email} • {user?.roles?.join(', ') || 'User'}
-        </p>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <button
-            key={stat.label}
-            onClick={() => !stat.isLoading && navigate(stat.href)}
-            disabled={stat.isLoading}
-            className="p-6 bg-surface rounded-lg border border-white/10 hover:border-brand transition-all text-left group disabled:cursor-wait"
+    <div className="content">
+      {/* Page Header */}
+      <div className="d-flex align-items-sm-center justify-content-between flex-wrap gap-2 mb-4">
+        <div>
+          <h4 className="fw-bold mb-1">
+            Bine ai venit, {user?.firstName || 'Doctor'}!
+          </h4>
+          <p className="text-muted mb-0">
+            {new Date().toLocaleDateString('ro-RO', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </p>
+        </div>
+        <div className="d-flex align-items-center flex-wrap gap-2">
+          <Button
+            variant="primary"
+            onClick={() => navigate('/appointments/create')}
           >
-            <div className="flex items-center justify-between mb-4">
-              <div className={`p-3 rounded-lg ${stat.color}`}>
-                <Icon name={stat.icon} className="w-6 h-6" />
-              </div>
-              {stat.isLoading ? (
-                <Skeleton variant="text" width={60} height={16} />
-              ) : (
-                <span
-                  className={`text-xs font-medium ${
-                    stat.trend === 'up'
-                      ? 'text-green-400'
-                      : stat.trend === 'down'
-                      ? 'text-red-400'
-                      : stat.trend === 'warning'
-                      ? 'text-yellow-400'
-                      : 'text-foreground/60'
-                  }`}
-                >
-                  {stat.change}
+            <i className="ti ti-plus me-1"></i>
+            Programare Noua
+          </Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => navigate('/patients/new')}
+          >
+            <i className="ti ti-user-plus me-1"></i>
+            Pacient Nou
+          </Button>
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="row">
+        {/* Total Patients */}
+        <div className="col-xl-3 col-md-6">
+          <div
+            className="card border shadow-sm cursor-pointer hover-shadow"
+            onClick={() => !patientsLoading && navigate('/patients')}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="card-body">
+              <div className="d-flex align-items-center mb-2 justify-content-between">
+                <span className="avatar bg-primary rounded-circle">
+                  <i className="ti ti-users fs-24"></i>
                 </span>
-              )}
+                <div className="text-end">
+                  <span className="badge px-2 py-1 fs-12 fw-medium d-inline-flex mb-1 bg-success">
+                    Activi
+                  </span>
+                </div>
+              </div>
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="mb-1 text-muted">Total Pacienti</p>
+                  {patientsLoading ? (
+                    <StatSkeleton />
+                  ) : patientsError ? (
+                    <div>
+                      <h3 className="fw-bold mb-0 text-danger">Eroare</h3>
+                      <button
+                        className="btn btn-link btn-sm p-0 text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          refetchPatients();
+                        }}
+                      >
+                        Reincearca
+                      </button>
+                    </div>
+                  ) : (
+                    <h3 className="fw-bold mb-0">
+                      {formatNumber(patientsCount || 0)}
+                    </h3>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="text-sm text-foreground/60 mb-1">{stat.label}</div>
-            {stat.isLoading ? (
-              <Skeleton variant="text" width="60%" height={40} />
-            ) : stat.isError ? (
-              <div>
-                <div className="text-xl font-bold text-red-400 mb-2">
-                  Error loading
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    stat.refetch();
-                  }}
-                  className="text-xs text-brand hover:text-brand/80 underline"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : (
-              <div className="text-3xl font-bold text-foreground group-hover:text-brand transition-colors">
-                {stat.value}
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Quick Actions */}
-      <div>
-        <h2 className="text-xl font-semibold text-foreground mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {quickActions.map((action) => (
-            <button
-              key={action.label}
-              onClick={action.action}
-              className="p-6 bg-surface rounded-lg border border-white/10 hover:border-brand transition-all text-left group"
-            >
-              <div className={`w-12 h-12 rounded-lg ${action.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                <Icon name={action.icon as any} className="w-6 h-6 text-white" />
-              </div>
-              <div className="text-foreground font-semibold mb-1 group-hover:text-brand transition-colors">
-                {action.label}
-              </div>
-              <div className="text-sm text-foreground/60">{action.description}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Confirmation Widget */}
-      <ConfirmationStatsWidget />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="p-6 bg-surface rounded-lg border border-white/10">
-          <h2 className="text-xl font-semibold text-foreground mb-4">Recent Activity</h2>
-          <div className="space-y-4">
-            {recentActivity.map((activity, idx) => (
-              <div key={idx} className="flex items-start gap-4">
-                <div className={`p-2 rounded-lg ${activity.color} flex-shrink-0`}>
-                  <Icon name={activity.icon as any} className="w-5 h-5" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-foreground">{activity.title}</div>
-                  <div className="text-sm text-foreground/60 truncate">{activity.description}</div>
-                  <div className="text-xs text-foreground/40 mt-1">{activity.time}</div>
-                </div>
-              </div>
-            ))}
           </div>
-          <button className="w-full mt-4 py-2 text-sm text-brand hover:text-brand/80 transition-colors">
-            View all activity
-          </button>
         </div>
 
+        {/* Today's Appointments */}
+        <div className="col-xl-3 col-md-6">
+          <div
+            className="card border shadow-sm cursor-pointer hover-shadow"
+            onClick={() => !appointmentsLoading && navigate('/appointments')}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="card-body">
+              <div className="d-flex align-items-center mb-2 justify-content-between">
+                <span className="avatar bg-info rounded-circle">
+                  <i className="ti ti-calendar-event fs-24"></i>
+                </span>
+                <div className="text-end">
+                  {appointmentsData?.pending ? (
+                    <span className="badge px-2 py-1 fs-12 fw-medium d-inline-flex mb-1 bg-warning">
+                      {appointmentsData.pending} de confirmat
+                    </span>
+                  ) : (
+                    <span className="badge px-2 py-1 fs-12 fw-medium d-inline-flex mb-1 bg-success">
+                      Confirmate
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="mb-1 text-muted">Programari Azi</p>
+                  {appointmentsLoading ? (
+                    <StatSkeleton />
+                  ) : appointmentsError ? (
+                    <div>
+                      <h3 className="fw-bold mb-0 text-danger">Eroare</h3>
+                      <button
+                        className="btn btn-link btn-sm p-0 text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          refetchAppointments();
+                        }}
+                      >
+                        Reincearca
+                      </button>
+                    </div>
+                  ) : (
+                    <h3 className="fw-bold mb-0">{appointmentsData?.total || 0}</h3>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Outstanding Balance */}
+        <div className="col-xl-3 col-md-6">
+          <div
+            className="card border shadow-sm cursor-pointer hover-shadow"
+            onClick={() => !balanceLoading && navigate('/billing')}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="card-body">
+              <div className="d-flex align-items-center mb-2 justify-content-between">
+                <span className="avatar bg-success rounded-circle">
+                  <i className="ti ti-currency-dollar fs-24"></i>
+                </span>
+                <div className="text-end">
+                  {balanceData?.overdueCount ? (
+                    <span className="badge px-2 py-1 fs-12 fw-medium d-inline-flex mb-1 bg-danger">
+                      {balanceData.overdueCount} restante
+                    </span>
+                  ) : (
+                    <span className="badge px-2 py-1 fs-12 fw-medium d-inline-flex mb-1 bg-success">
+                      La zi
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="mb-1 text-muted">Sold Restant</p>
+                  {balanceLoading ? (
+                    <StatSkeleton />
+                  ) : balanceError ? (
+                    <div>
+                      <h3 className="fw-bold mb-0 text-danger">Eroare</h3>
+                      <button
+                        className="btn btn-link btn-sm p-0 text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          refetchBalance();
+                        }}
+                      >
+                        Reincearca
+                      </button>
+                    </div>
+                  ) : (
+                    <h3 className="fw-bold mb-0">
+                      {formatCurrency(balanceData?.total || 0, balanceData?.currency)}
+                    </h3>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Low Stock */}
+        <div className="col-xl-3 col-md-6">
+          <div
+            className="card border shadow-sm cursor-pointer hover-shadow"
+            onClick={() => !inventoryLoading && navigate('/inventory')}
+            role="button"
+            tabIndex={0}
+          >
+            <div className="card-body">
+              <div className="d-flex align-items-center mb-2 justify-content-between">
+                <span className="avatar bg-danger rounded-circle">
+                  <i className="ti ti-package fs-24"></i>
+                </span>
+                <div className="text-end">
+                  {inventoryData?.criticalCount ? (
+                    <span className="badge px-2 py-1 fs-12 fw-medium d-inline-flex mb-1 bg-danger">
+                      {inventoryData.criticalCount} critice
+                    </span>
+                  ) : inventoryData?.count ? (
+                    <span className="badge px-2 py-1 fs-12 fw-medium d-inline-flex mb-1 bg-warning">
+                      Atentie
+                    </span>
+                  ) : (
+                    <span className="badge px-2 py-1 fs-12 fw-medium d-inline-flex mb-1 bg-success">
+                      OK
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="mb-1 text-muted">Stoc Scazut</p>
+                  {inventoryLoading ? (
+                    <StatSkeleton />
+                  ) : inventoryError ? (
+                    <div>
+                      <h3 className="fw-bold mb-0 text-danger">Eroare</h3>
+                      <button
+                        className="btn btn-link btn-sm p-0 text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          refetchInventory();
+                        }}
+                      >
+                        Reincearca
+                      </button>
+                    </div>
+                  ) : (
+                    <h3 className="fw-bold mb-0">{inventoryData?.count || 0}</h3>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Row */}
+      <div className="row">
         {/* Upcoming Appointments */}
-        <div className="p-6 bg-surface rounded-lg border border-white/10">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground">Today's Appointments</h2>
-            <button
-              onClick={() => navigate('/appointments')}
-              className="text-sm text-brand hover:text-brand/80 transition-colors"
-            >
-              View all
-            </button>
-          </div>
-          <div className="space-y-3">
-            {upcomingAppointments.map((appt) => (
-              <div
-                key={appt.id}
-                className="p-4 bg-surface-hover rounded-lg hover:bg-surface-hover/80 transition-colors cursor-pointer"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <div className="text-foreground font-medium">{appt.patient}</div>
-                    <div className="text-sm text-foreground/60">{appt.type}</div>
-                  </div>
-                  <div className="text-brand font-semibold text-sm">{appt.time}</div>
+        <div className="col-xl-8">
+          <Card className="shadow-sm">
+            <CardHeader className="d-flex align-items-center justify-content-between">
+              <h5 className="fw-bold mb-0">Programari de Azi</h5>
+              <Link to="/appointments" className="btn btn-outline-primary btn-sm">
+                Vezi Toate
+              </Link>
+            </CardHeader>
+            <CardBody>
+              <div className="table-responsive">
+                <table className="table table-hover mb-0">
+                  <thead className="table-light">
+                    <tr>
+                      <th>Ora</th>
+                      <th>Pacient</th>
+                      <th>Procedura</th>
+                      <th>Doctor</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {upcomingAppointments.map((appt) => (
+                      <tr key={appt.id} className="cursor-pointer">
+                        <td>
+                          <span className="fw-semibold text-primary">
+                            {appt.time}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <div className="avatar avatar-sm me-2 bg-primary-transparent rounded-circle">
+                              <span className="avatar-text">
+                                {appt.patient
+                                  .split(' ')
+                                  .map((n) => n[0])
+                                  .join('')}
+                              </span>
+                            </div>
+                            <span className="fw-medium">{appt.patient}</span>
+                          </div>
+                        </td>
+                        <td>{appt.type}</td>
+                        <td>{appt.provider}</td>
+                        <td>
+                          <Badge
+                            variant={
+                              appt.status === 'confirmed' ? 'soft-success' : 'soft-warning'
+                            }
+                          >
+                            {appt.status === 'confirmed'
+                              ? 'Confirmat'
+                              : 'In asteptare'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {upcomingAppointments.length === 0 && (
+                <div className="text-center py-4">
+                  <i className="ti ti-calendar-off fs-48 text-muted"></i>
+                  <p className="text-muted mt-2 mb-0">
+                    Nu sunt programari pentru azi
+                  </p>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-foreground/50">
-                  <Icon name="users" className="w-4 h-4" />
-                  {appt.provider}
+              )}
+            </CardBody>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card className="shadow-sm mt-4">
+            <CardHeader>
+              <h5 className="fw-bold mb-0">Actiuni Rapide</h5>
+            </CardHeader>
+            <CardBody>
+              <div className="row g-3">
+                <div className="col-md-3 col-6">
+                  <button
+                    className="btn btn-light w-100 h-100 py-4 d-flex flex-column align-items-center gap-2 hover-primary"
+                    onClick={() => navigate('/patients/new')}
+                  >
+                    <div className="avatar avatar-lg bg-primary-transparent rounded-circle">
+                      <i className="ti ti-user-plus fs-24 text-primary"></i>
+                    </div>
+                    <span className="fw-medium">Pacient Nou</span>
+                  </button>
+                </div>
+                <div className="col-md-3 col-6">
+                  <button
+                    className="btn btn-light w-100 h-100 py-4 d-flex flex-column align-items-center gap-2 hover-primary"
+                    onClick={() => navigate('/appointments/create')}
+                  >
+                    <div className="avatar avatar-lg bg-info-transparent rounded-circle">
+                      <i className="ti ti-calendar-plus fs-24 text-info"></i>
+                    </div>
+                    <span className="fw-medium">Programare</span>
+                  </button>
+                </div>
+                <div className="col-md-3 col-6">
+                  <button
+                    className="btn btn-light w-100 h-100 py-4 d-flex flex-column align-items-center gap-2 hover-primary"
+                    onClick={() => navigate('/billing/invoices/new')}
+                  >
+                    <div className="avatar avatar-lg bg-success-transparent rounded-circle">
+                      <i className="ti ti-file-invoice fs-24 text-success"></i>
+                    </div>
+                    <span className="fw-medium">Factura Noua</span>
+                  </button>
+                </div>
+                <div className="col-md-3 col-6">
+                  <button
+                    className="btn btn-light w-100 h-100 py-4 d-flex flex-column align-items-center gap-2 hover-primary"
+                    onClick={() => navigate('/clinical/treatments')}
+                  >
+                    <div className="avatar avatar-lg bg-warning-transparent rounded-circle">
+                      <i className="ti ti-dental fs-24 text-warning"></i>
+                    </div>
+                    <span className="fw-medium">Plan Tratament</span>
+                  </button>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-6 bg-surface rounded-lg border border-white/10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
-              <Icon name="calendar" className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground">Appointment Rate</h3>
-          </div>
-          <div className="text-3xl font-bold text-foreground mb-2">94%</div>
-          <div className="text-sm text-foreground/60">Show rate this week</div>
-          <div className="mt-4 h-2 bg-surface-hover rounded-full overflow-hidden">
-            <div className="h-full w-[94%] bg-blue-500 rounded-full" />
-          </div>
+            </CardBody>
+          </Card>
         </div>
 
-        <div className="p-6 bg-surface rounded-lg border border-white/10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-green-500/20 text-green-300">
-              <Icon name="cash" className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground">Collection Rate</h3>
-          </div>
-          <div className="text-3xl font-bold text-foreground mb-2">87%</div>
-          <div className="text-sm text-foreground/60">Payments collected this month</div>
-          <div className="mt-4 h-2 bg-surface-hover rounded-full overflow-hidden">
-            <div className="h-full w-[87%] bg-green-500 rounded-full" />
-          </div>
-        </div>
+        {/* Right Sidebar */}
+        <div className="col-xl-4">
+          {/* Recent Activity */}
+          <Card className="shadow-sm">
+            <CardHeader className="d-flex align-items-center justify-content-between">
+              <h5 className="fw-bold mb-0">Activitate Recenta</h5>
+            </CardHeader>
+            <CardBody>
+              <div className="activity-feed">
+                {recentActivity.map((activity, idx) => (
+                  <div
+                    key={idx}
+                    className={`d-flex gap-3 ${
+                      idx < recentActivity.length - 1 ? 'mb-3 pb-3 border-bottom' : ''
+                    }`}
+                  >
+                    <div
+                      className={`avatar avatar-sm bg-${activity.color}-transparent rounded-circle flex-shrink-0`}
+                    >
+                      <i className={`${activity.icon} text-${activity.color}`}></i>
+                    </div>
+                    <div className="flex-grow-1 min-width-0">
+                      <p className="mb-1 fw-medium text-truncate">
+                        {activity.title}
+                      </p>
+                      <p className="mb-1 text-muted small text-truncate">
+                        {activity.description}
+                      </p>
+                      <small className="text-muted">{activity.time}</small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardBody>
+          </Card>
 
-        <div className="p-6 bg-surface rounded-lg border border-white/10">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 rounded-lg bg-purple-500/20 text-purple-300">
-              <Icon name="users" className="w-5 h-5" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground">Patient Satisfaction</h3>
-          </div>
-          <div className="text-3xl font-bold text-foreground mb-2">4.8</div>
-          <div className="text-sm text-foreground/60">Average rating this month</div>
-          <div className="mt-4 flex gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Icon
-                key={star}
-                name="check"
-                className={`w-5 h-5 ${star <= 4 ? 'text-yellow-400' : 'text-foreground/20'}`}
-              />
-            ))}
-          </div>
+          {/* Performance Metrics */}
+          <Card className="shadow-sm mt-4">
+            <CardHeader>
+              <h5 className="fw-bold mb-0">Performanta Saptamana</h5>
+            </CardHeader>
+            <CardBody>
+              {/* Appointment Rate */}
+              <div className="mb-4">
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">Rata Prezenta</span>
+                  <span className="fw-bold">94%</span>
+                </div>
+                <div className="progress" style={{ height: 8 }}>
+                  <div
+                    className="progress-bar bg-primary"
+                    style={{ width: '94%' }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Collection Rate */}
+              <div className="mb-4">
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">Rata Incasare</span>
+                  <span className="fw-bold">87%</span>
+                </div>
+                <div className="progress" style={{ height: 8 }}>
+                  <div
+                    className="progress-bar bg-success"
+                    style={{ width: '87%' }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Patient Satisfaction */}
+              <div>
+                <div className="d-flex justify-content-between mb-2">
+                  <span className="text-muted">Satisfactie Pacienti</span>
+                  <span className="fw-bold">4.8/5</span>
+                </div>
+                <div className="d-flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <i
+                      key={star}
+                      className={`ti ti-star-filled fs-20 ${
+                        star <= 4 ? 'text-warning' : 'text-muted'
+                      }`}
+                    ></i>
+                  ))}
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+
+          {/* Inventory Alerts */}
+          {inventoryData?.count && inventoryData.count > 0 && (
+            <Card className="shadow-sm mt-4 border-warning">
+              <CardHeader className="bg-warning-transparent">
+                <h5 className="fw-bold mb-0 text-warning">
+                  <i className="ti ti-alert-triangle me-2"></i>
+                  Alerte Stoc
+                </h5>
+              </CardHeader>
+              <CardBody>
+                <p className="text-muted mb-3">
+                  {inventoryData.count} produse au stoc scazut si necesita
+                  reaprovizionare.
+                </p>
+                <Button
+                  variant="warning"
+                  size="sm"
+                  className="w-100"
+                  onClick={() => navigate('/inventory?filter=low-stock')}
+                >
+                  Vezi Produse
+                </Button>
+              </CardBody>
+            </Card>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+export default DashboardPage;

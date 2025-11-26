@@ -18,7 +18,7 @@ export const useTotalPatientsCount = () => {
     queryKey: ['dashboard', 'patients', 'count'],
     queryFn: async () => {
       const response = await patientsClient.search({ page: 1, limit: 1 });
-      return response.data?.total || 0;
+      return response.total || 0;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000,

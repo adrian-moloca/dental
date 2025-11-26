@@ -38,7 +38,7 @@ export function DevTools() {
             setLastReloadTime(Date.now());
           });
 
-          import.meta.hot!.on('vite:error', (_err: unknown) => {
+          import.meta.hot!.on('vite:error', () => {
             setHmrStatus('disconnected');
             connectionRetries.current += 1;
 

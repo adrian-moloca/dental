@@ -1,0 +1,501 @@
+// Table Component Styles
+// Data display tables
+
+.table-container {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 0;
+  color: var(--gray-800);                // Improved contrast: was gray-700
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: 14px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.875rem;
+  }
+
+  th {
+    font-weight: 600;
+    color: var(--heading-color);
+    background-color: var(--light-900);
+    text-align: left;
+    white-space: nowrap;
+
+    &.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background-color: var(--light-800);
+      }
+
+      .sort-icon {
+        margin-left: 6px;
+        font-size: 14px;
+        color: var(--gray-600);          // Improved contrast: was gray-400
+      }
+
+      &.sorted-asc,
+      &.sorted-desc {
+        .sort-icon {
+          color: var(--primary);
+        }
+      }
+    }
+  }
+
+  td {
+    color: var(--gray-800);              // Improved contrast: was gray-700
+  }
+
+  tbody tr {
+    transition: background 0.2s ease;
+
+    &:hover {
+      background-color: var(--light-900);
+    }
+
+    &:last-child td {
+      border-bottom: none;
+    }
+  }
+}
+
+// Table Variants
+.table-striped {
+  tbody tr:nth-of-type(odd) {
+    background-color: var(--light-100);
+  }
+}
+
+.table-hover {
+  tbody tr {
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--primary-transparent);
+    }
+  }
+}
+
+.table-bordered {
+  th,
+  td {
+    border: 1px solid var(--border-color);
+  }
+}
+
+.table-borderless {
+  th,
+  td {
+    border: none;
+  }
+}
+
+// Table Sizes
+.table-sm {
+  th,
+  td {
+    padding: 10px 12px;
+    font-size: 0.8125rem;
+  }
+}
+
+.table-lg {
+  th,
+  td {
+    padding: 18px 20px;
+    font-size: 0.9375rem;
+  }
+}
+
+// Table Cell Alignments
+.text-center {
+  text-align: center !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
+
+.text-left {
+  text-align: left !important;
+}
+
+// Table Row Colors
+.table-primary {
+  background-color: var(--primary-transparent);
+}
+
+.table-success {
+  background-color: var(--success-transparent);
+}
+
+.table-warning {
+  background-color: var(--warning-transparent);
+}
+
+.table-danger {
+  background-color: var(--danger-transparent);
+}
+
+.table-info {
+  background-color: var(--info-transparent);
+}
+
+// Table with Selection
+.table-selectable {
+  th:first-child,
+  td:first-child {
+    width: 48px;
+    padding-right: 8px;
+  }
+
+  .form-check {
+    margin: 0;
+    justify-content: center;
+  }
+}
+
+// Table Actions Column
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--gray-500);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    i {
+      font-size: 18px;
+    }
+
+    &:hover {
+      background: var(--light-900);
+      color: var(--primary);
+    }
+
+    &.action-edit:hover {
+      background: var(--primary-transparent);
+      color: var(--primary);
+    }
+
+    &.action-delete:hover {
+      background: var(--danger-transparent);
+      color: var(--danger);
+    }
+
+    &.action-view:hover {
+      background: var(--info-transparent);
+      color: var(--info);
+    }
+  }
+}
+
+// User/Avatar Cell
+.table-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    background: var(--primary-transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    span {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+  }
+
+  .user-info {
+    min-width: 0;
+
+    h6 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--heading-color);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    span {
+      font-size: 0.8125rem;
+      color: var(--gray-700);            // Improved contrast: was gray-500
+    }
+  }
+}
+
+// Table with Card Style
+.table-card {
+  .table-container {
+    box-shadow: var(--box-shadow-sm);
+  }
+}
+
+// Data Table Header
+.datatable-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .datatable-title {
+    h5 {
+      margin: 0;
+      font-weight: 600;
+      color: var(--heading-color);
+    }
+
+    span {
+      font-size: 0.8125rem;
+      color: var(--gray-700);            // Improved contrast: was gray-500
+    }
+  }
+
+  .datatable-search {
+    max-width: 300px;
+    width: 100%;
+  }
+
+  .datatable-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+// Data Table Footer
+.datatable-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border-color);
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .datatable-info {
+    font-size: 0.875rem;
+    color: var(--gray-700);              // Improved contrast: was gray-500
+  }
+}
+
+// Pagination
+.pagination {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 4px;
+}
+
+.page-item {
+  .page-link {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--gray-700);
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--light-900);
+      border-color: var(--gray-300);
+    }
+  }
+
+  &.active .page-link {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--white);
+  }
+
+  &.disabled .page-link {
+    color: var(--gray-400);
+    pointer-events: none;
+    background: var(--light-900);
+  }
+}
+
+// Per Page Select
+.per-page-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--gray-600);
+
+  .form-select {
+    width: auto;
+    padding: 6px 32px 6px 12px;
+  }
+}
+
+// Empty Table State
+.table-empty {
+  text-align: center;
+  padding: 60px 20px;
+
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: var(--light-900);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 32px;
+      color: var(--gray-400);
+    }
+  }
+
+  h5 {
+    font-weight: 600;
+    color: var(--heading-color);
+    margin-bottom: 8px;
+  }
+
+  p {
+    color: var(--gray-500);
+    font-size: 0.875rem;
+    margin-bottom: 20px;
+  }
+}
+
+// Loading State
+.table-loading {
+  position: relative;
+  min-height: 200px;
+
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+  }
+}
+
+// Expandable Rows
+.table-expandable {
+  .expand-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--light-900);
+    border: none;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    i {
+      font-size: 14px;
+      transition: transform 0.2s ease;
+    }
+
+    &:hover {
+      background: var(--primary-transparent);
+      color: var(--primary);
+    }
+
+    &.expanded i {
+      transform: rotate(90deg);
+    }
+  }
+
+  .expanded-row {
+    background: var(--light-100);
+
+    td {
+      padding: 20px;
+    }
+  }
+}
+
+// Sticky Header
+.table-sticky-header {
+  max-height: 500px;
+  overflow-y: auto;
+
+  thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
+    th {
+      background: var(--light-900);
+    }
+  }
+}

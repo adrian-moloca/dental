@@ -180,7 +180,7 @@ export function TOTPSetupModal({
                 <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                   Backup Codes
                 </p>
-                <Badge variant="warning">Save These</Badge>
+                <Badge tone="warning">Save These</Badge>
               </div>
               <div className="grid grid-cols-2 gap-2 font-mono text-sm">
                 {backupCodes.map((code, index) => (

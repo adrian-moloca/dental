@@ -84,10 +84,8 @@ export default function ResetPasswordPage() {
       navigate('/login', {
         state: { message: 'Password reset successfully. Please log in with your new password.' },
       });
-    } catch (err: any) {
-      const errorMessage =
-        err.response?.data?.message || 'Failed to reset password. Please try again.';
-      setError(errorMessage);
+    } catch {
+      setError('Failed to reset password. Please try again.');
     } finally {
       setIsLoading(false);
     }
