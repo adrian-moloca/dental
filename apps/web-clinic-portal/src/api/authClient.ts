@@ -17,6 +17,11 @@ import type {
   RefreshTokenDto,
   SessionDto,
   UserDto,
+  MfaStatusDto,
+  MfaEnrollResponseDto,
+  MfaVerifyDto,
+  MfaDisableDto,
+  BackupCodesDto,
 } from '../types/auth.types';
 
 const authApi = createApiClient(env.AUTH_API_URL);
@@ -117,5 +122,85 @@ export const authClient = {
    */
   async deleteSession(sessionId: string): Promise<void> {
     await authApi.delete(`/auth/sessions/${sessionId}`);
+  },
+
+  /**
+   * DELETE /auth/sessions
+   * Revoke all other sessions (except current)
+   */
+  async revokeAllOtherSessions(): Promise<void> {
+    await authApi.delete('/auth/sessions');
+  },
+
+  /**
+   * GET /auth/mfa/status
+   * Check if MFA is enabled for the current user
+   */
+  async getMfaStatus(): Promise<MfaStatusDto> {
+    const response = await authApi.get<MfaStatusDto>('/auth/mfa/status');
+    return response.data;
+  },
+
+  /**
+   * POST /auth/mfa/enroll
+   * Generate TOTP secret and QR code for MFA enrollment
+   */
+  async enrollMfa(): Promise<MfaEnrollResponseDto> {
+    const response = await authApi.post<MfaEnrollResponseDto>('/auth/mfa/enroll');
+    return response.data;
+  },
+
+  /**
+   * POST /auth/mfa/verify
+   * Verify TOTP code and enable MFA
+   */
+  async verifyMfa(data: MfaVerifyDto): Promise<{ success: boolean }> {
+    const response = await authApi.post<{ success: boolean }>('/auth/mfa/verify', data);
+    return response.data;
+  },
+
+  /**
+   * POST /auth/mfa/disable
+   * Disable MFA (requires password confirmation)
+   */
+  async disableMfa(data: MfaDisableDto): Promise<{ success: boolean }> {
+    const response = await authApi.post<{ success: boolean }>('/auth/mfa/disable', data);
+    return response.data;
+  },
+
+  /**
+   * GET /auth/mfa/backup-codes
+   * Get current backup codes
+   */
+  async getBackupCodes(): Promise<BackupCodesDto> {
+    const response = await authApi.get<BackupCodesDto>('/auth/mfa/backup-codes');
+    return response.data;
+  },
+
+  /**
+   * POST /auth/mfa/backup-codes/regenerate
+   * Regenerate backup codes (invalidates old ones)
+   */
+  async regenerateBackupCodes(): Promise<BackupCodesDto> {
+    const response = await authApi.post<BackupCodesDto>('/auth/mfa/backup-codes/regenerate');
+    return response.data;
+  },
+
+  /**
+   * POST /auth/forgot-password
+   * Request password reset link via email
+   */
+  async forgotPassword(data: { email: string }): Promise<{ message: string }> {
+    const response = await authApi.post<{ message: string }>('/auth/forgot-password', data);
+    return response.data;
+  },
+
+  /**
+   * POST /auth/reset-password
+   * Complete password reset with token and new password
+   */
+  async resetPassword(data: { token: string; newPassword: string }): Promise<{ message: string }> {
+    const response = await authApi.post<{ message: string }>('/auth/reset-password', data);
+    return response.data;
   },
 };

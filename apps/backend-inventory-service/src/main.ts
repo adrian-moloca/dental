@@ -24,10 +24,14 @@ async function bootstrap() {
   // Security
   app.use(helmet());
 
-  // CORS
-  const corsOrigin = configService.get<string>('cors.origin', 'http://localhost:3000');
+  // CORS - Parse comma-separated origins into array
+  const corsOriginConfig = configService.get<string>('cors.origin', 'http://localhost:3000,http://localhost:5173');
+  const corsOrigins = typeof corsOriginConfig === 'string'
+    ? corsOriginConfig.split(',').map(o => o.trim())
+    : corsOriginConfig;
+
   app.enableCors({
-    origin: corsOrigin,
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [

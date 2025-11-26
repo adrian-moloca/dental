@@ -39,7 +39,7 @@ export default (): AppConfig => {
     },
     port: parseInt(process.env.PORT || '3002', 10),
     cors: {
-      origin: process.env.CORS_ORIGIN || '*',
+      origin: process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173',
     },
   };
 

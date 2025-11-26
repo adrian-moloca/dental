@@ -12,17 +12,29 @@
  * - Manages MFA factors via MfaFactorRepository
  * - Enforces organization-level MFA policies
  *
+ * SECURITY NOTE:
+ * TOTP secrets are encrypted using AES-256-GCM, NOT hashed.
+ * This is critical because TOTP verification requires the original secret
+ * to compute the HMAC. Hashing is one-way and would make verification impossible.
+ *
  * @module MfaService
  */
 
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UUID, OrganizationId } from '@dentalos/shared-types';
 import { SecurityError, NotFoundError } from '@dentalos/shared-errors';
 import { hash } from '@node-rs/argon2';
+import { AppConfig } from '../../../configuration';
 import { MfaFactorRepository } from '../repositories/mfa-factor.repository';
 import { MfaFactor, MfaFactorType } from '../entities/mfa-factor.entity';
 import { TOTPService } from './totp.service';
 import { SMSMfaService } from './sms-mfa.service';
+import {
+  encryptTotpSecret,
+  decryptTotpSecret,
+  isEncryptedSecret,
+} from '../utils/totp-encryption.util';
 
 /**
  * TOTP enrollment result
@@ -38,14 +50,28 @@ export interface TOTPEnrollmentResult {
  */
 @Injectable()
 export class MfaService {
+  /**
+   * AES-256-GCM encryption key for TOTP secrets
+   * @security This key protects all TOTP secrets. Handle with extreme care.
+   */
+  private readonly mfaEncryptionKey: string;
+
   constructor(
     private mfaFactorRepository: MfaFactorRepository,
     private totpService: TOTPService,
-    private smsMfaService: SMSMfaService
-  ) {}
+    private smsMfaService: SMSMfaService,
+    private configService: ConfigService<AppConfig, true>
+  ) {
+    this.mfaEncryptionKey = this.configService.get('security.mfaEncryptionKey', { infer: true });
+  }
 
   /**
    * Enroll TOTP factor for a user
+   *
+   * SECURITY: TOTP secrets are encrypted with AES-256-GCM, not hashed.
+   * TOTP verification requires the original secret to compute HMAC.
+   * The plaintext secret is returned to the user ONCE during enrollment
+   * and must be stored in their authenticator app.
    *
    * @param userId - User identifier
    * @param organizationId - Organization identifier
@@ -60,7 +86,10 @@ export class MfaService {
     userEmail: string
   ): Promise<TOTPEnrollmentResult> {
     const secret = this.totpService.generateSecret();
-    const secretHash = await this.hashSecret(secret);
+
+    // CRITICAL: Encrypt the secret, do NOT hash it
+    // TOTP verification requires the original secret to compute the expected token
+    const encryptedSecret = encryptTotpSecret(secret, this.mfaEncryptionKey);
 
     const existingFactors = await this.mfaFactorRepository.findByUserId(userId, organizationId);
     const isPrimary = existingFactors.length === 0;
@@ -69,7 +98,7 @@ export class MfaService {
       userId,
       organizationId,
       factorType: MfaFactorType.TOTP,
-      secret: secretHash,
+      secret: encryptedSecret,
       isEnabled: false,
       isPrimary,
       metadata: { factorName },
@@ -87,11 +116,18 @@ export class MfaService {
   /**
    * Verify and enable TOTP factor
    *
+   * SECURITY: Decrypts the stored secret before TOTP verification.
+   * The secret must be decrypted because TOTP verification requires
+   * the original base32 secret to compute the expected HMAC token.
+   *
    * @param userId - User identifier
    * @param organizationId - Organization identifier
    * @param factorId - Factor identifier
    * @param token - User-provided TOTP token
    * @returns True if verification successful
+   *
+   * @throws SecurityError if the stored secret cannot be decrypted
+   * @throws NotFoundError if factor not found or belongs to different user
    */
   async verifyTOTP(
     userId: UUID,
@@ -109,7 +145,35 @@ export class MfaService {
       throw new SecurityError({ code: 'INVALID_FACTOR_TYPE', message: 'Factor is not TOTP' });
     }
 
-    const isValid = this.totpService.verifyToken(factor.secret, token);
+    // CRITICAL: Decrypt the secret before verification
+    // TOTP requires the original plaintext secret to compute the HMAC
+    let plaintextSecret: string;
+    try {
+      // Check if this is an encrypted secret (new format) or hashed (legacy bug)
+      if (!isEncryptedSecret(factor.secret)) {
+        // This is a legacy hashed secret - verification is impossible
+        // Log this as a security incident and fail securely
+        throw new SecurityError({
+          code: 'LEGACY_HASHED_SECRET',
+          message:
+            'TOTP verification failed: secret was stored using irreversible hashing. User must re-enroll MFA.',
+        });
+      }
+
+      plaintextSecret = decryptTotpSecret(factor.secret, this.mfaEncryptionKey);
+    } catch (error) {
+      if (error instanceof SecurityError) {
+        throw error;
+      }
+      // Decryption failed - either wrong key or corrupted data
+      // Do not expose specific error details
+      throw new SecurityError({
+        code: 'TOTP_DECRYPTION_FAILED',
+        message: 'TOTP verification failed due to internal error',
+      });
+    }
+
+    const isValid = this.totpService.verifyToken(plaintextSecret, token);
 
     if (isValid && !factor.isEnabled) {
       const enabledFactor = factor.withEnabledStatus(true).withUpdatedUsage();
@@ -245,6 +309,17 @@ export class MfaService {
 
   /**
    * Hash secret using Argon2id
+   *
+   * NOTE: This is used for SMS/Email factors where the secret field stores
+   * a hash for integrity verification. The actual phone/email is stored
+   * in plaintext in dedicated fields because SMS/Email MFA sends codes
+   * to those addresses and doesn't need to reverse the hash.
+   *
+   * DO NOT use this for TOTP secrets - TOTP requires encryption (reversible)
+   * because the original secret is needed to compute HMAC for verification.
+   *
+   * @param secret - The value to hash (phone number, email, etc.)
+   * @returns Argon2id hash string
    */
   private async hashSecret(secret: string): Promise<string> {
     return hash(secret, {

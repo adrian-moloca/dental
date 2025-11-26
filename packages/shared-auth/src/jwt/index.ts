@@ -21,6 +21,7 @@ export {
   extractPayload,
   JWTError,
   JWTVerificationError,
+  ALLOWED_JWT_ALGORITHMS,
 } from './jwt-verifier';
 
 export {

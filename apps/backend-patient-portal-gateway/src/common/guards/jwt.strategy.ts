@@ -1,7 +1,15 @@
 /**
- * JWT Strategy for Passport
+ * JWT Strategy for Patient Portal Gateway
  *
  * Validates JWT tokens and extracts patient payload.
+ *
+ * @security CRITICAL: Algorithm Confusion Attack Prevention
+ * - ONLY RS256 algorithm is permitted
+ * - Uses public key for verification (asymmetric)
+ * - Validates JWT signature using RSA public key from auth service
+ *
+ * @see CVE-2015-9235 - Algorithm confusion vulnerability
+ * @see CVE-2016-10555 - jsonwebtoken algorithm confusion
  *
  * @module common/guards/jwt-strategy
  */
@@ -12,6 +20,12 @@ import { ConfigService } from '@nestjs/config';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import type { AppConfig } from '@/config/configuration';
 import type { CurrentPatientPayload } from '../decorators/current-patient.decorator';
+
+/**
+ * Allowed JWT algorithms
+ * SECURITY: Only RS256 is permitted to prevent algorithm confusion attacks
+ */
+const ALLOWED_JWT_ALGORITHMS: ('RS256')[] = ['RS256'];
 
 export interface JwtPayload {
   sub: string; // userId
@@ -31,9 +45,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get('jwt.accessSecret', { infer: true }),
+      // SECURITY: RSA public key for RS256 verification
+      secretOrKey: configService.get('jwt.accessPublicKey', { infer: true }),
       issuer: configService.get('jwt.issuer', { infer: true }),
       audience: configService.get('jwt.audience', { infer: true }),
+      // SECURITY CRITICAL: Only allow RS256 algorithm
+      // This prevents algorithm confusion attacks (CVE-2015-9235, CVE-2016-10555)
+      algorithms: ALLOWED_JWT_ALGORITHMS,
     });
   }
 

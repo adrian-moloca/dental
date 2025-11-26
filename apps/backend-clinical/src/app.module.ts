@@ -24,6 +24,7 @@ import { ClinicalNotesModule } from './modules/clinical-notes/clinical-notes.mod
 import { TreatmentPlansModule } from './modules/treatment-plans/treatment-plans.module';
 import { ProceduresModule } from './modules/procedures/procedures.module';
 import { ConsentsModule } from './modules/consents/consents.module';
+import { RetentionModule } from './modules/retention/retention.module';
 
 // Common Modules
 import { CacheModule } from './common/cache/cache.module';
@@ -95,6 +96,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     TreatmentPlansModule,
     ProceduresModule,
     ConsentsModule,
+    RetentionModule, // Romanian medical records retention (10 years)
   ],
   providers: [
     // Global JWT authentication

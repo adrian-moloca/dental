@@ -11,7 +11,7 @@
  * @module RefreshTokenDto
  */
 
-import { IsString, IsNotEmpty, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { OrganizationId } from '@dentalos/shared-types';
 
@@ -42,7 +42,7 @@ export class RefreshTokenDto {
     type: String,
     format: 'uuid',
   })
-  @IsUUID('4', { message: 'Organization ID must be a valid UUID v4' })
+  @IsString({ message: 'Organization ID must be a string' })
   @IsNotEmpty({ message: 'Organization ID is required' })
   organizationId!: OrganizationId;
 }

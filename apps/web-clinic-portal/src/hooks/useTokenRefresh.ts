@@ -60,8 +60,16 @@ export function useTokenRefresh() {
       throw new Error('No refresh token available');
     }
 
+    const user = tokenStorage.getUser();
+    if (!user?.organizationId) {
+      throw new Error('No organization ID available');
+    }
+
     try {
-      const response = await authClient.refresh({ refreshToken });
+      const response = await authClient.refresh({
+        refreshToken,
+        organizationId: user.organizationId,
+      });
 
       tokenStorage.setAccessToken(response.accessToken);
       tokenStorage.setRefreshToken(response.refreshToken);

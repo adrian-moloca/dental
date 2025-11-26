@@ -26,6 +26,7 @@
     "@dentalos/shared-errors": "workspace:*",
     "@dentalos/shared-events": "workspace:*",
     "@dentalos/shared-infra": "workspace:*",
+    "@dentalos/shared-security": "workspace:*",
     "@dentalos/shared-types": "workspace:*",
     "@dentalos/shared-validation": "workspace:*",
     "@nestjs/axios": "^3.0.1",

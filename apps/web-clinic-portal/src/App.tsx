@@ -15,6 +15,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { SidebarProvider } from './contexts/SidebarContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import LoginPage from './routes/LoginPage';
+import ForgotPasswordPage from './routes/ForgotPasswordPage';
+import ResetPasswordPage from './routes/ResetPasswordPage';
 import SelectOrganizationPage from './routes/SelectOrganizationPage';
 import PatientsListPage from './routes/PatientsListPage';
 import PatientDetailsPage from './routes/PatientDetailsPage';
@@ -23,10 +25,13 @@ import CreateAppointmentPage from './routes/CreateAppointmentPage';
 import AppointmentsListPage from './routes/AppointmentsListPage';
 import { DashboardPage } from './routes/DashboardPage';
 import { BillingPage } from './routes/BillingPage';
+import { CreateInvoicePage } from './routes/CreateInvoicePage';
 import { InvoiceDetailsPage } from './routes/InvoiceDetailsPage';
 import { ClinicalPage } from './routes/ClinicalPage';
 import { InventoryPage } from './routes/InventoryPage';
 import { ImagingPage } from './routes/ImagingPage';
+import SettingsSessionsPage from './routes/SettingsSessionsPage';
+import SettingsSecurityPage from './routes/SettingsSecurityPage';
 import { DevTools } from './components/DevTools';
 
 function AppContent() {
@@ -66,6 +71,8 @@ function AppContent() {
             />
             <Routes>
               <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
               <Route path="/login/select-org" element={<SelectOrganizationPage />} />
 
               {/* Dashboard */}
@@ -132,6 +139,14 @@ function AppContent() {
                 }
               />
               <Route
+                path="/billing/invoices/new"
+                element={
+                  <ProtectedRoute>
+                    <CreateInvoicePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/billing/invoices/:id"
                 element={
                   <ProtectedRoute>
@@ -174,6 +189,24 @@ function AppContent() {
                 element={
                   <ProtectedRoute>
                     <ImagingPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Settings */}
+              <Route
+                path="/settings/sessions"
+                element={
+                  <ProtectedRoute>
+                    <SettingsSessionsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings/security"
+                element={
+                  <ProtectedRoute>
+                    <SettingsSecurityPage />
                   </ProtectedRoute>
                 }
               />

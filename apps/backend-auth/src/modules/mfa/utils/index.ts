@@ -4,3 +4,4 @@
  */
 
 export * from './totp.util';
+export * from './totp-encryption.util';

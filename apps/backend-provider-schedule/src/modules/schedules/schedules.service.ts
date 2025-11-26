@@ -14,9 +14,11 @@ import {
   CreateAbsenceDto,
   CheckAvailabilityDto,
   ValidateAvailabilityDto,
+  GetAvailableSlotsDto,
   ScheduleResponseDto,
   AbsenceResponseDto,
   AvailabilityResponseDto,
+  AvailableSlotsResponseDto,
 } from './dto';
 
 /**
@@ -357,6 +359,154 @@ export class SchedulesService {
 
     return {
       isAvailable: true,
+    };
+  }
+
+  /**
+   * Get next N available slots for a provider (internal API)
+   *
+   * Used by the appointment booking UI to display available time slots.
+   * Calculates slots based on:
+   * - Provider's weekly schedule
+   * - Breaks
+   * - Absences
+   * - Requested duration
+   *
+   * IMPORTANT SCHEDULING CONSIDERATIONS:
+   * - Slots are returned in chronological order
+   * - Duration determines slot length (e.g., 30 min, 60 min)
+   * - Slots respect buffer times if configured
+   * - Only returns slots within provider's working hours
+   * - Excludes slots that overlap with absences
+   *
+   * @param dto - GetAvailableSlotsDto with provider, date, duration, count
+   * @returns AvailableSlotsResponseDto with array of available slots
+   */
+  async getAvailableSlots(dto: GetAvailableSlotsDto): Promise<AvailableSlotsResponseDto> {
+    this.logger.log(
+      `Getting ${dto.count} available slots for provider ${dto.providerId} ` +
+        `starting from ${dto.date} with duration ${dto.duration}min`,
+    );
+
+    // Get provider schedule
+    const schedule = await this.scheduleModel
+      .findOne({
+        providerId: dto.providerId,
+        tenantId: dto.tenantId,
+        organizationId: dto.organizationId,
+        isActive: true,
+        locationIds: dto.locationId,
+      })
+      .lean()
+      .exec();
+
+    if (!schedule) {
+      this.logger.warn(
+        `Schedule not found for provider ${dto.providerId} at location ${dto.locationId}`,
+      );
+      return { slots: [], hasMore: false };
+    }
+
+    const slots: { start: Date; end: Date }[] = [];
+    const maxDaysToSearch = 30; // Limit search to 30 days ahead
+    const currentDate = new Date(dto.date);
+    currentDate.setHours(0, 0, 0, 0);
+
+    // Search for available slots across multiple days
+    for (let dayOffset = 0; dayOffset < maxDaysToSearch && slots.length < dto.count; dayOffset++) {
+      const searchDate = new Date(currentDate);
+      searchDate.setDate(searchDate.getDate() + dayOffset);
+
+      const dayOfWeek = this.getDayOfWeek(searchDate);
+      const dailyHours = schedule.weeklyHours[dayOfWeek];
+
+      // Skip days when provider doesn't work
+      if (!dailyHours || dailyHours.length === 0) {
+        continue;
+      }
+
+      // Check for absences on this day
+      const startOfDay = new Date(searchDate);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(searchDate);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const absences = await this.absenceModel
+        .find({
+          providerId: dto.providerId,
+          tenantId: dto.tenantId,
+          organizationId: dto.organizationId,
+          status: 'approved',
+          start: { $lte: endOfDay },
+          end: { $gte: startOfDay },
+        })
+        .lean()
+        .exec();
+
+      // Get available time blocks for this day (excluding breaks)
+      const availableBlocks = this.calculateAvailableSlots(
+        searchDate,
+        dailyHours,
+        schedule.breaks || [],
+      );
+
+      // For each available block, generate slots of requested duration
+      for (const block of availableBlocks) {
+        let slotStart = new Date(block.start);
+
+        // If searching the first day, skip past current time + buffer
+        if (dayOffset === 0) {
+          const now = new Date();
+          const bufferMinutes = schedule.bufferTime || 0;
+          const minimumStartTime = new Date(now.getTime() + bufferMinutes * 60000);
+
+          if (slotStart < minimumStartTime) {
+            // Round up to next slot boundary
+            const minutesSinceBlockStart =
+              (minimumStartTime.getTime() - block.start.getTime()) / 60000;
+            const slotsToSkip = Math.ceil(minutesSinceBlockStart / dto.duration);
+            slotStart = new Date(block.start.getTime() + slotsToSkip * dto.duration * 60000);
+          }
+        }
+
+        // Generate slots within this block
+        while (slots.length < dto.count) {
+          const slotEnd = new Date(slotStart.getTime() + dto.duration * 60000);
+
+          // Check if slot fits within block
+          if (slotEnd > block.end) {
+            break;
+          }
+
+          // Check if slot overlaps with any absence
+          const hasAbsenceConflict = absences.some((absence) => {
+            const absenceStart = new Date(absence.start);
+            const absenceEnd = new Date(absence.end);
+            return slotStart < absenceEnd && slotEnd > absenceStart;
+          });
+
+          if (!hasAbsenceConflict) {
+            slots.push({ start: new Date(slotStart), end: new Date(slotEnd) });
+          }
+
+          // Move to next slot
+          slotStart = new Date(slotStart.getTime() + dto.duration * 60000);
+        }
+
+        if (slots.length >= dto.count) {
+          break;
+        }
+      }
+    }
+
+    this.logger.log(`Found ${slots.length} available slots for provider ${dto.providerId}`);
+
+    return {
+      slots,
+      hasMore: slots.length >= dto.count,
+      provider: {
+        id: dto.providerId,
+      },
     };
   }
 

@@ -3,10 +3,13 @@ import { Document, HydratedDocument } from 'mongoose';
 
 /**
  * Appointment status enumeration
+ * Flow: SCHEDULED -> CONFIRMED -> CHECKED_IN -> IN_PROGRESS -> COMPLETED
+ *       or any state -> CANCELLED or NO_SHOW
  */
 export enum AppointmentStatus {
   SCHEDULED = 'scheduled',
   CONFIRMED = 'confirmed',
+  CHECKED_IN = 'checked_in',
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
@@ -15,21 +18,47 @@ export enum AppointmentStatus {
 
 /**
  * Booking metadata interface
+ * Tracks the full lifecycle of an appointment
  */
 export interface BookingMetadata {
+  // Booking
   bookedBy?: string;
   bookedAt?: Date;
   bookingSource?: 'online' | 'phone' | 'walk_in' | 'referral';
+  notes?: string;
+  emergencyVisit?: boolean;
+
+  // Confirmation
+  confirmedBy?: string;
+  confirmedAt?: Date;
+  confirmationMethod?: 'sms' | 'email' | 'phone' | 'patient_portal';
   confirmationSentAt?: Date;
   reminderSentAt?: Date;
-  notes?: string;
+
+  // Check-in
+  checkedInBy?: string;
+  checkedInAt?: Date;
+
+  // In Progress
+  startedBy?: string;
+  startedAt?: Date;
+
+  // Completion
+  completedBy?: string;
+  completedAt?: Date;
+  completionNotes?: string;
+
+  // Rescheduling
+  rescheduledFrom?: string;
+  rescheduledTo?: string;
+
+  // Cancellation
   cancellationReason?: string;
   cancelledBy?: string;
   cancelledAt?: Date;
+
+  // No-show
   noShowReason?: string;
-  rescheduledFrom?: string;
-  rescheduledTo?: string;
-  emergencyVisit?: boolean;
 }
 
 export type AppointmentDocument = HydratedDocument<Appointment>;

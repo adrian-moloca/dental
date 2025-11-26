@@ -30,7 +30,7 @@ async function bootstrap() {
   app.enableCors(
     createCorsConfigFromEnv({
       CORS_ALLOWED_ORIGINS:
-        process.env.CORS_ORIGIN || 'http://localhost:3000,http://localhost:4200',
+        process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173',
       CORS_ALLOW_CREDENTIALS: 'true',
     }),
   );

@@ -21,7 +21,7 @@ export default function PatientsListPage() {
   const pageSize = 10;
 
   const { data, isLoading, error } = usePatients({
-    query: searchQuery || undefined,
+    search: searchQuery || undefined,
     page: currentPage,
     limit: pageSize,
   });

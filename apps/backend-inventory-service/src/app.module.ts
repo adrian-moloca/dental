@@ -12,6 +12,7 @@ import { PurchaseOrdersModule } from './modules/purchase-orders/purchase-orders.
 import { GoodsReceiptsModule } from './modules/goods-receipts/goods-receipts.module';
 import { SuppliersModule } from './modules/suppliers/suppliers.module';
 import { ClinicalIntegrationModule } from './modules/clinical-integration/clinical-integration.module';
+import { SterilizationModule } from './modules/sterilization/sterilization.module';
 
 // Standard modules
 import { HealthModule } from './health/health.module';
@@ -65,6 +66,7 @@ import { MetricsModule } from './metrics/metrics.module';
     GoodsReceiptsModule,
     SuppliersModule,
     ClinicalIntegrationModule,
+    SterilizationModule,
   ],
 })
 export class AppModule {}

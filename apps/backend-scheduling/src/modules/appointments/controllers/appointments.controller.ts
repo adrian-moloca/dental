@@ -154,4 +154,111 @@ export class AppointmentsController {
   ): Promise<AppointmentResponseDto> {
     return this.appointmentsService.recordNoShow(id, user.tenantId, body.reason);
   }
+
+  /**
+   * Confirm an appointment
+   */
+  @Post(':id/confirm')
+  @RequirePermissions('appointments:update')
+  @ApiOperation({ summary: 'Confirm an appointment' })
+  @ApiResponse({ status: 200, description: 'Appointment confirmed successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot confirm appointment' })
+  @ApiResponse({ status: 404, description: 'Appointment not found' })
+  async confirmAppointment(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+    @Body() body: { confirmationMethod?: 'sms' | 'email' | 'phone' | 'patient_portal' },
+  ): Promise<AppointmentResponseDto> {
+    return this.appointmentsService.confirmAppointment(
+      id,
+      user.tenantId,
+      user.userId,
+      body.confirmationMethod,
+    );
+  }
+
+  /**
+   * Check in patient for appointment
+   */
+  @Post(':id/check-in')
+  @RequirePermissions('appointments:update')
+  @ApiOperation({ summary: 'Check in patient for appointment' })
+  @ApiResponse({ status: 200, description: 'Patient checked in successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot check in appointment' })
+  @ApiResponse({ status: 404, description: 'Appointment not found' })
+  async checkInAppointment(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+  ): Promise<AppointmentResponseDto> {
+    return this.appointmentsService.checkInAppointment(id, user.tenantId, user.userId);
+  }
+
+  /**
+   * Start an appointment
+   */
+  @Post(':id/start')
+  @RequirePermissions('appointments:update')
+  @ApiOperation({ summary: 'Start appointment (call patient to treatment room)' })
+  @ApiResponse({ status: 200, description: 'Appointment started successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot start appointment' })
+  @ApiResponse({ status: 404, description: 'Appointment not found' })
+  async startAppointment(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+  ): Promise<AppointmentResponseDto> {
+    return this.appointmentsService.startAppointment(id, user.tenantId, user.userId);
+  }
+
+  /**
+   * Complete an appointment
+   */
+  @Post(':id/complete')
+  @RequirePermissions('appointments:update')
+  @ApiOperation({ summary: 'Complete an appointment' })
+  @ApiResponse({ status: 200, description: 'Appointment completed successfully' })
+  @ApiResponse({ status: 400, description: 'Cannot complete appointment' })
+  @ApiResponse({ status: 404, description: 'Appointment not found' })
+  async completeAppointment(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+    @Body() body: { notes?: string },
+  ): Promise<AppointmentResponseDto> {
+    return this.appointmentsService.completeAppointment(
+      id,
+      user.tenantId,
+      user.organizationId,
+      user.userId,
+      body.notes,
+    );
+  }
+
+  /**
+   * Get provider's agenda for a date
+   */
+  @Get('provider/:providerId/agenda')
+  @RequirePermissions('appointments:read')
+  @ApiOperation({ summary: 'Get provider agenda for a specific date' })
+  @ApiResponse({ status: 200, description: 'Provider agenda retrieved successfully' })
+  async getProviderAgenda(
+    @CurrentUser() user: CurrentUserData,
+    @Param('providerId') providerId: string,
+    @Query('date') dateStr?: string,
+  ): Promise<AppointmentListResponseDto> {
+    const date = dateStr ? new Date(dateStr) : new Date();
+    return this.appointmentsService.getProviderAgenda(user.tenantId, providerId, date);
+  }
+
+  /**
+   * Get reception queue (checked-in patients)
+   */
+  @Get('reception/queue')
+  @RequirePermissions('appointments:read')
+  @ApiOperation({ summary: 'Get reception queue of checked-in patients' })
+  @ApiResponse({ status: 200, description: 'Reception queue retrieved successfully' })
+  async getReceptionQueue(
+    @CurrentUser() user: CurrentUserData,
+    @Query('locationId') locationId: string,
+  ): Promise<AppointmentListResponseDto> {
+    return this.appointmentsService.getReceptionQueue(user.tenantId, locationId);
+  }
 }

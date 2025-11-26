@@ -5,11 +5,17 @@
  * Extracts and validates JWT from Authorization header,
  * then transforms payload into CurrentUser.
  *
- * @security
- * - Validates JWT signature using secret key
+ * @security CRITICAL: Algorithm Confusion Attack Prevention
+ * - ONLY RS256 algorithm is permitted
+ * - Uses asymmetric keys (public key for verification)
+ * - Private key NEVER leaves the token generation service
+ * - Validates JWT signature using RSA public key
  * - Checks token expiration automatically
  * - Validates issuer and audience claims
  * - Ensures all required fields are present in payload
+ *
+ * @see CVE-2015-9235 - Algorithm confusion vulnerability
+ * @see CVE-2016-10555 - jsonwebtoken algorithm confusion
  *
  * @module strategies/jwt-strategy
  */
@@ -18,7 +24,12 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { AccessTokenPayload, CurrentUser, createCurrentUser } from '@dentalos/shared-auth';
+import {
+  AccessTokenPayload,
+  CurrentUser,
+  createCurrentUser,
+  ALLOWED_JWT_ALGORITHMS,
+} from '@dentalos/shared-auth';
 import type { UUID } from '@dentalos/shared-types';
 import type { AppConfig } from '../configuration';
 import { SessionService } from '../modules/sessions/services/session.service';
@@ -30,12 +41,16 @@ import { TokenBlacklistService } from '../modules/tokens/services/token-blacklis
  * Integrates with Passport.js to validate JWT tokens
  * and populate request.user with CurrentUser.
  *
- * @remarks
+ * @security
  * Passport automatically verifies:
- * - JWT signature (using secret)
+ * - JWT signature (using RS256 public key)
  * - Token expiration (exp claim)
  * - Issuer (iss claim)
  * - Audience (aud claim)
+ *
+ * IMPORTANT: Only RS256 algorithm is allowed to prevent algorithm confusion attacks.
+ * An attacker could craft a token with alg:HS256 and sign it with the public key
+ * if symmetric algorithms were permitted.
  *
  * This strategy only needs to transform the validated payload.
  */
@@ -55,8 +70,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       // Don't ignore expiration - reject expired tokens
       ignoreExpiration: false,
 
-      // Secret key for signature verification
-      secretOrKey: jwtConfig.accessSecret,
+      // RSA public key for signature verification
+      // SECURITY: Use public key (not secret) for RS256 asymmetric verification
+      secretOrKey: jwtConfig.accessPublicKey,
 
       // Validate issuer claim
       issuer: jwtConfig.issuer,
@@ -64,8 +80,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       // Validate audience claim
       audience: jwtConfig.audience,
 
-      // Additional validation options
-      algorithms: ['HS256'], // Only allow HS256 algorithm
+      // SECURITY CRITICAL: Only allow RS256 algorithm
+      // This prevents algorithm confusion attacks (CVE-2015-9235, CVE-2016-10555)
+      // NEVER add HS256, HS384, HS512 here - attackers could forge tokens
+      // using the public key as an HMAC secret
+      algorithms: ALLOWED_JWT_ALGORITHMS,
     });
   }
 

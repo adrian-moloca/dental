@@ -29,7 +29,8 @@ export class AuthenticationError extends BaseError {
         | 'expired_token'
         | 'malformed_token'
         | 'missing_credentials'
-        | 'revoked_token';
+        | 'revoked_token'
+        | 'email_not_verified';
       correlationId?: string;
       cause?: Error;
       tenantContext?: TenantContext;

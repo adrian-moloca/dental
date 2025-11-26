@@ -292,4 +292,154 @@ export class UserRepository {
       },
     });
   }
+
+  /**
+   * Record a failed login attempt for brute-force protection
+   *
+   * CRITICAL: Always filtered by organizationId for tenant isolation
+   *
+   * Security behavior:
+   * - Increments failedLoginAttempts counter
+   * - Updates lastFailedLoginAt timestamp
+   * - Sets lockoutUntil if threshold reached (5 attempts = 15 min lockout)
+   *
+   * Edge cases:
+   * - Throws NotFoundError if user not found in organization
+   * - Lockout duration is 15 minutes from current time
+   * - Uses exponential backoff formula for repeat offenders
+   *
+   * @param id - User ID
+   * @param organizationId - Organization ID for tenant scoping
+   * @returns Object containing new attempt count and lockout info
+   * @throws {NotFoundError} If user not found in organization
+   */
+  async recordFailedLoginAttempt(
+    id: string,
+    organizationId: OrganizationId
+  ): Promise<{ failedAttempts: number; isLocked: boolean; lockoutUntil: Date | null }> {
+    const user = await this.findById(id, organizationId);
+    if (!user) {
+      throw new NotFoundError('User not found in organization', {
+        resourceType: 'user',
+        resourceId: id,
+      });
+    }
+
+    const newFailedAttempts = user.failedLoginAttempts + 1;
+    const now = new Date();
+
+    // Account lockout threshold: 5 failed attempts
+    // Lockout duration: 15 minutes with exponential backoff for repeat lockouts
+    const LOCKOUT_THRESHOLD = 5;
+    const BASE_LOCKOUT_MINUTES = 15;
+
+    let lockoutUntil: Date | null = null;
+
+    if (newFailedAttempts >= LOCKOUT_THRESHOLD) {
+      // Calculate lockout duration with exponential backoff
+      // Every additional 5 failures doubles the lockout time
+      const lockoutMultiplier = Math.pow(2, Math.floor((newFailedAttempts - LOCKOUT_THRESHOLD) / 5));
+      const lockoutMinutes = BASE_LOCKOUT_MINUTES * lockoutMultiplier;
+
+      // Cap at 24 hours maximum lockout
+      const cappedLockoutMinutes = Math.min(lockoutMinutes, 24 * 60);
+
+      lockoutUntil = new Date(now.getTime() + cappedLockoutMinutes * 60 * 1000);
+    }
+
+    await this.repository.update(
+      { id, organizationId },
+      {
+        failedLoginAttempts: newFailedAttempts,
+        lastFailedLoginAt: now,
+        lockoutUntil,
+      }
+    );
+
+    return {
+      failedAttempts: newFailedAttempts,
+      isLocked: lockoutUntil !== null,
+      lockoutUntil,
+    };
+  }
+
+  /**
+   * Clear failed login attempts after successful login
+   *
+   * CRITICAL: Always filtered by organizationId for tenant isolation
+   *
+   * Security behavior:
+   * - Resets failedLoginAttempts to 0
+   * - Clears lockoutUntil timestamp
+   * - Preserves lastFailedLoginAt for audit purposes
+   *
+   * @param id - User ID
+   * @param organizationId - Organization ID for tenant scoping
+   * @throws {NotFoundError} If user not found in organization
+   */
+  async clearFailedLoginAttempts(id: string, organizationId: OrganizationId): Promise<void> {
+    const result = await this.repository.update(
+      { id, organizationId },
+      {
+        failedLoginAttempts: 0,
+        lockoutUntil: null,
+      }
+    );
+
+    if (result.affected === 0) {
+      throw new NotFoundError('User not found in organization', {
+        resourceType: 'user',
+        resourceId: id,
+      });
+    }
+  }
+
+  /**
+   * Check if user account is currently locked
+   *
+   * CRITICAL: Always filtered by organizationId for tenant isolation
+   *
+   * Security behavior:
+   * - Returns lock status and remaining lockout time
+   * - Automatically clears expired lockouts (lockoutUntil < now)
+   *
+   * Edge cases:
+   * - Returns false if user not found (fail open for this check only)
+   * - Clears lockout if it has expired
+   *
+   * @param id - User ID
+   * @param organizationId - Organization ID for tenant scoping
+   * @returns Object with lock status and remaining time in seconds
+   */
+  async checkAccountLockStatus(
+    id: string,
+    organizationId: OrganizationId
+  ): Promise<{ isLocked: boolean; remainingSeconds: number; failedAttempts: number }> {
+    const user = await this.findById(id, organizationId);
+    if (!user) {
+      // Fail open for lock check - let authentication handle user not found
+      return { isLocked: false, remainingSeconds: 0, failedAttempts: 0 };
+    }
+
+    const now = new Date();
+
+    // Check if lockout has expired
+    if (user.lockoutUntil && user.lockoutUntil <= now) {
+      // Lockout expired, clear it (but preserve failed attempts for audit)
+      await this.repository.update(
+        { id, organizationId },
+        { lockoutUntil: null }
+      );
+      return { isLocked: false, remainingSeconds: 0, failedAttempts: user.failedLoginAttempts };
+    }
+
+    // Check if currently locked
+    if (user.lockoutUntil && user.lockoutUntil > now) {
+      const remainingMs = user.lockoutUntil.getTime() - now.getTime();
+      const remainingSeconds = Math.ceil(remainingMs / 1000);
+      return { isLocked: true, remainingSeconds, failedAttempts: user.failedLoginAttempts };
+    }
+
+    return { isLocked: false, remainingSeconds: 0, failedAttempts: user.failedLoginAttempts };
+  }
 }

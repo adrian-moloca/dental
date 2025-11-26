@@ -15,6 +15,8 @@ import {
   UpdateClinicSettingsDto,
   CreateClinicLocationDto,
   ClinicResponseDto,
+  UpdateClinicFiscalSettingsDto,
+  ClinicFiscalSettingsResponseDto,
 } from '../../dto/clinics';
 import { ErrorResponseDto } from '../../dto/common';
 
@@ -444,6 +446,264 @@ Updates clinic-specific operational settings.
   ) {
     return this.clinicsService.updateSettings(clinicId, dto, context);
   }
+
+  // ============================================
+  // Fiscal Settings (E-Factura Romania)
+  // ============================================
+
+  @Get('clinics/:clinicId/fiscal-settings')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get clinic fiscal settings',
+    description: `
+Retrieves the Romanian fiscal settings for a clinic.
+
+**Used For:**
+- E-Factura electronic invoicing to ANAF
+- Invoice generation with proper seller information
+- VAT and tax configuration
+
+**Returned Data:**
+- CUI (Cod Unic de Identificare)
+- Legal name and trade name
+- Registration number (Registrul Comerțului)
+- VAT payer status
+- Bank account (IBAN)
+- Fiscal address
+- E-Factura configuration status
+
+**Use Cases:**
+- Viewing fiscal configuration before invoicing
+- Checking E-Factura readiness
+- Administrative settings review
+    `,
+  })
+  @ApiParam({
+    name: 'clinicId',
+    type: String,
+    description: 'Clinic UUID or MongoDB ObjectId',
+    example: '507f1f77bcf86cd799439011',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Fiscal settings retrieved successfully',
+    type: ClinicFiscalSettingsResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Clinic not found',
+    type: ErrorResponseDto,
+  })
+  async getFiscalSettings(@Param('clinicId') clinicId: string) {
+    return this.clinicsService.getFiscalSettings(clinicId);
+  }
+
+  @Patch('clinics/:clinicId/fiscal-settings')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Update clinic fiscal settings',
+    description: `
+Updates the Romanian fiscal settings for a clinic.
+
+**Required for E-Factura:**
+- CUI (tax identification number)
+- Legal name (as registered)
+- Fiscal address (street, city, country)
+
+**Optional but Recommended:**
+- Trade name
+- Registration number (Nr. Reg. Com.)
+- IBAN and bank name
+- Fiscal contact information
+
+**Business Rules:**
+- CUI format is validated (RO followed by 2-10 digits)
+- Registration number format is validated (J##/####/YYYY)
+- IBAN format is validated
+- Changes are audited for compliance
+
+**Use Cases:**
+- Initial fiscal setup for new clinic
+- Updating bank account information
+- Enabling E-Factura for the clinic
+- Address correction for invoicing
+    `,
+  })
+  @ApiParam({
+    name: 'clinicId',
+    type: String,
+    description: 'Clinic UUID or MongoDB ObjectId',
+    example: '507f1f77bcf86cd799439011',
+  })
+  @ApiBody({
+    type: UpdateClinicFiscalSettingsDto,
+    description: 'Fiscal settings to update (all fields optional)',
+    examples: {
+      minimal: {
+        summary: 'Minimal E-Factura Setup',
+        value: {
+          cui: 'RO12345678',
+          legalName: 'Clinica Dentară Smile SRL',
+          fiscalAddress: {
+            streetName: 'Strada Victoriei 123',
+            city: 'București',
+            countryCode: 'RO',
+          },
+        },
+      },
+      complete: {
+        summary: 'Complete Fiscal Setup',
+        value: {
+          cui: 'RO12345678',
+          legalName: 'Clinica Dentară Smile SRL',
+          tradeName: 'Smile Dental',
+          regCom: 'J40/1234/2020',
+          isVatPayer: true,
+          defaultVatRate: 0.19,
+          iban: 'RO49AAAA1B31007593840000',
+          bankName: 'Banca Transilvania',
+          invoiceSeries: 'DENT',
+          invoiceStartNumber: 1,
+          eFacturaEnabled: true,
+          fiscalAddress: {
+            streetName: 'Strada Victoriei 123',
+            additionalStreetName: 'Bloc A, Etaj 2',
+            city: 'București',
+            county: 'Sector 1',
+            postalCode: '010101',
+            countryCode: 'RO',
+          },
+          fiscalContact: {
+            name: 'Ion Popescu',
+            phone: '+40212345678',
+            email: 'contabilitate@smiledental.ro',
+          },
+        },
+      },
+      vatExempt: {
+        summary: 'VAT Exempt Clinic (Medical Services)',
+        value: {
+          cui: 'RO87654321',
+          legalName: 'Cabinet Medical Individual Dr. Ionescu',
+          isVatPayer: false,
+          defaultVatRate: 0,
+          fiscalAddress: {
+            streetName: 'Bulevardul Unirii 45',
+            city: 'Cluj-Napoca',
+            county: 'Cluj',
+            countryCode: 'RO',
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Fiscal settings updated successfully',
+    type: ClinicFiscalSettingsResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid fiscal data (CUI format, IBAN, etc.)',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Clinic not found',
+    type: ErrorResponseDto,
+  })
+  async updateFiscalSettings(
+    @Param('clinicId') clinicId: string,
+    @Body() dto: UpdateClinicFiscalSettingsDto,
+    @TenantContext() context: TenantContextData,
+  ) {
+    return this.clinicsService.updateFiscalSettings(clinicId, dto, context);
+  }
+
+  @Get('clinics/:clinicId/efactura-seller-info')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Get E-Factura seller info',
+    description: `
+Retrieves the seller information in the format needed for E-Factura XML generation.
+
+**Internal API:** Used by billing-service to generate UBL 2.1 invoices.
+
+**Returns:**
+- CUI with RO prefix
+- Legal name
+- Formatted address for UBL
+- Bank account information
+- Contact details
+
+**Throws 404 if:**
+- Clinic not found
+- Fiscal settings not configured
+- Required fields missing (CUI, legalName, address)
+    `,
+  })
+  @ApiParam({
+    name: 'clinicId',
+    type: String,
+    description: 'Clinic UUID or MongoDB ObjectId',
+    example: '507f1f77bcf86cd799439011',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Seller info for E-Factura returned successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        cui: { type: 'string', example: 'RO12345678' },
+        legalName: { type: 'string', example: 'Clinica Dentară Smile SRL' },
+        tradeName: { type: 'string', example: 'Smile Dental' },
+        regCom: { type: 'string', example: 'J40/1234/2020' },
+        iban: { type: 'string', example: 'RO49AAAA1B31007593840000' },
+        bankName: { type: 'string', example: 'Banca Transilvania' },
+        address: {
+          type: 'object',
+          properties: {
+            streetName: { type: 'string', example: 'Strada Victoriei 123' },
+            additionalStreetName: { type: 'string', example: 'Bloc A, Etaj 2' },
+            city: { type: 'string', example: 'București' },
+            county: { type: 'string', example: 'Sector 1' },
+            postalCode: { type: 'string', example: '010101' },
+            countryCode: { type: 'string', example: 'RO' },
+          },
+        },
+        contact: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', example: 'Ion Popescu' },
+            phone: { type: 'string', example: '+40212345678' },
+            email: { type: 'string', example: 'contabilitate@smiledental.ro' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Clinic not found or fiscal settings incomplete',
+    type: ErrorResponseDto,
+  })
+  async getSellerInfoForEFactura(@Param('clinicId') clinicId: string) {
+    return this.clinicsService.getSellerInfoForEFactura(clinicId);
+  }
+
+  // ============================================
+  // Locations
+  // ============================================
 
   @Get('clinics/:clinicId/locations')
   @HttpCode(HttpStatus.OK)

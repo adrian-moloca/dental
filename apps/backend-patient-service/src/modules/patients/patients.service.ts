@@ -24,6 +24,7 @@ import {
 } from './events/patient.events';
 import { ValidationError } from '@dentalos/shared-errors';
 import type { UUID } from '@dentalos/shared-types';
+import { CnpEncryptionService } from '../../services';
 
 /**
  * Patients Service
@@ -42,6 +43,7 @@ export class PatientsService {
   constructor(
     private readonly patientsRepository: PatientsRepository,
     private readonly eventEmitter: EventEmitter2,
+    private readonly cnpEncryptionService: CnpEncryptionService,
   ) {}
 
   /**
@@ -65,6 +67,16 @@ export class PatientsService {
     // Validate required fields
     this.validateCreatePatient(dto);
 
+    // Check for CNP duplicate if provided
+    if (dto.person.cnp) {
+      const cnpExists = await this.checkCnpDuplicate(dto.person.cnp, tenantId);
+      if (cnpExists) {
+        throw new ValidationError(
+          'A patient with this CNP (Cod Numeric Personal) already exists in the system',
+        );
+      }
+    }
+
     // Generate unique patient ID
     const patientId = crypto.randomUUID() as UUID;
 
@@ -82,7 +94,13 @@ export class PatientsService {
         preferredName: dto.person.preferredName?.trim(),
         dateOfBirth: dto.person.dateOfBirth,
         gender: dto.person.gender,
-        ssn: dto.person.ssn, // TODO: Encrypt before storage
+        ssn: dto.person.ssn, // Deprecated - kept for backwards compatibility
+        // Handle Romanian CNP with encryption
+        nationalId: dto.person.cnp
+          ? this.cnpEncryptionService.toNationalIdInfo(
+              this.cnpEncryptionService.processCnp(dto.person.cnp, tenantId),
+            )
+          : undefined,
       },
       contacts: {
         phones: (dto.contacts?.phones || []).map((p) => ({
@@ -162,6 +180,9 @@ export class PatientsService {
         dataProcessingConsentDate: dto.consent.dataProcessingConsent ? new Date() : undefined,
         treatmentConsent: dto.consent.treatmentConsent ?? false,
         treatmentConsentDate: dto.consent.treatmentConsent ? new Date() : undefined,
+        smsMarketing: dto.consent.smsMarketing ?? false,
+        emailMarketing: dto.consent.emailMarketing ?? false,
+        whatsappMarketing: dto.consent.whatsappMarketing ?? false,
       },
       valueScore: 0, // Initial value score
       status: 'active',
@@ -613,6 +634,46 @@ export class PatientsService {
   }
 
   /**
+   * Find patient by Romanian CNP (Cod Numeric Personal)
+   *
+   * @param cnp - Raw CNP string
+   * @param tenantId - Tenant ID for isolation
+   * @returns Patient document or null
+   */
+  async findByCnp(cnp: string, tenantId: string): Promise<PatientDocument | null> {
+    const searchHash = this.cnpEncryptionService.createSearchHash(cnp);
+    return this.patientsRepository.findByCnpHash(searchHash, tenantId);
+  }
+
+  /**
+   * Decrypt and return the CNP for a patient
+   *
+   * @param patient - Patient document
+   * @returns Decrypted CNP or null if not stored
+   */
+  decryptPatientCnp(patient: PatientDocument): string | null {
+    const encryptedValue = patient.person?.nationalId?.encryptedValue;
+    if (!encryptedValue) {
+      return null;
+    }
+    return this.cnpEncryptionService.decryptCnp(encryptedValue);
+  }
+
+  /**
+   * Get masked CNP for display purposes
+   *
+   * @param patient - Patient document
+   * @returns Masked CNP (e.g., "***********1234") or null
+   */
+  getMaskedCnp(patient: PatientDocument): string | null {
+    const lastFour = patient.person?.nationalId?.lastFour;
+    if (!lastFour) {
+      return null;
+    }
+    return '*'.repeat(9) + lastFour;
+  }
+
+  /**
    * Validate create patient DTO
    *
    * @param dto - Patient creation data
@@ -643,5 +704,56 @@ export class PatientsService {
     if (!hasEmail && !hasPhone) {
       this.logger.warn(`Patient created without email or phone contact`);
     }
+
+    // Validate CNP if provided
+    if (dto.person.cnp) {
+      const cnpValidation = this.cnpEncryptionService.validateCnp(dto.person.cnp);
+      if (!cnpValidation.valid) {
+        throw new ValidationError(`Invalid Romanian CNP: ${cnpValidation.error}`);
+      }
+
+      // Warn if CNP data doesn't match provided data
+      if (cnpValidation.birthDate) {
+        const cnpBirthDate = cnpValidation.birthDate;
+        const dtoBirthDate = dto.person.dateOfBirth;
+
+        // Compare dates (ignore time)
+        const cnpDateStr = cnpBirthDate.toISOString().split('T')[0];
+        const dtoDateStr = dtoBirthDate.toISOString().split('T')[0];
+
+        if (cnpDateStr !== dtoDateStr) {
+          this.logger.warn(
+            `CNP birth date (${cnpDateStr}) differs from provided date (${dtoDateStr})`,
+          );
+        }
+      }
+
+      if (cnpValidation.gender) {
+        const cnpGender = cnpValidation.gender;
+        const dtoGender = dto.person.gender;
+
+        if (dtoGender !== 'other' && dtoGender !== 'prefer_not_to_say' && cnpGender !== dtoGender) {
+          this.logger.warn(`CNP gender (${cnpGender}) differs from provided gender (${dtoGender})`);
+        }
+      }
+    }
+  }
+
+  /**
+   * Check if CNP already exists for another patient
+   *
+   * @param cnp - CNP to check
+   * @param tenantId - Tenant ID for isolation
+   * @param excludePatientId - Patient ID to exclude (for updates)
+   * @returns Whether CNP exists for another patient
+   * @private
+   */
+  private async checkCnpDuplicate(
+    cnp: string,
+    tenantId: string,
+    excludePatientId?: UUID,
+  ): Promise<boolean> {
+    const searchHash = this.cnpEncryptionService.createSearchHash(cnp);
+    return this.patientsRepository.cnpExists(searchHash, tenantId, excludePatientId);
   }
 }

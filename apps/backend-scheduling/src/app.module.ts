@@ -8,6 +8,7 @@ import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { CorrelationMiddleware } from '@dentalos/shared-tracing';
 
 import { AppointmentsModule } from './modules/appointments/appointments.module';
+import { RemindersModule } from './modules/reminders/reminders.module';
 import { HealthController } from './health/health.controller';
 import { MetricsModule } from './metrics/metrics.module';
 import { CacheModule } from './common/cache/cache.module';
@@ -84,6 +85,7 @@ import { ResponseTimeMiddleware } from './common/middleware/response-time.middle
 
     // Feature Modules
     AppointmentsModule,
+    RemindersModule,
   ],
   controllers: [HealthController],
   providers: [

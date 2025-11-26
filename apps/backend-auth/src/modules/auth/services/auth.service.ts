@@ -53,6 +53,7 @@ import { TokenGenerationService } from './token-generation.service';
 import { SessionManagementService } from './session-management.service';
 import { SubscriptionIntegrationService } from './subscription-integration.service';
 import { UserManagementService } from './user-management.service';
+import { EmailVerificationService } from '../../email-verification/email-verification.service';
 
 /**
  * Authentication Service Facade
@@ -68,16 +69,41 @@ export class AuthService {
     private readonly tokenGenerationService: TokenGenerationService,
     private readonly sessionManagementService: SessionManagementService,
     private readonly subscriptionIntegrationService: SubscriptionIntegrationService,
-    private readonly userManagementService: UserManagementService
+    private readonly userManagementService: UserManagementService,
+    private readonly emailVerificationService: EmailVerificationService
   ) {
     this.logger = new StructuredLogger('AuthService');
   }
 
   /**
    * Register a new user
+   *
+   * Steps:
+   * 1. Create user account
+   * 2. Generate email verification token
+   * 3. Emit email verification event
+   * 4. Fetch cabinet and subscription context
+   * 5. Generate auth response with session
+   *
+   * Note: User will need to verify email before logging in again
    */
   async register(dto: RegisterDto, request: Request): Promise<AuthResponseDto> {
     const user = await this.authenticationService.register(dto);
+
+    // Generate email verification token and emit event
+    try {
+      await this.emailVerificationService.generateVerificationToken(user);
+      this.logger.log(
+        `Email verification token generated for new user ${user.id} (${user.email})`
+      );
+    } catch (error) {
+      // Non-critical: Log error but don't fail registration
+      // User can request resend later
+      this.logger.error(
+        `Failed to generate verification token for user ${user.id}: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+
     const cabinetContext = await this.subscriptionIntegrationService.fetchCabinetAndSubscription(
       user.id as UUID,
       user.organizationId
@@ -95,6 +121,9 @@ export class AuthService {
 
   /**
    * Smart login
+   *
+   * When single org: returns full auth response including csrfToken
+   * When multiple orgs: returns org list (no tokens, no csrfToken)
    */
   async loginSmart(dto: LoginSmartDto, request: Request): Promise<LoginSmartResponseDto> {
     const result = await this.authenticationService.loginSmart(dto);
@@ -103,21 +132,18 @@ export class AuthService {
       const user = result.users[0];
       const authResponse = await this.handleCabinetSelectionForLogin(user, request);
 
-      const response = {
+      const response: LoginSmartResponseDto = {
         needsOrgSelection: false,
         accessToken: authResponse.accessToken,
         refreshToken: authResponse.refreshToken,
         user: authResponse.user,
+        csrfToken: authResponse.csrfToken, // Include CSRF token for single-org login
       };
 
-      console.log('=== FIXED v14 EXPLICIT_REG_FIXED - RETURN LOGGING ===');
-      console.log('Response object:', JSON.stringify(response, null, 2));
-      console.log('Response keys:', Object.keys(response));
-      console.log('authResponse:', JSON.stringify(authResponse, null, 2));
-      return response as LoginSmartResponseDto;
+      return response;
     }
 
-    const response = {
+    const response: LoginSmartResponseDto = {
       needsOrgSelection: true,
       organizations: result.users.map((u) => ({
         id: u.organizationId,
@@ -126,8 +152,7 @@ export class AuthService {
       })),
     };
 
-    console.log('=== FIXED v6 MULTI-ORG - NO CLASS SERIALIZER ===');
-    return response as LoginSmartResponseDto;
+    return response;
   }
 
   /**
@@ -287,6 +312,17 @@ export class AuthService {
 
   /**
    * Refresh tokens
+   *
+   * IMPORTANT: The refresh flow requires careful token handling:
+   * 1. Validate the old refresh token
+   * 2. Rotate session (invalidate old, create new session)
+   * 3. Generate the FINAL refresh token with the NEW session ID
+   * 4. Update the new session with the FINAL token's hash
+   * 5. Return the auth response with the same FINAL token
+   *
+   * Bug fix: Previously was passing a temporary token to rotateSession,
+   * but then generateTokensForRefresh created a different token with
+   * the actual sessionId. The hash stored didn't match the returned token.
    */
   async refresh(
     refreshToken: string,
@@ -306,15 +342,37 @@ export class AuthService {
     }
 
     const deviceMetadata = this.sessionManagementService.extractDeviceMetadata(request);
+
+    // Generate a placeholder token first - we'll replace its hash after generating final token
+    const placeholderToken = this.tokenGenerationService.generateTemporaryRefreshToken(user);
+
+    // Rotate session: invalidate old, create new with placeholder hash
     const newSession = await this.sessionManagementService.rotateSession(
       oldSession.id,
       organizationId,
-      refreshToken,
+      placeholderToken,
       deviceMetadata
     );
 
+    // Generate the FINAL refresh token with the ACTUAL new session ID
+    const finalRefreshToken = this.tokenGenerationService.generateFinalRefreshToken(
+      user,
+      newSession.id as UUID
+    );
+
+    // Update the session with the correct hash of the FINAL token
+    await this.sessionManagementService.updateSessionTokenHash(
+      newSession.id as UUID,
+      organizationId,
+      finalRefreshToken
+    );
+
     this.logger.log(`Token refreshed successfully for user ${user.id}`);
-    return this.tokenGenerationService.generateTokensForRefresh(user, newSession);
+    return await this.tokenGenerationService.generateTokensForRefreshWithToken(
+      user,
+      newSession,
+      finalRefreshToken
+    );
   }
 
   /**
@@ -404,21 +462,48 @@ export class AuthService {
 
   /**
    * Generate auth response with session
+   *
+   * Creates a session and returns tokens. The flow is:
+   * 1. Create session with placeholder token (to get session ID)
+   * 2. Generate FINAL refresh token with ACTUAL session ID
+   * 3. Update session with FINAL token's hash
+   * 4. Return tokens (where refresh token matches stored hash)
    */
   private async generateAuthResponseWithSession(
     user: User,
     request: Request,
     cabinetContext?: { cabinetId: UUID; subscription: { status: string; modules: string[] } | null }
   ): Promise<AuthResponseDto> {
-    const tempRefreshToken = this.tokenGenerationService.generateTemporaryRefreshToken(user);
+    // Step 1: Create session with placeholder token to get session ID
+    const placeholderToken = this.tokenGenerationService.generateTemporaryRefreshToken(user);
     const session = await this.sessionManagementService.createSession(
       user.id as UUID,
       user.organizationId,
       user.clinicId,
-      tempRefreshToken,
+      placeholderToken,
       request
     );
-    return this.tokenGenerationService.generateAuthResponse(user, session, cabinetContext);
+
+    // Step 2: Generate FINAL refresh token with ACTUAL session ID
+    const finalRefreshToken = this.tokenGenerationService.generateFinalRefreshToken(
+      user,
+      session.id as UUID
+    );
+
+    // Step 3: Update session with FINAL token's hash
+    await this.sessionManagementService.updateSessionTokenHash(
+      session.id as UUID,
+      user.organizationId,
+      finalRefreshToken
+    );
+
+    // Step 4: Return auth response with FINAL token
+    return await this.tokenGenerationService.generateAuthResponseWithToken(
+      user,
+      session,
+      cabinetContext,
+      finalRefreshToken
+    );
   }
 
   /**

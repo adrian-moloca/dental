@@ -143,6 +143,23 @@ export class User {
   emailVerified!: boolean;
 
   /**
+   * Email verification token hash
+   * SHA-256 hash of the verification token
+   * SECURITY: Never store plain tokens
+   * NULL if email is already verified or no token generated yet
+   */
+  @Column({ type: 'varchar', length: 64, name: 'email_verification_token', nullable: true })
+  emailVerificationToken?: string | null;
+
+  /**
+   * Timestamp when email verification token expires
+   * Default: 24 hours from creation
+   * NULL if email is already verified or no token generated yet
+   */
+  @Column({ type: 'timestamp', name: 'email_verification_token_expires_at', nullable: true })
+  emailVerificationTokenExpiresAt?: Date | null;
+
+  /**
    * Timestamp of user's last successful login
    * NULL if user has never logged in
    */
@@ -164,15 +181,51 @@ export class User {
   updatedAt!: Date;
 
   /**
+   * Number of consecutive failed login attempts
+   * Reset to 0 on successful login
+   * Used for brute-force protection
+   */
+  @Column({ type: 'integer', name: 'failed_login_attempts', default: 0 })
+  failedLoginAttempts!: number;
+
+  /**
+   * Timestamp until which the account is locked
+   * NULL means account is not locked
+   * Set when failedLoginAttempts reaches threshold (5)
+   */
+  @Column({ type: 'timestamp', name: 'lockout_until', nullable: true })
+  lockoutUntil?: Date | null;
+
+  /**
+   * Timestamp of the last failed login attempt
+   * Used for progressive lockout calculations
+   * NULL if no failed attempts recorded
+   */
+  @Column({ type: 'timestamp', name: 'last_failed_login_at', nullable: true })
+  lastFailedLoginAt?: Date | null;
+
+  /**
    * Custom JSON serialization
    *
-   * SECURITY: Removes passwordHash from JSON output
-   * This prevents accidental password exposure in API responses or logs
+   * SECURITY: Removes sensitive fields from JSON output
+   * This prevents accidental exposure in API responses or logs
    *
-   * @returns Sanitized user object without password hash
+   * Fields excluded:
+   * - passwordHash: Never expose password hashes
+   * - failedLoginAttempts: Security-sensitive, aids attackers
+   * - lockoutUntil: Security-sensitive, reveals account state
+   * - lastFailedLoginAt: Security-sensitive, reveals attack timing
+   *
+   * @returns Sanitized user object without sensitive fields
    */
   toJSON(): Partial<User> {
-    const { passwordHash, ...rest } = this;
+    const {
+      passwordHash,
+      failedLoginAttempts,
+      lockoutUntil,
+      lastFailedLoginAt,
+      ...rest
+    } = this;
     return rest as Partial<User>;
   }
 }

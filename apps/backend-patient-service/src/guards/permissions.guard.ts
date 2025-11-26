@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
-import { CurrentUser, hasAnyPermission, hasAllPermissions } from '@dentalos/shared-auth';
+import { CurrentUser } from '@dentalos/shared-auth';
 
 /**
  * Permission metadata key for decorator
@@ -200,25 +200,82 @@ export class PermissionsGuard implements CanActivate {
 
   /**
    * Checks if user has ALL required permissions (AND logic)
+   * Supports wildcard permissions: *:* (full access), domain:* (domain access)
    *
    * @param user - Current authenticated user
-   * @param requiredPermissions - Array of required permissions
+   * @param requiredPermissions - Array of required permissions (strings like "patients:read")
    * @returns true if user has all permissions
    */
   private checkAllPermissions(user: CurrentUser, requiredPermissions: string[]): boolean {
-    // Use shared-auth hasAllPermissions helper
-    return hasAllPermissions(user, requiredPermissions as any);
+    return requiredPermissions.every((required) =>
+      this.userHasPermission(user, required),
+    );
   }
 
   /**
    * Checks if user has ANY required permission (OR logic)
+   * Supports wildcard permissions: *:* (full access), domain:* (domain access)
    *
    * @param user - Current authenticated user
-   * @param requiredPermissions - Array of required permissions
+   * @param requiredPermissions - Array of required permissions (strings like "patients:read")
    * @returns true if user has at least one permission
    */
   private checkAnyPermissions(user: CurrentUser, requiredPermissions: string[]): boolean {
-    // Use shared-auth hasAnyPermission helper
-    return hasAnyPermission(user, requiredPermissions as any);
+    return requiredPermissions.some((required) =>
+      this.userHasPermission(user, required),
+    );
+  }
+
+  /**
+   * Checks if user has a specific permission with wildcard support
+   * Handles both string permissions from JWT (like "*:*") and Permission objects
+   *
+   * @param user - Current authenticated user
+   * @param required - Required permission string (e.g., "patients:read")
+   * @returns true if user has the permission
+   */
+  private userHasPermission(user: CurrentUser, required: string): boolean {
+    // Cast to unknown[] because JWT payload contains strings but type says Permission[]
+    const userPermissions: unknown[] = (user.permissions || []) as unknown[];
+    const [requiredDomain, requiredAction] = required.split(':');
+
+    return userPermissions.some((perm: unknown) => {
+      // Handle string permissions (from JWT payload)
+      if (typeof perm === 'string') {
+        // Direct match
+        if (perm === required) {
+          return true;
+        }
+
+        // Full wildcard: *:* grants everything
+        if (perm === '*:*') {
+          return true;
+        }
+
+        const [userDomain, userAction] = perm.split(':');
+
+        // Domain wildcard: domain:* grants all actions in domain
+        if (userDomain === requiredDomain && userAction === '*') {
+          return true;
+        }
+
+        // Action wildcard: *:action grants action across all domains
+        if (userDomain === '*' && userAction === requiredAction) {
+          return true;
+        }
+
+        return false;
+      }
+
+      // Handle Permission objects (if shared-auth types are used)
+      if (typeof perm === 'object' && perm !== null) {
+        const permObj = perm as { resource?: string; action?: string };
+        if (permObj.resource && permObj.action) {
+          return permObj.resource === requiredDomain && permObj.action === requiredAction;
+        }
+      }
+
+      return false;
+    });
   }
 }

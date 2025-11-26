@@ -312,7 +312,260 @@ export class AppointmentsService {
       },
     });
 
+    // Emit no-show event for downstream systems (loyalty, patient scoring)
+    this.eventEmitter.emit('appointment.no_show', {
+      appointmentId: id,
+      patientId: appointment.patientId,
+      tenantId,
+      reason,
+    });
+
     return this.toResponseDto(appointment);
+  }
+
+  /**
+   * Confirm an appointment
+   */
+  async confirmAppointment(
+    id: string,
+    tenantId: string,
+    confirmedBy: string,
+    confirmationMethod: 'sms' | 'email' | 'phone' | 'patient_portal' = 'phone',
+  ): Promise<AppointmentResponseDto> {
+    this.logger.log('Confirming appointment', { appointmentId: id, tenantId });
+
+    const appointment = await this.repository.findByIdOrFail(id, tenantId);
+
+    if (appointment.status !== AppointmentStatus.SCHEDULED) {
+      throw new ValidationError(
+        `Cannot confirm appointment with status: ${appointment.status}`,
+        { field: 'status', value: appointment.status },
+      );
+    }
+
+    const updatedAppointment = await this.repository.update(id, tenantId, {
+      status: AppointmentStatus.CONFIRMED,
+      bookingMetadata: {
+        ...appointment.bookingMetadata,
+        confirmedBy,
+        confirmedAt: new Date(),
+        confirmationMethod,
+      },
+    });
+
+    // Emit confirmation event
+    this.eventEmitter.emit('appointment.confirmed', {
+      appointmentId: id,
+      patientId: appointment.patientId,
+      providerId: appointment.providerId,
+      tenantId,
+      confirmationMethod,
+    });
+
+    this.logger.log('Appointment confirmed', { appointmentId: id, tenantId });
+
+    return this.toResponseDto(updatedAppointment);
+  }
+
+  /**
+   * Check in patient for appointment
+   */
+  async checkInAppointment(
+    id: string,
+    tenantId: string,
+    checkedInBy: string,
+  ): Promise<AppointmentResponseDto> {
+    this.logger.log('Checking in patient', { appointmentId: id, tenantId });
+
+    const appointment = await this.repository.findByIdOrFail(id, tenantId);
+
+    if (
+      appointment.status !== AppointmentStatus.SCHEDULED &&
+      appointment.status !== AppointmentStatus.CONFIRMED
+    ) {
+      throw new ValidationError(
+        `Cannot check in appointment with status: ${appointment.status}`,
+        { field: 'status', value: appointment.status },
+      );
+    }
+
+    const updatedAppointment = await this.repository.update(id, tenantId, {
+      status: AppointmentStatus.CHECKED_IN,
+      bookingMetadata: {
+        ...appointment.bookingMetadata,
+        checkedInBy,
+        checkedInAt: new Date(),
+      },
+    });
+
+    // Emit check-in event for reception dashboard
+    this.eventEmitter.emit('appointment.checked_in', {
+      appointmentId: id,
+      patientId: appointment.patientId,
+      providerId: appointment.providerId,
+      locationId: appointment.locationId,
+      tenantId,
+    });
+
+    this.logger.log('Patient checked in', { appointmentId: id, tenantId });
+
+    return this.toResponseDto(updatedAppointment);
+  }
+
+  /**
+   * Start appointment (patient called to treatment room)
+   */
+  async startAppointment(
+    id: string,
+    tenantId: string,
+    startedBy: string,
+  ): Promise<AppointmentResponseDto> {
+    this.logger.log('Starting appointment', { appointmentId: id, tenantId });
+
+    const appointment = await this.repository.findByIdOrFail(id, tenantId);
+
+    if (appointment.status !== AppointmentStatus.CHECKED_IN) {
+      throw new ValidationError(
+        `Cannot start appointment with status: ${appointment.status}. Patient must be checked in first.`,
+        { field: 'status', value: appointment.status },
+      );
+    }
+
+    const updatedAppointment = await this.repository.update(id, tenantId, {
+      status: AppointmentStatus.IN_PROGRESS,
+      bookingMetadata: {
+        ...appointment.bookingMetadata,
+        startedBy,
+        startedAt: new Date(),
+      },
+    });
+
+    // Emit start event
+    this.eventEmitter.emit('appointment.started', {
+      appointmentId: id,
+      patientId: appointment.patientId,
+      providerId: appointment.providerId,
+      tenantId,
+    });
+
+    this.logger.log('Appointment started', { appointmentId: id, tenantId });
+
+    return this.toResponseDto(updatedAppointment);
+  }
+
+  /**
+   * Complete an appointment
+   */
+  async completeAppointment(
+    id: string,
+    tenantId: string,
+    organizationId: string,
+    completedBy: string,
+    notes?: string,
+  ): Promise<AppointmentResponseDto> {
+    this.logger.log('Completing appointment', { appointmentId: id, tenantId });
+
+    const appointment = await this.repository.findByIdOrFail(id, tenantId);
+
+    if (appointment.status !== AppointmentStatus.IN_PROGRESS) {
+      throw new ValidationError(
+        `Cannot complete appointment with status: ${appointment.status}. Appointment must be in progress.`,
+        { field: 'status', value: appointment.status },
+      );
+    }
+
+    const updatedAppointment = await this.repository.update(id, tenantId, {
+      status: AppointmentStatus.COMPLETED,
+      bookingMetadata: {
+        ...appointment.bookingMetadata,
+        completedBy,
+        completedAt: new Date(),
+        completionNotes: notes,
+      },
+    });
+
+    // Emit completion event for billing, inventory, clinical notes
+    this.eventEmitter.emit('appointment.completed', {
+      appointmentId: id,
+      patientId: appointment.patientId,
+      providerId: appointment.providerId,
+      serviceCode: appointment.serviceCode,
+      locationId: appointment.locationId,
+      organizationId,
+      tenantId,
+    });
+
+    this.logger.log('Appointment completed', { appointmentId: id, tenantId });
+
+    return this.toResponseDto(updatedAppointment);
+  }
+
+  /**
+   * Get today's agenda for a provider
+   */
+  async getProviderAgenda(
+    tenantId: string,
+    providerId: string,
+    date: Date,
+  ): Promise<AppointmentListResponseDto> {
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const appointments = await this.repository.findByProviderAndDateRange(
+      tenantId,
+      providerId,
+      dayStart,
+      dayEnd,
+    );
+
+    return {
+      data: appointments.map((apt) => this.toResponseDto(apt)),
+      total: appointments.length,
+      page: 1,
+      limit: appointments.length,
+      hasMore: false,
+    };
+  }
+
+  /**
+   * Get today's reception queue (checked-in patients)
+   */
+  async getReceptionQueue(
+    tenantId: string,
+    locationId: string,
+  ): Promise<AppointmentListResponseDto> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const { data, total } = await this.repository.findMany(tenantId, {
+      page: 1,
+      limit: 100, // Reception queue typically doesn't exceed 100 patients
+      locationId,
+      startDate: today,
+      endDate: tomorrow,
+      status: AppointmentStatus.CHECKED_IN,
+    });
+
+    // Sort by check-in time (earliest first)
+    const sorted = data.sort((a, b) => {
+      const aTime = a.bookingMetadata?.checkedInAt?.getTime() || 0;
+      const bTime = b.bookingMetadata?.checkedInAt?.getTime() || 0;
+      return aTime - bTime;
+    });
+
+    return {
+      data: sorted.map((apt) => this.toResponseDto(apt)),
+      total,
+      page: 1,
+      limit: total,
+      hasMore: false,
+    };
   }
 
   /**

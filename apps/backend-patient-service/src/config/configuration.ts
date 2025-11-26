@@ -12,7 +12,7 @@ const ConfigSchema = z.object({
     password: z.string().optional(),
   }),
   cors: z.object({
-    origin: z.string().default('http://localhost:3000'),
+    origin: z.string().default('http://localhost:3000,http://localhost:5173'),
   }),
   services: z.object({
     auth: z.string().url(),
@@ -43,7 +43,7 @@ export default () => {
       password: process.env.REDIS_PASSWORD,
     },
     cors: {
-      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+      origin: process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173',
     },
     services: {
       auth: process.env.AUTH_SERVICE_URL || 'http://localhost:3301',

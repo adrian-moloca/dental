@@ -31,6 +31,17 @@ export default function AppointmentsListPage() {
   const toast = useToast();
   const createAppointment = useCreateAppointment();
 
+  // useMemo hooks must be called before any conditional returns (React hooks rules)
+  const resources = useMemo(() => buildResources(data?.data ?? []), [data?.data]);
+  const filteredResources = useMemo(() => {
+    if (!selectedProviders || selectedProviders.length === 0) return resources;
+    return resources.filter((r) => selectedProviders.includes(r.id));
+  }, [resources, selectedProviders]);
+  const schedulerEvents = useMemo(
+    () => buildEvents(data?.data ?? [], filteredResources),
+    [data?.data, filteredResources],
+  );
+
   if (isLoading) {
     return (
       <AppShell title="Appointments" subtitle="Checking chair availability...">
@@ -47,16 +58,6 @@ export default function AppointmentsListPage() {
       </AppShell>
     );
   }
-
-  const resources = useMemo(() => buildResources(data?.data ?? []), [data?.data]);
-  const filteredResources = useMemo(() => {
-    if (!selectedProviders || selectedProviders.length === 0) return resources;
-    return resources.filter((r) => selectedProviders.includes(r.id));
-  }, [resources, selectedProviders]);
-  const schedulerEvents = useMemo(
-    () => buildEvents(data?.data ?? [], filteredResources),
-    [data?.data, filteredResources],
-  );
 
   return (
     <AppShell

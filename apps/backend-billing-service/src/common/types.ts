@@ -121,3 +121,56 @@ export interface MoneyAmount {
   amount: number;
   currency: Currency;
 }
+
+// ============================================
+// E-Factura Types
+// ============================================
+
+/**
+ * E-Factura Submission ID (branded type)
+ */
+export const EFacturaSubmissionIdSchema = z.string().uuid().brand('EFacturaSubmissionId');
+export type EFacturaSubmissionId = z.infer<typeof EFacturaSubmissionIdSchema>;
+
+/**
+ * E-Factura Submission Status
+ * Represents the lifecycle states of an e-factura submission to ANAF
+ */
+export enum EFacturaSubmissionStatus {
+  /** Initial state - submission created but not yet sent to ANAF */
+  PENDING = 'PENDING',
+  /** XML submitted to ANAF, awaiting processing */
+  SUBMITTED = 'SUBMITTED',
+  /** ANAF is processing the submission */
+  PROCESSING = 'PROCESSING',
+  /** ANAF validated the invoice successfully */
+  VALIDATED = 'VALIDATED',
+  /** ANAF signed the invoice - final successful state */
+  SIGNED = 'SIGNED',
+  /** ANAF rejected the invoice due to validation errors */
+  REJECTED = 'REJECTED',
+  /** Technical error occurred during submission */
+  ERROR = 'ERROR',
+  /** Submission was manually cancelled */
+  CANCELLED = 'CANCELLED',
+}
+
+/**
+ * E-Factura Log Action Types
+ */
+export enum EFacturaLogAction {
+  /** Initial submission to ANAF */
+  SUBMIT = 'SUBMIT',
+  /** Status check API call */
+  STATUS_CHECK = 'STATUS_CHECK',
+  /** Download signed invoice */
+  DOWNLOAD = 'DOWNLOAD',
+  /** Retry submission */
+  RETRY = 'RETRY',
+  /** Cancel submission */
+  CANCEL = 'CANCEL',
+  /** Validation error received */
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  /** API error occurred */
+  API_ERROR = 'API_ERROR',
+}

@@ -30,12 +30,40 @@ export class PermissionsGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    const userPermissions = user.permissions || [];
+    const userPermissions: string[] = user.permissions || [];
 
-    // Check if user has any of the required permissions (as strings)
-    const hasPermission = requiredPermissions.some((required) =>
-      userPermissions.includes(required),
-    );
+    // Check if user has any of the required permissions
+    // Supports wildcard permissions: *:* (full access), appointments:* (full domain access)
+    const hasPermission = requiredPermissions.some((required) => {
+      // Direct match
+      if (userPermissions.includes(required)) {
+        return true;
+      }
+
+      // Check for wildcard permissions
+      const [requiredDomain, requiredAction] = required.split(':');
+
+      return userPermissions.some((userPerm) => {
+        // Full wildcard: *:* grants everything
+        if (userPerm === '*:*') {
+          return true;
+        }
+
+        const [userDomain, userAction] = userPerm.split(':');
+
+        // Domain wildcard: domain:* grants all actions in domain
+        if (userDomain === requiredDomain && userAction === '*') {
+          return true;
+        }
+
+        // Action wildcard: *:action grants action across all domains
+        if (userDomain === '*' && userAction === requiredAction) {
+          return true;
+        }
+
+        return false;
+      });
+    });
 
     if (!hasPermission) {
       throw new ForbiddenException(

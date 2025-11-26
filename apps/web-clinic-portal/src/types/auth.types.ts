@@ -51,6 +51,25 @@ export interface SessionDto {
   ipAddress: string;
   createdAt: Date;
   lastActiveAt: Date;
+  isCurrent?: boolean;
+  browser?: {
+    name: string;
+    version: string;
+  };
+  os?: {
+    name: string;
+    version?: string;
+  };
+  device?: {
+    type: 'desktop' | 'mobile' | 'tablet';
+    vendor?: string;
+    model?: string;
+  };
+  location?: {
+    city?: string;
+    country?: string;
+    countryCode?: string;
+  };
 }
 
 /**
@@ -91,4 +110,44 @@ export interface SelectOrgDto {
   email: string;
   password: string;
   organizationId: string;
+}
+
+/**
+ * MFA Status Response
+ */
+export interface MfaStatusDto {
+  enabled: boolean;
+  enrolledAt?: Date;
+}
+
+/**
+ * MFA Enrollment Response
+ * Contains TOTP secret and QR code data URL
+ */
+export interface MfaEnrollResponseDto {
+  secret: string;
+  qrCodeDataUrl: string;
+  backupCodes: string[];
+}
+
+/**
+ * MFA Verify Request
+ */
+export interface MfaVerifyDto {
+  code: string;
+}
+
+/**
+ * MFA Disable Request
+ */
+export interface MfaDisableDto {
+  password: string;
+}
+
+/**
+ * Backup Codes Response
+ */
+export interface BackupCodesDto {
+  codes: string[];
+  generatedAt: Date;
 }

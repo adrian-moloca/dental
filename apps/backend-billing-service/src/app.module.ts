@@ -4,12 +4,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { RedisModule } from '@nestjs-modules/ioredis';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { CorrelationMiddleware } from '@dentalos/shared-tracing';
 
 import databaseConfig from './modules/config/database.config';
 import billingConfig from './modules/config/billing.config';
 import redisConfig from './modules/config/redis.config';
+import eFacturaConfig from './modules/e-factura/config/e-factura.config';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { InvoicesModule } from './modules/invoices/invoices.module';
@@ -18,6 +20,8 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { LedgerModule } from './modules/ledger/ledger.module';
 import { PatientBalancesModule } from './modules/patient-balances/patient-balances.module';
 import { ClinicalIntegrationModule } from './modules/clinical-integration/clinical-integration.module';
+import { EFacturaModule } from './modules/e-factura/e-factura.module';
+import { StripeModule } from './modules/stripe/stripe.module';
 import { HealthModule } from './health/health.module';
 
 // Standard DentalOS components
@@ -31,7 +35,7 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, billingConfig, redisConfig],
+      load: [databaseConfig, billingConfig, redisConfig, eFacturaConfig],
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
@@ -51,6 +55,15 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
       ignoreErrors: false,
     }),
     ScheduleModule.forRoot(),
+    // Redis module for E-Factura OAuth token storage
+    RedisModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        type: 'single',
+        url: `redis://:${configService.get<string>('redis.password')}@${configService.get<string>('redis.host')}:${configService.get<number>('redis.port')}/${configService.get<number>('redis.db')}`,
+      }),
+    }),
     // Global cache module
     CacheModule,
     // Health module
@@ -63,6 +76,8 @@ import { RequestContextMiddleware } from './common/middleware/request-context.mi
     LedgerModule,
     PatientBalancesModule,
     ClinicalIntegrationModule,
+    EFacturaModule,
+    StripeModule,
   ],
   providers: [
     {

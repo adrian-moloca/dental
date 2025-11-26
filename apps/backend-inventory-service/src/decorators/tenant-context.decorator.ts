@@ -5,10 +5,12 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
  * Used for multi-tenant operations requiring user and organizational context
  */
 export interface TenantContextData {
+  /** ID of the tenant for multi-tenant isolation */
+  tenantId: string;
   /** ID of the user making the request */
   userId: string;
-  /** ID of the organization (optional, required for org-level operations) */
-  organizationId?: string;
+  /** ID of the organization (required for most operations) */
+  organizationId: string;
   /** ID of the clinic (optional, required for clinic-level operations) */
   clinicId?: string;
 }
@@ -54,11 +56,13 @@ export const TenantContext = createParamDecorator(
 
     // Extract from headers (temporary implementation)
     // TODO: Extract from JWT/authentication guards when implemented
+    const tenantId = (request.headers['x-tenant-id'] as string) || 'default-tenant';
     const userId = (request.headers['x-user-id'] as string) || 'system-admin';
-    const organizationId = request.headers['x-organization-id'] as string | undefined;
+    const organizationId = (request.headers['x-organization-id'] as string) || 'default-org';
     const clinicId = request.headers['x-clinic-id'] as string | undefined;
 
     return {
+      tenantId,
       userId,
       organizationId,
       clinicId,

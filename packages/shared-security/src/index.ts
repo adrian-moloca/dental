@@ -20,3 +20,6 @@ export * from './logging/logger.utils.js';
 // Security Hardening
 export * from './hardening/enhanced-helmet.js';
 export * from './hardening/rate-limiter.js';
+
+// Field-Level Encryption (PII protection)
+export * from './encryption/index.js';

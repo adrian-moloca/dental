@@ -47,6 +47,7 @@ import {
 } from '../dto';
 import { Public } from '../../../decorators/public.decorator';
 import { AuthThrottle } from '../../../decorators/auth-throttle.decorator';
+import { CsrfService } from '../../csrf/csrf.service';
 import type { CurrentUser as CurrentUserType } from '@dentalos/shared-auth';
 import { CurrentUser } from '../../../decorators/current-user.decorator';
 
@@ -55,11 +56,34 @@ import { CurrentUser } from '../../../decorators/current-user.decorator';
  *
  * Handles user registration, login, token refresh, and profile retrieval.
  * All routes are under /auth prefix (configured in AuthModule).
+ *
+ * Security:
+ * - CSRF token is set as a cookie on all successful authentication responses
+ * - Cookie uses SameSite=Strict to prevent cross-site requests
+ * - Frontend must send CSRF token in X-CSRF-Token header for state-changing requests
  */
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthenticationController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly csrfService: CsrfService
+  ) {}
+
+  /**
+   * Set CSRF token cookie on response
+   *
+   * Sets the CSRF token as a cookie for the double-submit cookie pattern.
+   * Cookie is NOT HttpOnly so JavaScript can read it to send in header.
+   *
+   * @param response - Express response object
+   * @param csrfToken - CSRF token to set
+   */
+  private setCsrfCookie(response: Response, csrfToken: string): void {
+    const cookieOptions = this.csrfService.getCookieOptions();
+    const cookieName = this.csrfService.getCookieName();
+    response.cookie(cookieName, csrfToken, cookieOptions);
+  }
 
   /**
    * Register a new user
@@ -135,8 +159,15 @@ export class AuthenticationController {
       },
     },
   })
-  async register(@Body() dto: RegisterDto, @Req() request: Request): Promise<AuthResponseDto> {
-    return this.authService.register(dto, request);
+  async register(
+    @Body() dto: RegisterDto,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
+  ): Promise<AuthResponseDto> {
+    const authResponse = await this.authService.register(dto, request);
+    // Set CSRF token cookie for double-submit pattern
+    this.setCsrfCookie(response, authResponse.csrfToken);
+    return authResponse;
   }
 
   /**
@@ -228,8 +259,15 @@ export class AuthenticationController {
       },
     },
   })
-  async login(@Body() dto: LoginDto, @Req() request: Request): Promise<AuthResponseDto> {
-    return this.authService.login(dto, request);
+  async login(
+    @Body() dto: LoginDto,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
+  ): Promise<AuthResponseDto> {
+    const authResponse = await this.authService.login(dto, request);
+    // Set CSRF token cookie for double-submit pattern
+    this.setCsrfCookie(response, authResponse.csrfToken);
+    return authResponse;
   }
 
   /**
@@ -316,6 +354,10 @@ export class AuthenticationController {
     @Res() res: Response
   ): Promise<void> {
     const result = await this.authService.loginSmart(dto, request);
+    // Set CSRF cookie only when single org login succeeds (tokens are issued)
+    if (!result.needsOrgSelection && result.csrfToken) {
+      this.setCsrfCookie(res, result.csrfToken);
+    }
     res.status(HttpStatus.OK).json(result);
   }
 
@@ -427,9 +469,13 @@ export class AuthenticationController {
   })
   async loginSelectOrg(
     @Body() dto: SelectOrgDto,
-    @Req() request: Request
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
   ): Promise<AuthResponseDto> {
-    return this.authService.loginSelectOrg(dto, request);
+    const authResponse = await this.authService.loginSelectOrg(dto, request);
+    // Set CSRF token cookie for double-submit pattern
+    this.setCsrfCookie(response, authResponse.csrfToken);
+    return authResponse;
   }
 
   /**
@@ -595,8 +641,15 @@ export class AuthenticationController {
       },
     },
   })
-  async refresh(@Body() dto: RefreshTokenDto, @Req() request: Request): Promise<AuthResponseDto> {
-    return this.authService.refresh(dto.refreshToken, dto.organizationId, request);
+  async refresh(
+    @Body() dto: RefreshTokenDto,
+    @Req() request: Request,
+    @Res({ passthrough: true }) response: Response
+  ): Promise<AuthResponseDto> {
+    const authResponse = await this.authService.refresh(dto.refreshToken, dto.organizationId, request);
+    // Set new CSRF token cookie on token refresh (prevents token fixation)
+    this.setCsrfCookie(response, authResponse.csrfToken);
+    return authResponse;
   }
 
   /**

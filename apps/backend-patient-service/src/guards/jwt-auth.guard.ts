@@ -45,15 +45,39 @@ import { AppConfig } from '../config/configuration';
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   private readonly logger = new Logger(JwtAuthGuard.name);
-  private readonly jwtSecret: string;
+  private readonly jwtPublicKey: string;
   private readonly jwtIssuer: string;
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   constructor(_configService: ConfigService<AppConfig>) {
     // Load JWT configuration from environment
-    // SECURITY: JWT_SECRET must be a strong, randomly generated secret (min 256 bits)
-    this.jwtSecret = this.getRequiredEnvVar('JWT_SECRET');
-    this.jwtIssuer = this.getEnvVar('JWT_ISSUER', 'dentalos-auth-service');
+    // SECURITY: JWT_ACCESS_PUBLIC_KEY is the RS256 public key for token verification
+    // The auth service signs tokens with the private key, services verify with public key
+    const rawPublicKey = this.getRequiredEnvVar('JWT_ACCESS_PUBLIC_KEY');
+    // Handle base64-encoded public keys (common in Docker environments)
+    this.jwtPublicKey = this.decodeKeyIfBase64(rawPublicKey);
+    this.jwtIssuer = this.getEnvVar('JWT_ISSUER', 'dentalos-auth');
+  }
+
+  /**
+   * Decodes base64-encoded PEM key if necessary
+   * Docker environments often pass PEM keys as base64 to avoid newline issues
+   */
+  private decodeKeyIfBase64(key: string): string {
+    // If it already looks like a PEM key, return as-is
+    if (key.includes('-----BEGIN')) {
+      return key;
+    }
+    // Try base64 decoding
+    try {
+      const decoded = Buffer.from(key, 'base64').toString('utf-8');
+      if (decoded.includes('-----BEGIN')) {
+        return decoded;
+      }
+    } catch {
+      // Not base64, return original
+    }
+    return key;
   }
 
   /**
@@ -61,7 +85,7 @@ export class JwtAuthGuard implements CanActivate {
    *
    * SECURITY CHECKS:
    * 1. Extract Bearer token from Authorization header
-   * 2. Verify token signature using JWT_SECRET
+   * 2. Verify token signature using RS256 public key
    * 3. Validate token expiration
    * 4. Validate required claims (sub, email, roles, organizationId)
    * 5. Validate issuer matches expected value
@@ -87,11 +111,11 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       // Verify token signature and expiration
-      // SECURITY: verifyAccessToken uses HS256/HS384/HS512 algorithms
+      // SECURITY: verifyAccessToken uses RS256 algorithm (asymmetric)
       // and validates exp, iss, and required claims
       const payload: AccessTokenPayload = await verifyAccessToken(
         token,
-        this.jwtSecret,
+        this.jwtPublicKey,
         this.jwtIssuer,
       );
 
@@ -101,6 +125,7 @@ export class JwtAuthGuard implements CanActivate {
         userId: payload.sub,
         email: payload.email,
         roles: payload.roles as any,
+        permissions: payload.permissions || [],
         organizationId: payload.organizationId,
         clinicId: payload.clinicId,
       } as any);
@@ -125,6 +150,7 @@ export class JwtAuthGuard implements CanActivate {
         this.logger.warn('JWT verification failed', {
           code: error.code,
           message: error.message,
+          originalError: error.originalError?.message,
           method: request.method,
           url: request.url,
           ip: request.ip,

@@ -91,14 +91,16 @@ import { ModulesModule } from './modules/modules/modules.module';
     // Passport authentication module
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
-    // JWT module for token validation
+    // JWT module for token validation (RS256 - verify only with public key)
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService<AppConfig, true>) => {
         const jwtConfig = configService.get('jwt', { infer: true });
         return {
-          secret: jwtConfig.accessSecret,
-          signOptions: {
+          // RS256 requires public key for verification
+          publicKey: jwtConfig.accessPublicKey,
+          verifyOptions: {
+            algorithms: ['RS256'],
             issuer: jwtConfig.issuer,
             audience: jwtConfig.audience,
           },

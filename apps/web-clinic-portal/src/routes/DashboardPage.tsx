@@ -3,49 +3,112 @@
  */
 
 import { Icon } from '../components/ui/Icon';
+import { Skeleton } from '../components/ui/Skeleton';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
+import {
+  useTotalPatientsCount,
+  useTodaysAppointments,
+  useOutstandingBalance,
+  useLowStockItems,
+} from '../hooks/useDashboardStats';
 
 export function DashboardPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
 
+  // Fetch real data from APIs
+  const {
+    data: patientsCount,
+    isLoading: patientsLoading,
+    isError: patientsError,
+    refetch: refetchPatients
+  } = useTotalPatientsCount();
+
+  const {
+    data: appointmentsData,
+    isLoading: appointmentsLoading,
+    isError: appointmentsError,
+    refetch: refetchAppointments
+  } = useTodaysAppointments();
+
+  const {
+    data: balanceData,
+    isLoading: balanceLoading,
+    isError: balanceError,
+    refetch: refetchBalance
+  } = useOutstandingBalance();
+
+  const {
+    data: inventoryData,
+    isLoading: inventoryLoading,
+    isError: inventoryError,
+    refetch: refetchInventory
+  } = useLowStockItems();
+
+  // Format currency
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Format number with commas
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('en-US').format(num);
+  };
+
   const stats = [
     {
       label: 'Total Patients',
-      value: '1,248',
-      change: '+12%',
-      trend: 'up',
-      icon: 'users',
+      value: patientsLoading ? null : patientsError ? 'Error' : formatNumber(patientsCount || 0),
+      change: patientsLoading ? null : 'Active patients',
+      trend: 'neutral' as const,
+      icon: 'users' as const,
       color: 'bg-blue-500/20 text-blue-300',
       href: '/patients',
+      isLoading: patientsLoading,
+      isError: patientsError,
+      refetch: refetchPatients,
     },
     {
       label: "Today's Appointments",
-      value: '24',
-      change: '3 pending',
-      trend: 'neutral',
-      icon: 'calendar',
+      value: appointmentsLoading ? null : appointmentsError ? 'Error' : String(appointmentsData?.total || 0),
+      change: appointmentsLoading ? null : appointmentsData?.pending ? `${appointmentsData.pending} pending` : 'All confirmed',
+      trend: appointmentsData?.pending && appointmentsData.pending > 0 ? 'neutral' : 'up',
+      icon: 'calendar' as const,
       color: 'bg-purple-500/20 text-purple-300',
       href: '/appointments',
+      isLoading: appointmentsLoading,
+      isError: appointmentsError,
+      refetch: refetchAppointments,
     },
     {
       label: 'Outstanding Balance',
-      value: '$12,450',
-      change: '-8%',
-      trend: 'down',
-      icon: 'cash',
+      value: balanceLoading ? null : balanceError ? 'Error' : formatCurrency(balanceData?.total || 0, balanceData?.currency),
+      change: balanceLoading ? null : balanceData?.overdueCount ? `${balanceData.overdueCount} overdue` : 'All current',
+      trend: balanceData?.overdueCount && balanceData.overdueCount > 0 ? 'warning' : 'up',
+      icon: 'cash' as const,
       color: 'bg-green-500/20 text-green-300',
       href: '/billing',
+      isLoading: balanceLoading,
+      isError: balanceError,
+      refetch: refetchBalance,
     },
     {
       label: 'Low Stock Items',
-      value: '8',
-      change: 'Action needed',
-      trend: 'warning',
-      icon: 'exclamation',
+      value: inventoryLoading ? null : inventoryError ? 'Error' : String(inventoryData?.count || 0),
+      change: inventoryLoading ? null : inventoryData?.criticalCount ? `${inventoryData.criticalCount} critical` : inventoryData?.count ? 'Action needed' : 'All stocked',
+      trend: inventoryData?.criticalCount ? 'warning' : inventoryData?.count ? 'neutral' : 'up',
+      icon: 'exclamation' as const,
       color: 'bg-red-500/20 text-red-300',
       href: '/inventory',
+      isLoading: inventoryLoading,
+      isError: inventoryError,
+      refetch: refetchInventory,
     },
   ];
 
@@ -156,31 +219,55 @@ export function DashboardPage() {
         {stats.map((stat) => (
           <button
             key={stat.label}
-            onClick={() => navigate(stat.href)}
-            className="p-6 bg-surface rounded-lg border border-white/10 hover:border-brand transition-all text-left group"
+            onClick={() => !stat.isLoading && navigate(stat.href)}
+            disabled={stat.isLoading}
+            className="p-6 bg-surface rounded-lg border border-white/10 hover:border-brand transition-all text-left group disabled:cursor-wait"
           >
             <div className="flex items-center justify-between mb-4">
               <div className={`p-3 rounded-lg ${stat.color}`}>
-                <Icon name={stat.icon as any} className="w-6 h-6" />
+                <Icon name={stat.icon} className="w-6 h-6" />
               </div>
-              <span
-                className={`text-xs font-medium ${
-                  stat.trend === 'up'
-                    ? 'text-green-400'
-                    : stat.trend === 'down'
-                    ? 'text-red-400'
-                    : stat.trend === 'warning'
-                    ? 'text-yellow-400'
-                    : 'text-foreground/60'
-                }`}
-              >
-                {stat.change}
-              </span>
+              {stat.isLoading ? (
+                <Skeleton variant="text" width={60} height={16} />
+              ) : (
+                <span
+                  className={`text-xs font-medium ${
+                    stat.trend === 'up'
+                      ? 'text-green-400'
+                      : stat.trend === 'down'
+                      ? 'text-red-400'
+                      : stat.trend === 'warning'
+                      ? 'text-yellow-400'
+                      : 'text-foreground/60'
+                  }`}
+                >
+                  {stat.change}
+                </span>
+              )}
             </div>
             <div className="text-sm text-foreground/60 mb-1">{stat.label}</div>
-            <div className="text-3xl font-bold text-foreground group-hover:text-brand transition-colors">
-              {stat.value}
-            </div>
+            {stat.isLoading ? (
+              <Skeleton variant="text" width="60%" height={40} />
+            ) : stat.isError ? (
+              <div>
+                <div className="text-xl font-bold text-red-400 mb-2">
+                  Error loading
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    stat.refetch();
+                  }}
+                  className="text-xs text-brand hover:text-brand/80 underline"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : (
+              <div className="text-3xl font-bold text-foreground group-hover:text-brand transition-colors">
+                {stat.value}
+              </div>
+            )}
           </button>
         ))}
       </div>

@@ -183,8 +183,16 @@ services:
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       RABBITMQ_HOST: ${RABBITMQ_URI}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      # RS256 JWT Keys
+      JWT_ACCESS_PRIVATE_KEY: ${JWT_ACCESS_PRIVATE_KEY}
+      JWT_ACCESS_PUBLIC_KEY: ${JWT_ACCESS_PUBLIC_KEY}
+      JWT_REFRESH_PRIVATE_KEY: ${JWT_REFRESH_PRIVATE_KEY}
+      JWT_REFRESH_PUBLIC_KEY: ${JWT_REFRESH_PUBLIC_KEY}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION:-15m}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
+      # Security Keys
+      MFA_ENCRYPTION_KEY: ${MFA_ENCRYPTION_KEY}
       DEVICE_TOKEN_SECRET: ${DEVICE_TOKEN_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       SUBSCRIPTION_SERVICE_URL: http://subscription:${SUBSCRIPTION_PORT:-3011}
@@ -206,16 +214,18 @@ services:
       start_period: 60s
 
   # Patient Service - MongoDB-based service with watch mode
-  # INTERNAL PORT: 3004 | HOST PORT: 3304
+  # INTERNAL PORT: 3004 | HOST PORT: 3303
   patient:
     <<: *service-base
     command: sh -c 'cd /workspace/apps/backend-patient-service && npx nodemon'
     environment:
       PORT: ${PATIENT_PORT:-3004}
       MONGODB_URI: ${MONGO_URI_PATIENT}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ACCESS_PUBLIC_KEY: ${JWT_ACCESS_PUBLIC_KEY}
+      PII_ENCRYPTION_KEY: ${PII_ENCRYPTION_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS}
     ports:
-      - "${HOST_PATIENT_PORT:-3304}:${PATIENT_PORT:-3004}"
+      - "${HOST_PATIENT_PORT:-3303}:${PATIENT_PORT:-3004}"
     depends_on:
       mongo:
         condition: service_healthy
@@ -239,7 +249,9 @@ services:
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      JWT_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ACCESS_PUBLIC_KEY: ${JWT_ACCESS_PUBLIC_KEY}
+      CORS_ENABLED: "true"
+      CORS_ORIGINS: ${CORS_ORIGINS}
     ports:
       - "${HOST_SCHEDULING_PORT:-3302}:${SCHEDULING_PORT:-3002}"
     depends_on:
@@ -255,15 +267,18 @@ services:
       start_period: 60s
 
   # Provider Schedule Service - NestJS with watch mode
-  # INTERNAL PORT: 3003 | HOST PORT: 3303
+  # INTERNAL PORT: 3003 | HOST PORT: 3308
   provider-schedule:
     <<: *service-base
     command: sh -c 'cd /workspace/apps/backend-provider-schedule && npx nodemon'
     environment:
       PORT: ${PROVIDER_PORT:-3003}
       MONGODB_URI: ${MONGO_URI_PROVIDER}
+      JWT_ACCESS_PUBLIC_KEY: ${JWT_ACCESS_PUBLIC_KEY}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS}
     ports:
-      - "${HOST_PROVIDER_PORT:-3303}:${PROVIDER_PORT:-3003}"
+      - "${HOST_PROVIDER_PORT:-3308}:${PROVIDER_PORT:-3003}"
     depends_on:
       mongo:
         condition: service_healthy
@@ -275,7 +290,7 @@ services:
       start_period: 60s
 
   # Clinical Service - MongoDB-based service with watch mode
-  # INTERNAL PORT: 3005 | HOST PORT: 3305
+  # INTERNAL PORT: 3005 | HOST PORT: 3304
   clinical:
     <<: *service-base
     command: sh -c 'cd /workspace/apps/backend-clinical && npx nodemon'
@@ -285,9 +300,10 @@ services:
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ACCESS_PUBLIC_KEY: ${JWT_ACCESS_PUBLIC_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS}
     ports:
-      - "${HOST_CLINICAL_PORT:-3305}:${CLINICAL_PORT:-3005}"
+      - "${HOST_CLINICAL_PORT:-3304}:${CLINICAL_PORT:-3005}"
     depends_on:
       mongo:
         condition: service_healthy
@@ -301,7 +317,7 @@ services:
       start_period: 60s
 
   # Inventory Service - MongoDB with MinIO integration
-  # INTERNAL PORT: 3008 | HOST PORT: 3308
+  # INTERNAL PORT: 3008 | HOST PORT: 3306
   inventory:
     <<: *service-base
     command: sh -c 'cd /workspace/apps/backend-inventory-service && npx nodemon'
@@ -311,14 +327,15 @@ services:
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      JWT_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ACCESS_PUBLIC_KEY: ${JWT_ACCESS_PUBLIC_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS}
       STORAGE_ENDPOINT: ${MINIO_ENDPOINT}
       STORAGE_ACCESS_KEY_ID: ${MINIO_ACCESS_KEY}
       STORAGE_SECRET_ACCESS_KEY: ${MINIO_SECRET_KEY}
       STORAGE_BUCKET: ${MINIO_BUCKET}
       STORAGE_REGION: ${MINIO_REGION}
     ports:
-      - "${HOST_INVENTORY_PORT:-3308}:${INVENTORY_PORT:-3008}"
+      - "${HOST_INVENTORY_PORT:-3306}:${INVENTORY_PORT:-3008}"
     depends_on:
       mongo:
         condition: service_healthy
@@ -334,7 +351,7 @@ services:
       start_period: 60s
 
   # Billing Service - MongoDB-based service with watch mode
-  # INTERNAL PORT: 3010 | HOST PORT: 3310
+  # INTERNAL PORT: 3010 | HOST PORT: 3305
   billing:
     <<: *service-base
     command: sh -c 'cd /workspace/apps/backend-billing-service && npx nodemon'
@@ -344,9 +361,12 @@ services:
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      JWT_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ACCESS_PUBLIC_KEY: ${JWT_ACCESS_PUBLIC_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      STRIPE_SECRET_KEY: ${STRIPE_API_KEY:-sk_test_placeholder}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
     ports:
-      - "${HOST_BILLING_PORT:-3310}:${BILLING_PORT:-3010}"
+      - "${HOST_BILLING_PORT:-3305}:${BILLING_PORT:-3010}"
     depends_on:
       mongo:
         condition: service_healthy
@@ -360,7 +380,7 @@ services:
       start_period: 60s
 
   # Subscription Service - NestJS + PostgreSQL with watch mode
-  # INTERNAL PORT: 3011 | HOST PORT: 3311
+  # INTERNAL PORT: 3011 | HOST PORT: 3309
   subscription:
     <<: *service-base
     command: sh -c 'cd /workspace/apps/backend-subscription-service && npx nodemon'
@@ -379,14 +399,14 @@ services:
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_TLS: "false"
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_ACCESS_PUBLIC_KEY: ${JWT_ACCESS_PUBLIC_KEY}
       STRIPE_API_KEY: ${STRIPE_API_KEY:-sk_test_placeholder}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
       CORS_ORIGINS: ${CORS_ORIGINS}
       LOG_LEVEL: debug
       SWAGGER_ENABLED: "true"
     ports:
-      - "${HOST_SUBSCRIPTION_PORT:-3311}:${SUBSCRIPTION_PORT:-3011}"
+      - "${HOST_SUBSCRIPTION_PORT:-3309}:${SUBSCRIPTION_PORT:-3011}"
     depends_on:
       postgres-subscription:
         condition: service_healthy
@@ -400,7 +420,7 @@ services:
       start_period: 60s
 
   # Enterprise Service - MongoDB-based service with watch mode
-  # INTERNAL PORT: 3017 | HOST PORT: 3317
+  # INTERNAL PORT: 3017 | HOST PORT: 3307
   enterprise:
     <<: *service-base
     command: sh -c 'cd /workspace/apps/backend-enterprise-service && npx nodemon'
@@ -410,8 +430,10 @@ services:
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      JWT_ACCESS_PUBLIC_KEY: ${JWT_ACCESS_PUBLIC_KEY}
     ports:
-      - "${HOST_ENTERPRISE_PORT:-3317}:${ENTERPRISE_PORT:-3017}"
+      - "${HOST_ENTERPRISE_PORT:-3307}:${ENTERPRISE_PORT:-3017}"
     depends_on:
       mongo:
         condition: service_healthy

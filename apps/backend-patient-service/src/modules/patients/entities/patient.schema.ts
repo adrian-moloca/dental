@@ -72,6 +72,56 @@ export class Address {
 }
 
 /**
+ * Romanian national ID (CNP) information
+ * Stored encrypted, with searchable hash for lookups
+ */
+export class NationalIdInfo {
+  /**
+   * CNP encrypted using AES-256-GCM
+   * Format: iv:authTag:ciphertext (base64)
+   */
+  @Prop({ type: String })
+  encryptedValue?: string;
+
+  /**
+   * Deterministic hash for searching (HMAC-SHA256)
+   * Allows finding patient by CNP without decrypting all records
+   */
+  @Prop({ type: String, index: true })
+  searchHash?: string;
+
+  /**
+   * Last 4 digits for display purposes (e.g., "***********1234")
+   */
+  @Prop({ type: String })
+  lastFour?: string;
+
+  /**
+   * Whether CNP has been validated against Romanian algorithm
+   */
+  @Prop({ type: Boolean, default: false })
+  isValidated?: boolean;
+
+  /**
+   * Gender extracted from CNP (for data consistency check)
+   */
+  @Prop({ type: String, enum: ['male', 'female'] })
+  extractedGender?: string;
+
+  /**
+   * Birth date extracted from CNP (for data consistency check)
+   */
+  @Prop({ type: Date })
+  extractedBirthDate?: Date;
+
+  /**
+   * County code from CNP (JJ component)
+   */
+  @Prop({ type: String })
+  countyCode?: string;
+}
+
+/**
  * Person information sub-document
  */
 export class PersonInfo {
@@ -93,8 +143,19 @@ export class PersonInfo {
   @Prop({ required: true, type: String, enum: ['male', 'female', 'other', 'prefer_not_to_say'] })
   gender!: string;
 
-  @Prop({ type: String, trim: true }) // Should be encrypted at rest
+  /**
+   * @deprecated Use nationalId instead. Kept for backwards compatibility.
+   * Should be encrypted at rest.
+   */
+  @Prop({ type: String, trim: true })
   ssn?: string;
+
+  /**
+   * Romanian national ID (CNP) - Cod Numeric Personal
+   * Encrypted at rest with searchable hash
+   */
+  @Prop({ type: NationalIdInfo })
+  nationalId?: NationalIdInfo;
 
   @Prop({ type: String, trim: true })
   photoUrl?: string;
@@ -214,7 +275,7 @@ export class CommunicationPreferences {
 }
 
 /**
- * Consent information sub-document
+ * Consent information sub-document (GDPR compliant)
  */
 export class ConsentInfo {
   @Prop({ type: Boolean, default: false })
@@ -222,6 +283,9 @@ export class ConsentInfo {
 
   @Prop({ type: Date })
   gdprConsentDate?: Date;
+
+  @Prop({ type: String })
+  gdprConsentVersion?: string;
 
   @Prop({ type: Boolean, default: false })
   marketingConsent!: boolean;
@@ -240,6 +304,65 @@ export class ConsentInfo {
 
   @Prop({ type: Date })
   treatmentConsentDate?: Date;
+
+  @Prop({ type: Boolean, default: false })
+  smsMarketing!: boolean;
+
+  @Prop({ type: Boolean, default: false })
+  emailMarketing!: boolean;
+
+  @Prop({ type: Boolean, default: false })
+  whatsappMarketing!: boolean;
+}
+
+/**
+ * GDPR compliance sub-document
+ */
+export class GdprInfo {
+  @Prop({ type: ConsentInfo })
+  consents?: ConsentInfo;
+
+  @Prop({
+    type: Object,
+    default: null,
+  })
+  rightToErasure?: {
+    status: 'none' | 'requested' | 'processing' | 'completed';
+    requestedAt?: Date;
+    completedAt?: Date;
+  };
+
+  @Prop({
+    type: Object,
+    default: { clinicalData: 10 },
+  })
+  retentionPolicy!: {
+    clinicalData: number; // years (Romanian law: 10 years)
+  };
+}
+
+/**
+ * Patient lifecycle sub-document
+ */
+export class LifecycleInfo {
+  @Prop({
+    type: String,
+    enum: ['lead', 'new', 'active', 'at_risk', 'churned'],
+    default: 'new',
+  })
+  stage!: string;
+
+  @Prop({ type: Date })
+  firstVisitDate?: Date;
+
+  @Prop({ type: Date })
+  lastVisitDate?: Date;
+
+  @Prop({ type: Number, default: 0 })
+  visitCount!: number;
+
+  @Prop({ type: Number, default: 0 })
+  totalSpent!: number;
 }
 
 /**
@@ -304,6 +427,12 @@ export class Patient {
 
   @Prop({ required: true, type: ConsentInfo })
   consent!: ConsentInfo;
+
+  @Prop({ type: GdprInfo })
+  gdpr?: GdprInfo;
+
+  @Prop({ type: LifecycleInfo })
+  lifecycle?: LifecycleInfo;
 
   @Prop({ type: Number, default: 0, min: 0, max: 1000 })
   valueScore!: number;
@@ -377,6 +506,9 @@ PatientSchema.index({ tenantId: 1, patientNumber: 1 }, { unique: true, sparse: t
 PatientSchema.index({ organizationId: 1, clinicId: 1, isDeleted: 1 });
 PatientSchema.index({ createdAt: 1 });
 PatientSchema.index({ updatedAt: 1 });
+
+// Romanian CNP (national ID) search hash index for lookups
+PatientSchema.index({ tenantId: 1, 'person.nationalId.searchHash': 1 }, { sparse: true });
 
 // Text index for full-text search
 PatientSchema.index(

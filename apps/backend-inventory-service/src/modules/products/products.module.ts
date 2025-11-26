@@ -16,6 +16,9 @@ import { Reflector } from '@nestjs/core';
   ],
   controllers: [ProductsController],
   providers: [ProductsService, LicenseGuard, Reflector],
-  exports: [ProductsService],
+  exports: [
+    ProductsService,
+    MongooseModule, // Export for other modules that need Product model
+  ],
 })
 export class ProductsModule {}

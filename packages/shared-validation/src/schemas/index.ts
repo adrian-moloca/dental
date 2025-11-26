@@ -63,3 +63,6 @@ export * from './integrations';
 
 // Offline Sync schemas (device registration, change tracking, sync batches)
 export * from './offline-sync';
+
+// Romanian Market schemas (CNP validation, Romanian addresses, phone, CUI/CIF, IBAN)
+export * from './romanian';

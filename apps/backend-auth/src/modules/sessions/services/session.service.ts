@@ -472,6 +472,42 @@ export class SessionService {
   }
 
   /**
+   * Update refresh token hash for a session
+   *
+   * This is called after generating the final refresh token to update
+   * the session with the correct hash. Necessary because the initial
+   * session creation uses a placeholder token.
+   *
+   * @param sessionId - Session identifier
+   * @param organizationId - Organization for tenant isolation
+   * @param refreshToken - The final refresh token to hash and store
+   */
+  async updateRefreshTokenHash(
+    sessionId: UUID,
+    organizationId: OrganizationId,
+    refreshToken: string
+  ): Promise<void> {
+    const session = await this.sessionRepository.findById(sessionId, organizationId);
+
+    if (!session) {
+      throw new AuthenticationError('Session not found', {
+        reason: 'invalid_credentials',
+      });
+    }
+
+    // Hash the final refresh token
+    const refreshTokenHash = await this.passwordService.hashPassword(refreshToken);
+
+    // Update session with new hash
+    const updatedSession = new Session({
+      ...session,
+      refreshTokenHash,
+    });
+
+    await this.sessionRepository.update(updatedSession);
+  }
+
+  /**
    * Convert session entity to DTO
    * Excludes sensitive data (token hash)
    */

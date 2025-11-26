@@ -102,19 +102,24 @@ export class UserDto {
 
 /**
  * Authentication response with tokens and user data
+ *
+ * Security:
+ * - Includes CSRF token for double-submit cookie pattern
+ * - CSRF token must be sent in X-CSRF-Token header on state-changing requests
+ * - CSRF cookie is also set by the server (HttpOnly=false for JS access)
  */
 export class AuthResponseDto {
   @Expose()
   @ApiProperty({
     description: 'JWT access token (short-lived, 15 minutes)',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    example: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
   accessToken!: string;
 
   @Expose()
   @ApiProperty({
     description: 'JWT refresh token (long-lived, 7 days)',
-    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    example: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
   refreshToken!: string;
 
@@ -138,4 +143,14 @@ export class AuthResponseDto {
     type: UserDto,
   })
   user!: UserDto;
+
+  @Expose()
+  @ApiProperty({
+    description:
+      'CSRF token for protection against Cross-Site Request Forgery. ' +
+      'Must be included in X-CSRF-Token header for all state-changing requests (POST/PUT/PATCH/DELETE). ' +
+      'Also set as a cookie named "csrf_token" for the double-submit pattern.',
+    example: 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
+  })
+  csrfToken!: string;
 }

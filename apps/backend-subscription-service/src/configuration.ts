@@ -63,10 +63,44 @@ const RedisConfigSchema = z.object({
 });
 
 /**
+ * Decode a PEM key from base64 if it appears to be base64-encoded
+ */
+function decodeKeyIfBase64(key: string | undefined): string | undefined {
+  if (!key) return undefined;
+
+  // If it already looks like a PEM key, return as-is
+  if (key.includes('-----BEGIN')) {
+    return key;
+  }
+
+  // Try to decode as base64
+  try {
+    const decoded = Buffer.from(key, 'base64').toString('utf-8');
+    if (decoded.includes('-----BEGIN')) {
+      return decoded;
+    }
+  } catch {
+    // Not valid base64, return original
+  }
+
+  return key;
+}
+
+/**
  * JWT configuration schema
+ *
+ * @security CRITICAL: RS256 Algorithm for token verification
+ * This service only needs the PUBLIC key to verify tokens signed by auth service.
+ * The private key NEVER leaves the auth service.
  */
 const JwtConfigSchema = z.object({
-  accessSecret: z.string().min(32),
+  // RS256 public key for verifying tokens signed by auth service
+  accessPublicKey: z
+    .string()
+    .min(100)
+    .refine((key) => key.includes('-----BEGIN') && key.includes('PUBLIC KEY'), {
+      message: 'accessPublicKey must be a valid PEM-encoded RSA public key',
+    }),
   issuer: z.string().default('dentalos-auth'),
   audience: z.string().default('dentalos-api'),
 });
@@ -98,10 +132,11 @@ const RateLimitConfigSchema = z.object({
 
 /**
  * Stripe configuration schema
+ * In development mode, allows empty/placeholder values
  */
 const StripeConfigSchema = z.object({
-  apiKey: z.string().min(1),
-  webhookSecret: z.string().min(1),
+  apiKey: z.string().default('sk_test_dev_placeholder'),
+  webhookSecret: z.string().default('whsec_dev_placeholder'),
   apiVersion: z.string().default('2024-11-20.acacia'),
 });
 
@@ -177,7 +212,8 @@ export function loadConfiguration(): AppConfig {
       keyPrefix: process.env.REDIS_KEY_PREFIX,
     },
     jwt: {
-      accessSecret: process.env.JWT_ACCESS_SECRET,
+      // RS256 public key for verifying tokens (can be base64 encoded)
+      accessPublicKey: decodeKeyIfBase64(process.env.JWT_ACCESS_PUBLIC_KEY),
       issuer: process.env.JWT_ISSUER,
       audience: process.env.JWT_AUDIENCE,
     },

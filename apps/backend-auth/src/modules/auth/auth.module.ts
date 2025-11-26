@@ -37,6 +37,8 @@ import { CabinetController } from './controllers/cabinet.controller';
 import { SessionController } from './controllers/session.controller';
 import { UsersModule } from '../users/users.module';
 import { SessionsModule } from '../sessions/sessions.module';
+import { PasswordResetModule } from '../password-reset/password-reset.module';
+import { EmailVerificationModule } from '../email-verification/email-verification.module';
 import type { AppConfig } from '../../configuration';
 
 /**
@@ -54,6 +56,12 @@ import type { AppConfig } from '../../configuration';
     // Sessions module provides SessionService for session management
     SessionsModule,
 
+    // Password reset module provides PasswordHistoryService
+    PasswordResetModule,
+
+    // Email verification module provides EmailVerificationService
+    EmailVerificationModule,
+
     // HTTP module for calling subscription service
     HttpModule.register({
       timeout: 5000,
@@ -61,8 +69,8 @@ import type { AppConfig } from '../../configuration';
     }),
 
     // JWT module for token generation and validation
-    // Configured with access token secrets and options
-    // Refresh token uses separate secret (configured in AuthService)
+    // SECURITY: Configured for RS256 (asymmetric) algorithm only
+    // This prevents algorithm confusion attacks (CVE-2015-9235, CVE-2016-10555)
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -70,14 +78,26 @@ import type { AppConfig } from '../../configuration';
         const jwtConfig = configService.get('jwt', { infer: true });
 
         return {
-          // Access token secret (used for API authentication)
-          secret: jwtConfig.accessSecret,
+          // SECURITY: RSA private key for signing tokens
+          // Private key MUST stay within auth service - never distribute
+          privateKey: jwtConfig.accessPrivateKey,
+
+          // RSA public key for verifying tokens (can be distributed to other services)
+          publicKey: jwtConfig.accessPublicKey,
 
           // Default sign options for access tokens
           signOptions: {
+            algorithm: 'RS256', // SECURITY: Enforce RS256 - no symmetric algorithms
             expiresIn: jwtConfig.accessExpiration as any, // Default: 15m
             issuer: jwtConfig.issuer, // Default: dentalos-auth
             audience: jwtConfig.audience, // Default: dentalos-api
+          },
+
+          // Verification options
+          verifyOptions: {
+            // SECURITY CRITICAL: Only allow RS256
+            // Never add HS256/HS384/HS512 - enables algorithm confusion attacks
+            algorithms: ['RS256'],
           },
         };
       },

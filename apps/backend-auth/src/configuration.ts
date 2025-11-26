@@ -4,10 +4,45 @@
  * Loads and validates environment variables using Zod schemas.
  * Provides typed configuration object for the entire application.
  *
+ * @security RS256 JWT Algorithm Enforcement
+ * This configuration requires RSA key pairs for JWT operations.
+ * Symmetric algorithms (HS256, etc.) are NOT supported to prevent
+ * algorithm confusion attacks.
+ *
  * @module configuration
  */
 
 import { z } from 'zod';
+
+/**
+ * Decode a PEM key from base64 if it appears to be base64-encoded
+ *
+ * Environment variables often have issues with multiline PEM keys.
+ * This helper allows keys to be provided as base64-encoded strings.
+ *
+ * @param key - Raw key string or base64-encoded key
+ * @returns Decoded PEM key string
+ */
+function decodeKeyIfBase64(key: string | undefined): string | undefined {
+  if (!key) return undefined;
+
+  // If it already looks like a PEM key, return as-is
+  if (key.includes('-----BEGIN')) {
+    return key;
+  }
+
+  // Try to decode as base64
+  try {
+    const decoded = Buffer.from(key, 'base64').toString('utf-8');
+    if (decoded.includes('-----BEGIN')) {
+      return decoded;
+    }
+  } catch {
+    // Not valid base64, return original
+  }
+
+  return key;
+}
 
 /**
  * Database configuration schema
@@ -64,12 +99,62 @@ const RedisConfigSchema = z.object({
 
 /**
  * JWT configuration schema
+ *
+ * @security CRITICAL: RS256 Algorithm Enforcement
+ * This configuration requires RSA key pairs for JWT signing/verification.
+ * RS256 (RSA + SHA-256) is mandatory to prevent algorithm confusion attacks.
+ *
+ * Key Requirements:
+ * - accessPrivateKey: RSA private key (PEM format) for signing access tokens
+ * - accessPublicKey: RSA public key (PEM format) for verifying access tokens
+ * - refreshPrivateKey: RSA private key (PEM format) for signing refresh tokens
+ * - refreshPublicKey: RSA public key (PEM format) for verifying refresh tokens
+ *
+ * Generate keys with:
+ *   openssl genrsa -out private.pem 2048
+ *   openssl rsa -in private.pem -pubout -out public.pem
+ *
+ * @see CVE-2015-9235 - Algorithm confusion vulnerability
+ * @see CVE-2016-10555 - jsonwebtoken algorithm confusion
  */
 const JwtConfigSchema = z.object({
-  accessSecret: z.string().min(32),
-  refreshSecret: z.string().min(32),
+  // RS256 requires RSA key pairs - private key for signing, public key for verification
+  // Private keys should ONLY be available to the auth service (token generation)
+  // Public keys can be distributed to all services for token verification
+
+  // Access token keys (short-lived tokens for API authentication)
+  accessPrivateKey: z
+    .string()
+    .min(100)
+    .refine((key) => key.includes('-----BEGIN') && key.includes('PRIVATE KEY'), {
+      message: 'accessPrivateKey must be a valid PEM-encoded RSA private key',
+    }),
+  accessPublicKey: z
+    .string()
+    .min(100)
+    .refine((key) => key.includes('-----BEGIN') && key.includes('PUBLIC KEY'), {
+      message: 'accessPublicKey must be a valid PEM-encoded RSA public key',
+    }),
+
+  // Refresh token keys (long-lived tokens for session renewal)
+  refreshPrivateKey: z
+    .string()
+    .min(100)
+    .refine((key) => key.includes('-----BEGIN') && key.includes('PRIVATE KEY'), {
+      message: 'refreshPrivateKey must be a valid PEM-encoded RSA private key',
+    }),
+  refreshPublicKey: z
+    .string()
+    .min(100)
+    .refine((key) => key.includes('-----BEGIN') && key.includes('PUBLIC KEY'), {
+      message: 'refreshPublicKey must be a valid PEM-encoded RSA public key',
+    }),
+
+  // Token expiration settings
   accessExpiration: z.string().default('15m'),
   refreshExpiration: z.string().default('7d'),
+
+  // Token validation settings
   issuer: z.string().default('dentalos-auth'),
   audience: z.string().default('dentalos-api'),
 });
@@ -117,13 +202,69 @@ const RateLimitConfigSchema = z.object({
 });
 
 /**
- * Security configuration schema (Argon2id password hashing)
+ * Security configuration schema (Argon2id password hashing, MFA encryption, CSRF)
  */
 const SecurityConfigSchema = z.object({
   argon2: z.object({
     memoryCost: z.coerce.number().int().positive().default(65536),
     timeCost: z.coerce.number().int().positive().default(3),
     parallelism: z.coerce.number().int().positive().default(4),
+  }),
+  /**
+   * Password History Configuration
+   *
+   * Number of previous passwords to check when user changes password.
+   * Prevents users from reusing recent passwords.
+   *
+   * Default: 5 (checks last 5 passwords)
+   * Min: 0 (disabled)
+   * Max: 24 (2 years if password changed monthly)
+   *
+   * Compliance notes:
+   * - NIST SP 800-63B no longer requires password history
+   * - Some organizations still enforce it for compliance
+   * - Consider setting to 0 for better user experience
+   */
+  passwordHistoryCount: z.coerce.number().int().min(0).max(24).default(5),
+  /**
+   * MFA TOTP Secret Encryption Key
+   *
+   * CRITICAL: TOTP secrets MUST be encrypted, not hashed.
+   * TOTP verification requires the original secret to compute HMAC.
+   * Hashing is one-way and would make verification impossible.
+   *
+   * AES-256-GCM requires a 32-byte (256-bit) key.
+   * Generate with: openssl rand -hex 32
+   *
+   * @security This key protects all TOTP secrets in the database.
+   * Compromise of this key allows attackers to bypass MFA for all users.
+   * Store securely in secrets manager (AWS Secrets Manager, HashiCorp Vault).
+   */
+  mfaEncryptionKey: z
+    .string()
+    .length(64)
+    .regex(/^[0-9a-fA-F]+$/, {
+      message: 'MFA encryption key must be a 64-character hex string (32 bytes)',
+    }),
+  /**
+   * CSRF Protection Configuration
+   *
+   * Implements double-submit cookie pattern for CSRF protection.
+   * Token is generated on login, returned in response, and set as cookie.
+   * Frontend must send token in X-CSRF-Token header on state-changing requests.
+   *
+   * @security CSRF tokens are cryptographically random (256-bit)
+   * @security Uses timing-safe comparison to prevent timing attacks
+   */
+  csrf: z.object({
+    /** Enable/disable CSRF protection globally */
+    enabled: z.coerce.boolean().default(true),
+    /** Token time-to-live in seconds (matches session timeout) */
+    tokenTtl: z.coerce.number().int().positive().default(86400), // 24 hours
+    /** Cookie name for CSRF token */
+    cookieName: z.string().default('csrf_token'),
+    /** Header name for CSRF token */
+    headerName: z.string().default('X-CSRF-Token'),
   }),
 });
 
@@ -209,8 +350,13 @@ export function loadConfiguration(): AppConfig {
       keyPrefix: process.env.REDIS_KEY_PREFIX,
     },
     jwt: {
-      accessSecret: process.env.JWT_ACCESS_SECRET,
-      refreshSecret: process.env.JWT_REFRESH_SECRET,
+      // RS256 key pairs for secure asymmetric JWT signing
+      // Keys can be provided directly or as base64-encoded strings
+      // Base64 encoding is useful when keys contain newlines that break env vars
+      accessPrivateKey: decodeKeyIfBase64(process.env.JWT_ACCESS_PRIVATE_KEY),
+      accessPublicKey: decodeKeyIfBase64(process.env.JWT_ACCESS_PUBLIC_KEY),
+      refreshPrivateKey: decodeKeyIfBase64(process.env.JWT_REFRESH_PRIVATE_KEY),
+      refreshPublicKey: decodeKeyIfBase64(process.env.JWT_REFRESH_PUBLIC_KEY),
       accessExpiration: process.env.JWT_ACCESS_EXPIRATION,
       refreshExpiration: process.env.JWT_REFRESH_EXPIRATION,
       issuer: process.env.JWT_ISSUER,
@@ -247,6 +393,14 @@ export function loadConfiguration(): AppConfig {
         memoryCost: process.env.ARGON2_MEMORY_COST,
         timeCost: process.env.ARGON2_TIME_COST,
         parallelism: process.env.ARGON2_PARALLELISM,
+      },
+      passwordHistoryCount: process.env.PASSWORD_HISTORY_COUNT,
+      mfaEncryptionKey: process.env.MFA_ENCRYPTION_KEY,
+      csrf: {
+        enabled: process.env.CSRF_ENABLED,
+        tokenTtl: process.env.CSRF_TOKEN_TTL,
+        cookieName: process.env.CSRF_COOKIE_NAME,
+        headerName: process.env.CSRF_HEADER_NAME,
       },
     },
     subscriptionService: {

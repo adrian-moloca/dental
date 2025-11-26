@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const ConfigSchema = z.object({
-  port: z.number().int().positive().default(3003),
+  port: z.number().int().positive().default(3308),
   nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
   mongodb: z.object({
     uri: z.string().url(),
@@ -12,7 +12,14 @@ const ConfigSchema = z.object({
     password: z.string().optional(),
   }),
   cors: z.object({
-    origin: z.string().default('http://localhost:3000'),
+    origin: z.string().default('http://localhost:3000,http://localhost:5173'),
+  }),
+  jwt: z.object({
+    secret: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+    issuer: z.string().default('dentalos-auth-service'),
+  }),
+  internalApi: z.object({
+    key: z.string().min(32, 'INTERNAL_API_KEY must be at least 32 characters'),
   }),
   services: z.object({
     auth: z.string().url(),
@@ -32,10 +39,10 @@ export type AppConfig = z.infer<typeof ConfigSchema>;
 
 export default () => {
   const config = {
-    port: parseInt(process.env.PORT || '3003', 10),
+    port: parseInt(process.env.PORT || '3308', 10),
     nodeEnv: process.env.NODE_ENV || 'development',
     mongodb: {
-      uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/enterprise',
+      uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/provider-schedule',
     },
     redis: {
       host: process.env.REDIS_HOST || 'localhost',
@@ -43,7 +50,14 @@ export default () => {
       password: process.env.REDIS_PASSWORD,
     },
     cors: {
-      origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+      origin: process.env.CORS_ORIGINS || 'http://localhost:3000,http://localhost:5173',
+    },
+    jwt: {
+      secret: process.env.JWT_SECRET || 'development-secret-key-min-32-chars!!',
+      issuer: process.env.JWT_ISSUER || 'dentalos-auth-service',
+    },
+    internalApi: {
+      key: process.env.INTERNAL_API_KEY || 'development-internal-api-key-provider-schedule-secure',
     },
     services: {
       auth: process.env.AUTH_SERVICE_URL || 'http://localhost:3301',

@@ -136,11 +136,27 @@ export class CreatePersonInfoDto {
   @IsNotEmpty()
   gender!: string;
 
-  @ApiPropertyOptional()
+  /**
+   * @deprecated Use cnp instead for Romanian patients
+   */
+  @ApiPropertyOptional({ description: 'US Social Security Number (deprecated for Romanian patients)' })
   @IsString()
   @IsOptional()
   @Matches(/^\d{3}-\d{2}-\d{4}$/, { message: 'SSN must be in format XXX-XX-XXXX' })
   ssn?: string;
+
+  /**
+   * Romanian CNP (Cod Numeric Personal) - 13 digit national ID
+   * Will be validated and encrypted before storage
+   */
+  @ApiPropertyOptional({
+    description: 'Romanian CNP (Cod Numeric Personal) - 13 digit national ID',
+    example: '1850101123456',
+  })
+  @IsString()
+  @IsOptional()
+  @Matches(/^\d{13}$/, { message: 'CNP must be exactly 13 digits' })
+  cnp?: string;
 }
 
 export class CreateContactInfoDto {
@@ -329,6 +345,21 @@ export class CreateConsentInfoDto {
   @IsBoolean()
   @IsOptional()
   treatmentConsent?: boolean;
+
+  @ApiPropertyOptional()
+  @IsBoolean()
+  @IsOptional()
+  smsMarketing?: boolean;
+
+  @ApiPropertyOptional()
+  @IsBoolean()
+  @IsOptional()
+  emailMarketing?: boolean;
+
+  @ApiPropertyOptional()
+  @IsBoolean()
+  @IsOptional()
+  whatsappMarketing?: boolean;
 }
 
 /**

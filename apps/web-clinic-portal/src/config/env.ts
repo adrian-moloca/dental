@@ -19,14 +19,18 @@ interface EnvConfig {
 }
 
 export const env: EnvConfig = {
+  // Port assignments per CLAUDE.md:
+  // backend-auth: 3301, backend-scheduling: 3302, backend-patient-service: 3303
+  // backend-clinical: 3304, backend-billing-service: 3305, backend-inventory-service: 3306
+  // backend-enterprise-service: 3307, backend-provider-schedule: 3308
   AUTH_API_URL: import.meta.env.VITE_AUTH_API_URL || 'http://localhost:3301/api/v1',
-  PATIENT_API_URL: import.meta.env.VITE_PATIENT_API_URL || 'http://localhost:3304/api/v1',
-  PROVIDER_API_URL: import.meta.env.VITE_PROVIDER_API_URL || 'http://localhost:3303/api/v1',
+  PATIENT_API_URL: import.meta.env.VITE_PATIENT_API_URL || 'http://localhost:3303/api/v1',
+  PROVIDER_API_URL: import.meta.env.VITE_PROVIDER_API_URL || 'http://localhost:3308/api/v1',
   SCHEDULING_API_URL: import.meta.env.VITE_SCHEDULING_API_URL || 'http://localhost:3302/api/v1',
-  CLINICAL_API_URL: import.meta.env.VITE_CLINICAL_API_URL || 'http://localhost:3305/api/v1',
-  BILLING_API_URL: import.meta.env.VITE_BILLING_API_URL || 'http://localhost:3310/api/v1',
-  INVENTORY_API_URL: import.meta.env.VITE_INVENTORY_API_URL || 'http://localhost:3308/api/v1',
-  ENTERPRISE_API_URL: import.meta.env.VITE_ENTERPRISE_API_URL || 'http://localhost:3317/api/v1',
+  CLINICAL_API_URL: import.meta.env.VITE_CLINICAL_API_URL || 'http://localhost:3304/api/v1',
+  BILLING_API_URL: import.meta.env.VITE_BILLING_API_URL || 'http://localhost:3305/api/v1',
+  INVENTORY_API_URL: import.meta.env.VITE_INVENTORY_API_URL || 'http://localhost:3306/api/v1',
+  ENTERPRISE_API_URL: import.meta.env.VITE_ENTERPRISE_API_URL || 'http://localhost:3307/api/v1',
   HEALTH_AGGREGATOR_URL: import.meta.env.VITE_HEALTH_AGGREGATOR_URL || 'http://localhost:3399/api/v1',
   IMAGING_API_URL: import.meta.env.VITE_IMAGING_API_URL || 'http://localhost:3008/api/v1',
 };

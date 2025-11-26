@@ -69,6 +69,9 @@ export interface AccessTokenPayload {
   /** User roles in the system */
   readonly roles: readonly UserRole[];
 
+  /** User permissions (string array like ["*:*", "patients:read"]) */
+  readonly permissions?: readonly string[];
+
   /** Organization ID (tenant context) */
   readonly organizationId: OrganizationId;
 

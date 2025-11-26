@@ -465,4 +465,48 @@ export class PatientsRepository {
 
     return this.patientModel.countDocuments(query).exec();
   }
+
+  /**
+   * Find patient by Romanian CNP (national ID) search hash
+   *
+   * @param cnpSearchHash - Deterministic hash of CNP for lookup
+   * @param tenantId - Tenant ID for isolation
+   * @returns Patient document or null
+   */
+  async findByCnpHash(cnpSearchHash: string, tenantId: string): Promise<PatientDocument | null> {
+    return this.patientModel
+      .findOne({
+        tenantId,
+        isDeleted: false,
+        'person.nationalId.searchHash': cnpSearchHash,
+      })
+      .exec();
+  }
+
+  /**
+   * Check if CNP already exists in the system
+   *
+   * @param cnpSearchHash - Deterministic hash of CNP
+   * @param tenantId - Tenant ID for isolation
+   * @param excludePatientId - Patient ID to exclude (for updates)
+   * @returns Whether CNP already exists
+   */
+  async cnpExists(
+    cnpSearchHash: string,
+    tenantId: string,
+    excludePatientId?: UUID,
+  ): Promise<boolean> {
+    const query: FilterQuery<PatientDocument> = {
+      tenantId,
+      isDeleted: false,
+      'person.nationalId.searchHash': cnpSearchHash,
+    };
+
+    if (excludePatientId) {
+      query.id = { $ne: excludePatientId };
+    }
+
+    const count = await this.patientModel.countDocuments(query).exec();
+    return count > 0;
+  }
 }

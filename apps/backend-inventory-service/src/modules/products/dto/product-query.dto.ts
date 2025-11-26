@@ -1,5 +1,5 @@
 import { IsOptional, IsString, IsEnum, IsNumber, Min, Max } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ProductType, ProductStatus } from '../schemas/product.schema';
 
@@ -15,6 +15,7 @@ export class ProductQueryDto {
   type?: ProductType;
 
   @ApiPropertyOptional({ enum: ProductStatus, description: 'Filter by status' })
+  @Transform(({ value }) => value?.toUpperCase())
   @IsEnum(ProductStatus)
   @IsOptional()
   status?: ProductStatus;

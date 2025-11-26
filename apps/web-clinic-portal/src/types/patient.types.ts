@@ -26,21 +26,49 @@ export interface AddressDto {
   isPrimary?: boolean;
 }
 
-export interface CreatePatientDto {
+/** Person info nested object for CreatePatientDto */
+export interface CreatePersonInfoDto {
   firstName: string;
   lastName: string;
+  middleName?: string;
+  preferredName?: string;
   dateOfBirth: Date;
-  gender?: 'male' | 'female' | 'other';
+  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  ssn?: string;
+  cnp?: string;
+}
+
+/** Contact info nested object for CreatePatientDto */
+export interface CreateContactInfoDto {
   phones?: PhoneDto[];
   emails?: EmailDto[];
-  address?: AddressDto;
-  emergencyContact?: {
-    name: string;
-    relationship: string;
-    phone: string;
-  };
-  medicalHistory?: Record<string, any>;
-  insuranceInfo?: Record<string, any>;
+  addresses?: AddressDto[];
+}
+
+/** Consent info nested object for CreatePatientDto (gdprConsent is required) */
+export interface CreateConsentInfoDto {
+  gdprConsent: boolean;
+  marketingConsent?: boolean;
+  dataProcessingConsent?: boolean;
+  treatmentConsent?: boolean;
+  smsMarketing?: boolean;
+  emailMarketing?: boolean;
+  whatsappMarketing?: boolean;
+}
+
+/**
+ * CreatePatientDto - matches backend nested structure
+ * Required fields: clinicId, person, consent
+ */
+export interface CreatePatientDto {
+  clinicId: string;
+  patientNumber?: string;
+  person: CreatePersonInfoDto;
+  contacts?: CreateContactInfoDto;
+  consent: CreateConsentInfoDto;
+  tags?: string[];
+  assignedProviderId?: string;
+  referredBy?: string;
   notes?: string;
 }
 
@@ -64,7 +92,8 @@ export interface PatientDto {
 }
 
 export interface SearchPatientDto {
-  query?: string;
+  /** Search term for name, email, or phone (backend field name is 'search') */
+  search?: string;
   firstName?: string;
   lastName?: string;
   email?: string;

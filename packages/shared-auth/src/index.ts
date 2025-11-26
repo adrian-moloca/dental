@@ -27,6 +27,7 @@ export {
   getTokenAge,
   ModuleCode,
   SubscriptionStatus,
+  ALLOWED_JWT_ALGORITHMS,
 } from './jwt';
 
 // ============================================================================

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Prop, Schema as MongooseSchema, SchemaFactory } from '@nestjs/mongoose';
 import { createHash } from 'crypto';
 
 /**
@@ -110,29 +111,69 @@ export interface AuditLogEntry {
 }
 
 /**
- * Audit Log Schema for MongoDB
+ * Audit Log Document for MongoDB
  */
-export const AuditLogSchema = {
-  id: { type: String, required: true, unique: true, index: true },
-  eventType: { type: String, required: true, index: true },
-  userId: { type: String, required: true, index: true },
-  userEmail: { type: String },
-  organizationId: { type: String, index: true },
-  clinicId: { type: String, index: true },
-  resourceType: { type: String, index: true },
-  resourceId: { type: String, index: true },
-  httpMethod: { type: String },
-  url: { type: String },
-  ipAddress: { type: String },
-  userAgent: { type: String },
-  correlationId: { type: String, index: true },
-  result: { type: String, required: true, enum: ['success', 'failure', 'partial'] },
-  errorMessage: { type: String },
-  metadata: { type: Object },
-  timestamp: { type: Date, required: true, index: true },
-  previousHash: { type: String, required: true },
-  hash: { type: String, required: true, unique: true },
-};
+@MongooseSchema({ collection: 'audit_logs', timestamps: false })
+export class AuditLog {
+  @Prop({ required: true, unique: true, index: true })
+  id!: string;
+
+  @Prop({ required: true, index: true })
+  eventType!: string;
+
+  @Prop({ required: true, index: true })
+  userId!: string;
+
+  @Prop()
+  userEmail?: string;
+
+  @Prop({ index: true })
+  organizationId?: string;
+
+  @Prop({ index: true })
+  clinicId?: string;
+
+  @Prop({ index: true })
+  resourceType?: string;
+
+  @Prop({ index: true })
+  resourceId?: string;
+
+  @Prop()
+  httpMethod?: string;
+
+  @Prop()
+  url?: string;
+
+  @Prop()
+  ipAddress?: string;
+
+  @Prop()
+  userAgent?: string;
+
+  @Prop({ index: true })
+  correlationId?: string;
+
+  @Prop({ required: true, enum: ['success', 'failure', 'partial'] })
+  result!: string;
+
+  @Prop()
+  errorMessage?: string;
+
+  @Prop({ type: Object })
+  metadata?: Record<string, any>;
+
+  @Prop({ required: true, index: true })
+  timestamp!: Date;
+
+  @Prop({ required: true })
+  previousHash!: string;
+
+  @Prop({ required: true, unique: true })
+  hash!: string;
+}
+
+export const AuditLogSchema = SchemaFactory.createForClass(AuditLog);
 
 /**
  * Audit Logging Service for Enterprise Service
@@ -171,7 +212,7 @@ export class AuditLogService {
   private readonly logger = new Logger(AuditLogService.name);
   private lastHash: string = 'GENESIS'; // Initial hash for first entry
 
-  constructor(@InjectModel('AuditLog') private readonly auditLogModel: Model<any>) {
+  constructor(@InjectModel(AuditLog.name) private readonly auditLogModel: Model<AuditLog>) {
     this.initializeLastHash();
   }
 

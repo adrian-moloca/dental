@@ -20,13 +20,18 @@ import type { AppConfig } from '@/config/configuration';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService<AppConfig, true>) => ({
-        secret: configService.get('jwt.accessSecret', { infer: true }),
-        signOptions: {
-          issuer: configService.get('jwt.issuer', { infer: true }),
-          audience: configService.get('jwt.audience', { infer: true }),
-        },
-      }),
+      useFactory: (configService: ConfigService<AppConfig, true>) => {
+        const jwtConfig = configService.get('jwt', { infer: true });
+        return {
+          // RS256 requires public key for verification
+          publicKey: jwtConfig.accessPublicKey,
+          verifyOptions: {
+            algorithms: ['RS256'],
+            issuer: jwtConfig.issuer,
+            audience: jwtConfig.audience,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
   ],

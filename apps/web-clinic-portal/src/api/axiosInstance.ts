@@ -62,7 +62,9 @@ export const createApiClient = (baseURL: string) => {
 
         try {
           const refreshToken = tokenStorage.getRefreshToken();
-          if (!refreshToken) {
+          const user = tokenStorage.getUser();
+
+          if (!refreshToken || !user?.organizationId) {
             tokenStorage.clear();
             window.location.href = '/login';
             return Promise.reject(error);
@@ -71,6 +73,7 @@ export const createApiClient = (baseURL: string) => {
           // Attempt token refresh using auth API URL
           const response = await axios.post(`${env.AUTH_API_URL}/auth/refresh`, {
             refreshToken,
+            organizationId: user.organizationId,
           });
 
           const { accessToken, refreshToken: newRefreshToken } = response.data;

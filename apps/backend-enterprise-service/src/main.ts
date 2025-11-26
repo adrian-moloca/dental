@@ -27,9 +27,13 @@ async function bootstrap() {
   app.use(helmet());
 
   // CORS
-  const corsOrigin = configService.get('cors.origin', { infer: true })!;
+  const corsOriginConfig = configService.get('cors.origin', { infer: true })!;
+  // Support comma-separated origins or a single origin
+  const corsOrigins = corsOriginConfig.includes(',')
+    ? corsOriginConfig.split(',').map((o: string) => o.trim())
+    : corsOriginConfig;
   app.enableCors({
-    origin: corsOrigin,
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [

@@ -2,15 +2,30 @@
  * Patient Form Component
  *
  * Reusable form for creating and editing patients.
+ * Sends data in backend-expected nested structure.
  */
 
 import { useState } from 'react';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
-import type { CreatePatientDto } from '../../types/patient.types';
+import type { CreatePatientDto, PhoneDto, EmailDto, AddressDto } from '../../types/patient.types';
+import { useAuthStore } from '../../store/authStore';
+
+/** Internal form state (flat for easier form handling) */
+interface PatientFormState {
+  firstName: string;
+  lastName: string;
+  dateOfBirth: Date | undefined;
+  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say' | undefined;
+  phones: PhoneDto[];
+  emails: EmailDto[];
+  address: Partial<AddressDto>;
+  notes: string;
+  gdprConsent: boolean;
+}
 
 interface PatientFormProps {
-  initialData?: Partial<CreatePatientDto>;
+  initialData?: Partial<PatientFormState>;
   onSubmit: (data: CreatePatientDto) => void | Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
@@ -24,7 +39,9 @@ export function PatientForm({
   isSubmitting = false,
   mode = 'create',
 }: PatientFormProps) {
-  const [formData, setFormData] = useState<Partial<CreatePatientDto>>({
+  const user = useAuthStore((state) => state.user);
+
+  const [formData, setFormData] = useState<PatientFormState>({
     firstName: initialData?.firstName || '',
     lastName: initialData?.lastName || '',
     dateOfBirth: initialData?.dateOfBirth || undefined,
@@ -39,6 +56,7 @@ export function PatientForm({
       country: 'Romania',
     },
     notes: initialData?.notes || '',
+    gdprConsent: true, // Default to true for required consent
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -54,6 +72,9 @@ export function PatientForm({
     }
     if (!formData.dateOfBirth) {
       newErrors.dateOfBirth = 'Date of birth is required';
+    }
+    if (!formData.gender) {
+      newErrors.gender = 'Gender is required';
     }
 
     const primaryEmail = formData.emails?.[0]?.address;
@@ -77,21 +98,39 @@ export function PatientForm({
       return;
     }
 
+    // Build the nested structure expected by backend
     const submitData: CreatePatientDto = {
-      firstName: formData.firstName!,
-      lastName: formData.lastName!,
-      dateOfBirth: formData.dateOfBirth!,
-      gender: formData.gender,
-      phones: formData.phones?.filter(p => p.number.trim()),
-      emails: formData.emails?.filter(e => e.address.trim()),
-      address: formData.address,
-      notes: formData.notes,
+      // Use clinicId from user context, or default to organization for super admin
+      clinicId: user?.clinicId || user?.organizationId || 'default-clinic',
+      person: {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        dateOfBirth: formData.dateOfBirth!,
+        gender: formData.gender || 'prefer_not_to_say',
+      },
+      contacts: {
+        phones: formData.phones?.filter(p => p.number.trim()),
+        emails: formData.emails?.filter(e => e.address.trim()),
+        addresses: formData.address?.street ? [{
+          street: formData.address.street,
+          street2: formData.address.street2,
+          city: formData.address.city || '',
+          state: formData.address.state || '',
+          postalCode: formData.address.postalCode || '',
+          country: formData.address.country,
+          isPrimary: true,
+        }] : undefined,
+      },
+      consent: {
+        gdprConsent: formData.gdprConsent,
+      },
+      notes: formData.notes || undefined,
     };
 
     await onSubmit(submitData);
   };
 
-  const updateField = (field: keyof CreatePatientDto, value: any) => {
+  const updateField = <K extends keyof PatientFormState>(field: K, value: PatientFormState[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
@@ -99,18 +138,18 @@ export function PatientForm({
   };
 
   const updatePhone = (index: number, value: string) => {
-    const newPhones = [...(formData.phones || [])];
+    const newPhones = [...formData.phones];
     newPhones[index] = { ...newPhones[index], number: value };
     updateField('phones', newPhones);
   };
 
   const updateEmail = (index: number, value: string) => {
-    const newEmails = [...(formData.emails || [])];
+    const newEmails = [...formData.emails];
     newEmails[index] = { ...newEmails[index], address: value };
     updateField('emails', newEmails);
   };
 
-  const updateAddress = (field: string, value: string) => {
+  const updateAddress = (field: keyof AddressDto, value: string) => {
     updateField('address', { ...formData.address, [field]: value });
   };
 
@@ -154,17 +193,24 @@ export function PatientForm({
             autoComplete="bday"
           />
           <div className="space-y-2">
-            <label className="block text-sm text-slate-200">Gender</label>
+            <label className="block text-sm text-slate-200">
+              Gender <span className="text-red-400">*</span>
+            </label>
             <select
               value={formData.gender || ''}
-              onChange={(e) => updateField('gender', e.target.value || undefined)}
-              className="w-full rounded-lg border border-slate-700/80 bg-ink-800/60 px-3 py-2 text-white focus:border-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-300"
+              onChange={(e) => updateField('gender', (e.target.value || undefined) as PatientFormState['gender'])}
+              className={`w-full rounded-lg border ${errors.gender ? 'border-red-500' : 'border-slate-700/80'} bg-ink-800/60 px-3 py-2 text-white focus:border-brand-300 focus:outline-none focus:ring-2 focus:ring-brand-300`}
+              required
             >
-              <option value="">Prefer not to say</option>
+              <option value="">Select gender</option>
               <option value="male">Male</option>
               <option value="female">Female</option>
               <option value="other">Other</option>
+              <option value="prefer_not_to_say">Prefer not to say</option>
             </select>
+            {errors.gender && (
+              <p className="text-xs text-red-400 mt-1">{errors.gender}</p>
+            )}
           </div>
         </div>
       </div>

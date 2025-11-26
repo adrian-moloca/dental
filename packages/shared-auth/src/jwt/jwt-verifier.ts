@@ -1,10 +1,32 @@
 /**
  * JWT verification utilities
  * @module shared-auth/jwt/verifier
+ *
+ * @security IMPORTANT: Algorithm Confusion Attack Prevention
+ * This module ONLY accepts RS256 algorithm to prevent algorithm confusion attacks.
+ * See: CVE-2015-9235, CVE-2016-10555
+ *
+ * RS256 (RSA + SHA-256) is mandatory because:
+ * 1. Asymmetric signing prevents key confusion attacks
+ * 2. Private key never leaves the auth service
+ * 3. Public key can be safely distributed to all services
+ * 4. Industry standard for distributed systems
+ *
+ * NEVER add HS256/HS384/HS512 to the allowed algorithms list.
  */
 
 import * as jwt from 'jsonwebtoken';
 import { AccessTokenPayload, RefreshTokenPayload } from './jwt-payload.types';
+
+/**
+ * Allowed JWT signing algorithms
+ *
+ * @security CRITICAL: Only RS256 is permitted
+ * Adding symmetric algorithms (HS256, HS384, HS512) would expose
+ * the system to algorithm confusion attacks where an attacker
+ * could forge tokens using the public key as an HMAC secret.
+ */
+export const ALLOWED_JWT_ALGORITHMS: jwt.Algorithm[] = ['RS256'];
 
 /**
  * Error codes for JWT verification failures
@@ -16,6 +38,7 @@ export enum JWTVerificationError {
   MISSING_CLAIMS = 'MISSING_CLAIMS',
   INVALID_ISSUER = 'INVALID_ISSUER',
   VERIFICATION_FAILED = 'VERIFICATION_FAILED',
+  ALGORITHM_MISMATCH = 'ALGORITHM_MISMATCH',
 }
 
 /**
@@ -35,23 +58,28 @@ export class JWTError extends Error {
 
 /**
  * Verifies an access token and returns its payload
- * Supports key rotation by accepting multiple secrets
+ * Supports key rotation by accepting multiple public keys
  *
  * @param token - JWT token string
- * @param secret - Single secret or array of secrets (for key rotation)
+ * @param publicKey - Single public key or array of public keys (for key rotation)
  * @param expectedIssuer - Optional expected issuer to validate
  * @returns Decoded and verified access token payload
  * @throws {JWTError} If token is invalid, expired, or malformed
  *
- * @security
- * - Verifies signature using provided secret(s)
+ * @security CRITICAL: Algorithm Confusion Attack Prevention
+ * - ONLY RS256 algorithm is accepted (asymmetric)
+ * - Explicitly rejects HS256/HS384/HS512 to prevent key confusion attacks
+ * - Verifies signature using provided public key(s)
  * - Validates expiration (exp claim)
  * - Validates issuer if provided
- * - Tries multiple secrets in order for graceful key rotation
+ * - Tries multiple keys in order for graceful key rotation
+ *
+ * @see CVE-2015-9235 - Algorithm confusion vulnerability
+ * @see CVE-2016-10555 - jsonwebtoken algorithm confusion
  */
 export async function verifyAccessToken(
   token: string,
-  secret: string | string[],
+  publicKey: string | string[],
   expectedIssuer?: string,
 ): Promise<AccessTokenPayload> {
   if (!token || typeof token !== 'string') {
@@ -61,18 +89,32 @@ export async function verifyAccessToken(
     );
   }
 
-  if (!secret || (Array.isArray(secret) && secret.length === 0)) {
-    throw new Error('Secret is required for token verification');
+  if (!publicKey || (Array.isArray(publicKey) && publicKey.length === 0)) {
+    throw new Error('Public key is required for token verification');
   }
 
-  const secrets = Array.isArray(secret) ? secret : [secret];
+  // Pre-flight check: Decode header to verify algorithm before signature check
+  // This prevents timing attacks and provides clearer error messages
+  const decodedHeader = jwt.decode(token, { complete: true });
+  if (decodedHeader && decodedHeader.header) {
+    const tokenAlgorithm = decodedHeader.header.alg;
+    if (!ALLOWED_JWT_ALGORITHMS.includes(tokenAlgorithm as jwt.Algorithm)) {
+      throw new JWTError(
+        JWTVerificationError.ALGORITHM_MISMATCH,
+        `Algorithm '${tokenAlgorithm}' is not allowed. Only RS256 is permitted.`,
+      );
+    }
+  }
+
+  const keys = Array.isArray(publicKey) ? publicKey : [publicKey];
   let lastError: Error | undefined;
 
-  for (const currentSecret of secrets) {
+  for (const currentKey of keys) {
     try {
-      const decoded = jwt.verify(token, currentSecret, {
+      const decoded = jwt.verify(token, currentKey, {
         complete: false,
-        algorithms: ['HS256', 'HS384', 'HS512'],
+        // SECURITY: ONLY allow RS256 - prevents algorithm confusion attacks
+        algorithms: ALLOWED_JWT_ALGORITHMS,
       }) as AccessTokenPayload;
 
       // Validate required claims
@@ -128,33 +170,38 @@ export async function verifyAccessToken(
     }
   }
 
-  // All secrets failed
+  // All keys failed
   throw new JWTError(
     JWTVerificationError.INVALID_SIGNATURE,
-    'Token signature verification failed with all provided secrets',
+    'Token signature verification failed with all provided public keys',
     lastError,
   );
 }
 
 /**
  * Verifies a refresh token and returns its payload
- * Supports key rotation by accepting multiple secrets
+ * Supports key rotation by accepting multiple public keys
  *
  * @param token - JWT token string
- * @param secret - Single secret or array of secrets (for key rotation)
+ * @param publicKey - Single public key or array of public keys (for key rotation)
  * @param expectedIssuer - Optional expected issuer to validate
  * @returns Decoded and verified refresh token payload
  * @throws {JWTError} If token is invalid, expired, or malformed
  *
- * @security
- * - Verifies signature using provided secret(s)
+ * @security CRITICAL: Algorithm Confusion Attack Prevention
+ * - ONLY RS256 algorithm is accepted (asymmetric)
+ * - Explicitly rejects HS256/HS384/HS512 to prevent key confusion attacks
+ * - Verifies signature using provided public key(s)
  * - Validates expiration (exp claim)
  * - Validates issuer if provided
  * - Minimal payload to reduce token size
+ *
+ * @see CVE-2015-9235 - Algorithm confusion vulnerability
+ * @see CVE-2016-10555 - jsonwebtoken algorithm confusion
  */
 export async function verifyRefreshToken(
   token: string,
-  secret: string | string[],
+  publicKey: string | string[],
   expectedIssuer?: string,
 ): Promise<RefreshTokenPayload> {
   if (!token || typeof token !== 'string') {
@@ -164,18 +211,31 @@ export async function verifyRefreshToken(
     );
   }
 
-  if (!secret || (Array.isArray(secret) && secret.length === 0)) {
-    throw new Error('Secret is required for token verification');
+  if (!publicKey || (Array.isArray(publicKey) && publicKey.length === 0)) {
+    throw new Error('Public key is required for token verification');
   }
 
-  const secrets = Array.isArray(secret) ? secret : [secret];
+  // Pre-flight check: Decode header to verify algorithm before signature check
+  const decodedHeader = jwt.decode(token, { complete: true });
+  if (decodedHeader && decodedHeader.header) {
+    const tokenAlgorithm = decodedHeader.header.alg;
+    if (!ALLOWED_JWT_ALGORITHMS.includes(tokenAlgorithm as jwt.Algorithm)) {
+      throw new JWTError(
+        JWTVerificationError.ALGORITHM_MISMATCH,
+        `Algorithm '${tokenAlgorithm}' is not allowed. Only RS256 is permitted.`,
+      );
+    }
+  }
+
+  const keys = Array.isArray(publicKey) ? publicKey : [publicKey];
   let lastError: Error | undefined;
 
-  for (const currentSecret of secrets) {
+  for (const currentKey of keys) {
     try {
-      const decoded = jwt.verify(token, currentSecret, {
+      const decoded = jwt.verify(token, currentKey, {
         complete: false,
-        algorithms: ['HS256', 'HS384', 'HS512'],
+        // SECURITY: ONLY allow RS256 - prevents algorithm confusion attacks
+        algorithms: ALLOWED_JWT_ALGORITHMS,
       }) as RefreshTokenPayload;
 
       // Validate required claims
@@ -231,10 +291,10 @@ export async function verifyRefreshToken(
     }
   }
 
-  // All secrets failed
+  // All keys failed
   throw new JWTError(
     JWTVerificationError.INVALID_SIGNATURE,
-    'Token signature verification failed with all provided secrets',
+    'Token signature verification failed with all provided public keys',
     lastError,
   );
 }

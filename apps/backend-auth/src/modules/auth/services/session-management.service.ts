@@ -278,6 +278,26 @@ export class SessionManagementService {
   }
 
   /**
+   * Update session's refresh token hash
+   *
+   * After generating the final refresh token with actual sessionId,
+   * this method updates the session with the correct token hash.
+   * This is necessary because the initial session creation uses a
+   * placeholder token, but the final token has the actual sessionId.
+   *
+   * @param sessionId - Session ID to update
+   * @param organizationId - Organization ID for tenant scoping
+   * @param refreshToken - The final refresh token to hash and store
+   */
+  async updateSessionTokenHash(
+    sessionId: UUID,
+    organizationId: OrganizationId,
+    refreshToken: string
+  ): Promise<void> {
+    await this.sessionService.updateRefreshTokenHash(sessionId, organizationId, refreshToken);
+  }
+
+  /**
    * Map Session entity to DTO
    *
    * Transforms session entity to API response format.

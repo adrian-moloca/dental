@@ -8,10 +8,15 @@
  * - Track factor usage and status
  *
  * Security:
- * - Secrets stored using Argon2id hashing
- * - Phone numbers and emails encrypted
- * - No plain-text sensitive data in toJSON output
+ * - TOTP secrets: Encrypted with AES-256-GCM (MUST be reversible for HMAC computation)
+ * - SMS/Email secrets: Hashed with Argon2id (integrity check only)
+ * - Phone numbers and emails stored for delivery
+ * - No plain-text TOTP secrets in toJSON output
  * - Immutable value object with validation
+ *
+ * CRITICAL: TOTP secrets require encryption, NOT hashing.
+ * TOTP verification computes HMAC from the original secret.
+ * Hashing is one-way and makes verification mathematically impossible.
  *
  * @module MfaFactorEntity
  */

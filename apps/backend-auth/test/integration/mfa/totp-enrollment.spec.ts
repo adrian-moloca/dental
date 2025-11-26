@@ -25,7 +25,15 @@ import type { UUID, OrganizationId } from '@dentalos/shared-types';
 import { TOTPService } from '../../../src/modules/mfa/services/totp.service';
 import { MfaFactorRepository } from '../../../src/modules/mfa/repositories/mfa-factor.repository';
 import { MfaFactor, MfaFactorType } from '../../../src/modules/mfa/entities/mfa-factor.entity';
-import { hash } from '@node-rs/argon2';
+import {
+  encryptTotpSecret,
+  decryptTotpSecret,
+  isEncryptedSecret,
+} from '../../../src/modules/mfa/utils/totp-encryption.util';
+
+// Test encryption key (32 bytes / 64 hex characters)
+// DO NOT use this key in production - generate with: openssl rand -hex 32
+const TEST_MFA_ENCRYPTION_KEY = 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2';
 
 describe('TOTP Enrollment Integration Tests', () => {
   let totpService: TOTPService;
@@ -310,18 +318,16 @@ describe('TOTP Enrollment Integration Tests', () => {
   describe('TOTP Factor Enrollment and Enablement', () => {
     it('should create TOTP factor after successful enrollment', async () => {
       const secret = totpService.generateSecret();
-      const secretHash = await hash(secret, {
-        memoryCost: 65536,
-        timeCost: 3,
-        parallelism: 4,
-      });
+      // CRITICAL: TOTP secrets must be encrypted, NOT hashed
+      // Hashing would make verification impossible since TOTP needs the original secret
+      const encryptedSecret = encryptTotpSecret(secret, TEST_MFA_ENCRYPTION_KEY);
 
       const mockFactor: MfaFactor = MfaFactor.fromJSON({
         id: crypto.randomUUID(),
         userId,
         organizationId: orgId,
         factorType: MfaFactorType.TOTP,
-        secret: secretHash,
+        secret: encryptedSecret,
         isEnabled: false, // Initially disabled until verified
         isPrimary: false,
         metadata: {
@@ -341,7 +347,7 @@ describe('TOTP Enrollment Integration Tests', () => {
         userId,
         organizationId: orgId,
         factorType: MfaFactorType.TOTP,
-        secret: secretHash,
+        secret: encryptedSecret,
         isEnabled: false,
         isPrimary: false,
         metadata: {
@@ -370,19 +376,16 @@ describe('TOTP Enrollment Integration Tests', () => {
     it('should enable TOTP factor after successful token verification', async () => {
       const secret = totpService.generateSecret();
       const token = totpService.getCurrentToken(secret);
-      const secretHash = await hash(secret, {
-        memoryCost: 65536,
-        timeCost: 3,
-        parallelism: 4,
-      });
+      // CRITICAL: TOTP secrets must be encrypted for storage
+      const encryptedSecret = encryptTotpSecret(secret, TEST_MFA_ENCRYPTION_KEY);
 
-      // Step 1: Create disabled factor
+      // Step 1: Create disabled factor with encrypted secret
       const disabledFactor = MfaFactor.fromJSON({
         id: crypto.randomUUID(),
         userId,
         organizationId: orgId,
         factorType: MfaFactorType.TOTP,
-        secret: secretHash,
+        secret: encryptedSecret,
         isEnabled: false,
         isPrimary: false,
         metadata: {},
@@ -390,8 +393,10 @@ describe('TOTP Enrollment Integration Tests', () => {
         updatedAt: new Date().toISOString(),
       });
 
-      // Step 2: Verify token
-      const isValidToken = totpService.verifyToken(secret, token);
+      // Step 2: Decrypt secret and verify token (simulating what MfaService does)
+      const decryptedSecret = decryptTotpSecret(disabledFactor.secret, TEST_MFA_ENCRYPTION_KEY);
+      expect(decryptedSecret).toBe(secret); // Verify decryption works
+      const isValidToken = totpService.verifyToken(decryptedSecret, token);
       expect(isValidToken).toBe(true);
 
       // Step 3: Enable factor after successful verification
@@ -410,39 +415,49 @@ describe('TOTP Enrollment Integration Tests', () => {
       );
     });
 
-    it('should store TOTP secret as Argon2id hash', async () => {
+    it('should store TOTP secret as AES-256-GCM encrypted (NOT hashed)', () => {
       const secret = totpService.generateSecret();
-      const secretHash = await hash(secret, {
-        memoryCost: 65536,
-        timeCost: 3,
-        parallelism: 4,
-      });
 
-      // Verify hash format (Argon2id hashes start with $argon2id$)
-      expect(secretHash).toMatch(/^\$argon2id\$/);
-      expect(secretHash.length).toBeGreaterThan(64);
+      // CRITICAL: TOTP secrets MUST be encrypted, NOT hashed
+      // Hashing is one-way and would make TOTP verification impossible
+      const encryptedSecret = encryptTotpSecret(secret, TEST_MFA_ENCRYPTION_KEY);
 
-      // Verify we can verify the hash
-      const { verify } = await import('@node-rs/argon2');
-      const isValid = await verify(secretHash, secret);
-      expect(isValid).toBe(true);
+      // Verify encrypted format: iv:authTag:ciphertext (base64)
+      const parts = encryptedSecret.split(':');
+      expect(parts.length).toBe(3);
+      expect(isEncryptedSecret(encryptedSecret)).toBe(true);
+
+      // Verify we can decrypt back to original secret
+      const decryptedSecret = decryptTotpSecret(encryptedSecret, TEST_MFA_ENCRYPTION_KEY);
+      expect(decryptedSecret).toBe(secret);
+
+      // Verify the decrypted secret works for TOTP verification
+      const token = totpService.getCurrentToken(decryptedSecret);
+      expect(totpService.verifyToken(decryptedSecret, token)).toBe(true);
     });
 
-    it('should not enable TOTP factor without token verification', async () => {
+    it('should detect legacy hashed secrets vs encrypted secrets', () => {
+      // Legacy (incorrect) Argon2id hash format
+      const legacyHashedSecret = '$argon2id$v=19$m=65536,t=3,p=4$somesalthere$hashvaluehere';
+      expect(isEncryptedSecret(legacyHashedSecret)).toBe(false);
+
+      // Correct encrypted format
       const secret = totpService.generateSecret();
-      const secretHash = await hash(secret, {
-        memoryCost: 65536,
-        timeCost: 3,
-        parallelism: 4,
-      });
+      const encryptedSecret = encryptTotpSecret(secret, TEST_MFA_ENCRYPTION_KEY);
+      expect(isEncryptedSecret(encryptedSecret)).toBe(true);
+    });
+
+    it('should not enable TOTP factor without token verification', () => {
+      const secret = totpService.generateSecret();
+      const encryptedSecret = encryptTotpSecret(secret, TEST_MFA_ENCRYPTION_KEY);
 
       const factor = MfaFactor.fromJSON({
         id: crypto.randomUUID(),
         userId,
         organizationId: orgId,
         factorType: MfaFactorType.TOTP,
-        secret: secretHash,
-        isEnabled: false, // Should remain disabled
+        secret: encryptedSecret,
+        isEnabled: false, // Should remain disabled until verified
         isPrimary: false,
         metadata: {},
         createdAt: new Date().toISOString(),
@@ -451,17 +466,8 @@ describe('TOTP Enrollment Integration Tests', () => {
 
       vi.mocked(mfaFactorRepository.create).mockResolvedValue(factor);
 
-      const result = await mfaFactorRepository.create({
-        userId,
-        organizationId: orgId,
-        factorType: MfaFactorType.TOTP,
-        secret: secretHash,
-        isEnabled: false,
-        isPrimary: false,
-      });
-
       // Factor should be created but NOT enabled
-      expect(result.isEnabled).toBe(false);
+      expect(factor.isEnabled).toBe(false);
     });
   });
 
@@ -483,7 +489,7 @@ describe('TOTP Enrollment Integration Tests', () => {
         userId: user1Id,
         organizationId: org1Id,
         factorType: MfaFactorType.TOTP,
-        secret: await hash(secret1),
+        secret: encryptTotpSecret(secret1, TEST_MFA_ENCRYPTION_KEY),
         isEnabled: true,
         isPrimary: true,
         metadata: {},
@@ -496,7 +502,7 @@ describe('TOTP Enrollment Integration Tests', () => {
         userId: user1Id,
         organizationId: org2Id,
         factorType: MfaFactorType.TOTP,
-        secret: await hash(secret2),
+        secret: encryptTotpSecret(secret2, TEST_MFA_ENCRYPTION_KEY),
         isEnabled: true,
         isPrimary: true,
         metadata: {},
@@ -536,7 +542,7 @@ describe('TOTP Enrollment Integration Tests', () => {
         userId,
         organizationId: org1Id,
         factorType: MfaFactorType.TOTP,
-        secret: await hash(totpService.generateSecret()),
+        secret: encryptTotpSecret(totpService.generateSecret(), TEST_MFA_ENCRYPTION_KEY),
         isEnabled: true,
         isPrimary: true,
         metadata: {},

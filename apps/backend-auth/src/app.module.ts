@@ -30,6 +30,8 @@ import { AuditModule } from './modules/audit/audit.module';
 import { RBACModule } from './modules/rbac/rbac.module';
 import { MfaModule } from './modules/mfa/mfa.module';
 import { DeviceModule } from './modules/device/device.module';
+import { PasswordResetModule } from './modules/password-reset/password-reset.module';
+import { EmailVerificationModule } from './modules/email-verification/email-verification.module';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { Reflector } from '@nestjs/core';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -40,6 +42,7 @@ import { TenantContextService } from './context/tenant-context.service';
 import { CacheModule } from './common/cache/cache.module';
 import { DataLoaderModule } from './common/dataloader/dataloader.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { CsrfModule, CsrfGuard } from './modules/csrf';
 
 /**
  * Root application module
@@ -95,17 +98,22 @@ import { MetricsModule } from './metrics/metrics.module';
     // Passport authentication module
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
-    // JWT module for token generation and validation
+    // JWT module for token generation and validation (RS256)
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService<AppConfig, true>) => {
         const jwtConfig = configService.get('jwt', { infer: true });
         return {
-          secret: jwtConfig.accessSecret,
+          privateKey: jwtConfig.accessPrivateKey,
+          publicKey: jwtConfig.accessPublicKey,
           signOptions: {
+            algorithm: 'RS256',
             expiresIn: jwtConfig.accessExpiration as any,
             issuer: jwtConfig.issuer,
             audience: jwtConfig.audience,
+          },
+          verifyOptions: {
+            algorithms: ['RS256'],
           },
         };
       },
@@ -155,6 +163,9 @@ import { MetricsModule } from './metrics/metrics.module';
     AuditModule, // HIPAA/GDPR compliance audit logging
     RBACModule, // Role-based access control
     MfaModule, // Multi-factor authentication
+    PasswordResetModule, // Password reset flow
+    EmailVerificationModule, // Email verification flow
+    CsrfModule, // CSRF protection (double-submit cookie pattern)
   ],
   providers: [
     // Tenant context service for AsyncLocalStorage
@@ -168,7 +179,7 @@ import { MetricsModule } from './metrics/metrics.module';
 
     // GUARD ORDER (execution order):
     // 1. JwtAuthGuard - Authenticates user, populates request.user
-    // 2. SubscriptionStatusGuard - Validates subscription is ACTIVE/TRIAL
+    // 2. CsrfGuard - Validates CSRF token on state-changing requests
     // 3. LicenseGuard - Validates module access based on @RequiresModule decorator
     // 4. TenantThrottlerGuard - Rate limiting per tenant
 
@@ -178,7 +189,15 @@ import { MetricsModule } from './metrics/metrics.module';
       useClass: JwtAuthGuard,
     },
 
-    // SECURITY FIX: Global license guard (runs third)
+    // SECURITY: Global CSRF guard (runs second, after authentication)
+    // Validates CSRF token on POST/PUT/PATCH/DELETE requests
+    // Skips public routes and safe methods (GET/HEAD/OPTIONS)
+    {
+      provide: APP_GUARD,
+      useClass: CsrfGuard,
+    },
+
+    // Global license guard (runs third)
     // Validates module-level permissions
     {
       provide: APP_GUARD,

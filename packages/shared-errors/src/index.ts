@@ -33,6 +33,7 @@ export { DomainError } from './domain';
 export { AuthenticationError } from './auth';
 export { AuthorizationError } from './auth';
 export { SecurityError } from './auth';
+export { AccountLockedError } from './auth';
 
 // Infrastructure errors (5xx server errors)
 export { InfrastructureError } from './infra';

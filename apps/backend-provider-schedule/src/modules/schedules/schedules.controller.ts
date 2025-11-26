@@ -9,6 +9,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { SchedulesService } from './schedules.service';
@@ -24,17 +25,24 @@ import {
   AvailabilityResponseDto,
 } from './dto';
 import { ZodValidationPipe } from '@dentalos/shared-validation';
+import { JwtAuthGuard, TenantIsolationGuard } from '../../guards';
+import { TenantContext, TenantContextData } from '../../decorators/tenant-context.decorator';
 
 /**
  * Provider Schedule Controller
  *
  * Handles HTTP requests for provider schedules and absences.
- * All endpoints enforce multi-tenant isolation and require authentication.
+ * All endpoints enforce multi-tenant isolation and require JWT authentication.
+ *
+ * SECURITY:
+ * - JwtAuthGuard validates JWT tokens and populates request.user
+ * - TenantIsolationGuard prevents cross-tenant data access
+ * - TenantContext decorator extracts tenant info from authenticated user
  */
 @ApiTags('provider-schedules')
 @ApiBearerAuth()
 @Controller('providers')
-// @UseGuards(JwtAuthGuard, TenantGuard) // Uncomment when guards are available
+@UseGuards(JwtAuthGuard, TenantIsolationGuard)
 export class SchedulesController {
   private readonly logger = new Logger(SchedulesController.name);
 
@@ -47,18 +55,22 @@ export class SchedulesController {
   @Get(':id/schedule')
   @ApiOperation({ summary: 'Get provider schedule with absences' })
   @ApiResponse({ status: 200, description: 'Schedule retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or missing JWT' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Cross-tenant access denied' })
   @ApiResponse({ status: 404, description: 'Schedule not found' })
   async getSchedule(
     @Param('id') providerId: string,
-    // @GetTenantContext() context: TenantContext, // Uncomment when decorator is available
+    @TenantContext() context: TenantContextData,
   ): Promise<{ schedule: ScheduleResponseDto; absences: AbsenceResponseDto[] }> {
-    this.logger.log(`GET /providers/${providerId}/schedule`);
+    this.logger.log(
+      `GET /providers/${providerId}/schedule [tenant: ${context.tenantId}, user: ${context.userId}]`,
+    );
 
-    // TODO: Replace with actual tenant context from JWT
-    const tenantId = 'mock-tenant-id';
-    const organizationId = 'mock-org-id';
-
-    return this.schedulesService.getProviderSchedule(providerId, tenantId, organizationId);
+    return this.schedulesService.getProviderSchedule(
+      providerId,
+      context.tenantId,
+      context.organizationId,
+    );
   }
 
   /**
@@ -69,18 +81,23 @@ export class SchedulesController {
   @ApiOperation({ summary: 'Update provider working hours' })
   @ApiResponse({ status: 200, description: 'Schedule updated successfully' })
   @ApiResponse({ status: 400, description: 'Invalid schedule data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or missing JWT' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Cross-tenant access denied' })
   async updateSchedule(
     @Param('id') providerId: string,
     @Body(new ZodValidationPipe(UpdateScheduleSchema)) dto: UpdateScheduleDto,
-    // @GetTenantContext() context: TenantContext,
+    @TenantContext() context: TenantContextData,
   ): Promise<ScheduleResponseDto> {
-    this.logger.log(`PUT /providers/${providerId}/schedule`);
+    this.logger.log(
+      `PUT /providers/${providerId}/schedule [tenant: ${context.tenantId}, user: ${context.userId}]`,
+    );
 
-    // TODO: Replace with actual tenant context from JWT
-    const tenantId = 'mock-tenant-id';
-    const organizationId = 'mock-org-id';
-
-    return this.schedulesService.updateProviderSchedule(providerId, tenantId, organizationId, dto);
+    return this.schedulesService.updateProviderSchedule(
+      providerId,
+      context.tenantId,
+      context.organizationId,
+      dto,
+    );
   }
 
   /**
@@ -92,20 +109,25 @@ export class SchedulesController {
   @ApiOperation({ summary: 'Create provider absence' })
   @ApiResponse({ status: 201, description: 'Absence created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid absence data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or missing JWT' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Cross-tenant access denied' })
   @ApiResponse({ status: 409, description: 'Absence conflicts with existing absence' })
   async createAbsence(
     @Param('id') providerId: string,
     @Body(new ZodValidationPipe(CreateAbsenceSchema)) dto: CreateAbsenceDto,
-    // @GetTenantContext() context: TenantContext,
+    @TenantContext() context: TenantContextData,
   ): Promise<AbsenceResponseDto> {
-    this.logger.log(`POST /providers/${providerId}/absences`);
+    this.logger.log(
+      `POST /providers/${providerId}/absences [tenant: ${context.tenantId}, user: ${context.userId}]`,
+    );
 
-    // TODO: Replace with actual tenant context from JWT
-    const tenantId = 'mock-tenant-id';
-    const organizationId = 'mock-org-id';
-    const userId = 'mock-user-id';
-
-    return this.schedulesService.createAbsence(providerId, tenantId, organizationId, dto, userId);
+    return this.schedulesService.createAbsence(
+      providerId,
+      context.tenantId,
+      context.organizationId,
+      dto,
+      context.userId,
+    );
   }
 
   /**
@@ -116,19 +138,24 @@ export class SchedulesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete provider absence' })
   @ApiResponse({ status: 204, description: 'Absence deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or missing JWT' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Cross-tenant access denied' })
   @ApiResponse({ status: 404, description: 'Absence not found' })
   async deleteAbsence(
     @Param('id') providerId: string,
     @Param('absenceId') absenceId: string,
-    // @GetTenantContext() context: TenantContext,
+    @TenantContext() context: TenantContextData,
   ): Promise<void> {
-    this.logger.log(`DELETE /providers/${providerId}/absences/${absenceId}`);
+    this.logger.log(
+      `DELETE /providers/${providerId}/absences/${absenceId} [tenant: ${context.tenantId}, user: ${context.userId}]`,
+    );
 
-    // TODO: Replace with actual tenant context from JWT
-    const tenantId = 'mock-tenant-id';
-    const organizationId = 'mock-org-id';
-
-    await this.schedulesService.deleteAbsence(absenceId, providerId, tenantId, organizationId);
+    await this.schedulesService.deleteAbsence(
+      absenceId,
+      providerId,
+      context.tenantId,
+      context.organizationId,
+    );
   }
 
   /**
@@ -138,12 +165,16 @@ export class SchedulesController {
   @Get(':id/availability/:date')
   @ApiOperation({ summary: 'Check provider availability for a date' })
   @ApiResponse({ status: 200, description: 'Availability checked successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or missing JWT' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Cross-tenant access denied' })
   async checkAvailability(
     @Param('id') providerId: string,
     @Param('date') dateStr: string,
-    // @GetTenantContext() context: TenantContext,
+    @TenantContext() context: TenantContextData,
   ): Promise<AvailabilityResponseDto> {
-    this.logger.log(`GET /providers/${providerId}/availability/${dateStr}`);
+    this.logger.log(
+      `GET /providers/${providerId}/availability/${dateStr} [tenant: ${context.tenantId}, user: ${context.userId}]`,
+    );
 
     // Parse date
     const date = new Date(dateStr);
@@ -151,10 +182,11 @@ export class SchedulesController {
     // Validate using Zod
     const dto: CheckAvailabilityDto = CheckAvailabilitySchema.parse({ date });
 
-    // TODO: Replace with actual tenant context from JWT
-    const tenantId = 'mock-tenant-id';
-    const organizationId = 'mock-org-id';
-
-    return this.schedulesService.checkAvailability(providerId, tenantId, organizationId, dto);
+    return this.schedulesService.checkAvailability(
+      providerId,
+      context.tenantId,
+      context.organizationId,
+      dto,
+    );
   }
 }

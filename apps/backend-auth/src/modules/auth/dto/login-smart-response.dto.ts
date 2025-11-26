@@ -46,6 +46,10 @@ export class OrganizationSummaryDto {
 /**
  * Response for smart login
  * FIX v8: Removed @Expose decorators to prevent automatic ClassSerializer stripping
+ *
+ * Security:
+ * - When single org (needsOrgSelection=false), csrfToken is included for CSRF protection
+ * - CSRF cookie is also set by the controller
  */
 export class LoginSmartResponseDto {
   @ApiProperty({
@@ -69,6 +73,14 @@ export class LoginSmartResponseDto {
     type: () => UserDto,
   })
   user?: UserDto;
+
+  @ApiPropertyOptional({
+    description:
+      'CSRF token for protection against Cross-Site Request Forgery (only if single org). ' +
+      'Must be included in X-CSRF-Token header for all state-changing requests.',
+    example: 'a1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
+  })
+  csrfToken?: string;
 
   @ApiPropertyOptional({
     description: 'List of organizations (only if multiple orgs)',
