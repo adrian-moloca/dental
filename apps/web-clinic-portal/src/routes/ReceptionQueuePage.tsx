@@ -64,15 +64,16 @@ export default function ReceptionQueuePage() {
   // Filter appointments
   const appointments = data?.data ?? [];
   const filteredAppointments = appointments.filter((apt) => {
+    if (!apt) return false;
     // Status filter
-    if (statusFilter !== 'all' && apt.status !== statusFilter) {
+    if (statusFilter !== 'all' && apt?.status !== statusFilter) {
       return false;
     }
     // Search filter (by patient ID for now)
     if (searchQuery) {
       const searchLower = searchQuery.toLowerCase();
-      const patientMatch = apt.patientId?.toLowerCase().includes(searchLower);
-      const serviceMatch = apt.serviceCode?.toLowerCase().includes(searchLower);
+      const patientMatch = apt?.patientId?.toLowerCase().includes(searchLower);
+      const serviceMatch = apt?.serviceCode?.toLowerCase().includes(searchLower);
       if (!patientMatch && !serviceMatch) return false;
     }
     return true;
@@ -92,6 +93,7 @@ export default function ReceptionQueuePage() {
 
   // Handlers
   const handleCheckIn = async (id: string) => {
+    if (checkIn.isPending) return; // Prevent double-click
     try {
       await checkIn.mutateAsync(id);
       toast.success('Pacient inregistrat cu succes!');
@@ -101,6 +103,7 @@ export default function ReceptionQueuePage() {
   };
 
   const handleStart = async (id: string) => {
+    if (startAppointment.isPending) return; // Prevent double-click
     try {
       await startAppointment.mutateAsync(id);
       toast.success('Consultatie inceputa!');
@@ -110,6 +113,7 @@ export default function ReceptionQueuePage() {
   };
 
   const handleComplete = async (id: string) => {
+    if (completeAppointment.isPending) return; // Prevent double-click
     try {
       await completeAppointment.mutateAsync({ id });
       toast.success('Consultatie finalizata!');
@@ -119,6 +123,7 @@ export default function ReceptionQueuePage() {
   };
 
   const handleNoShow = async (id: string) => {
+    if (noShowAppointment.isPending) return; // Prevent double-click
     try {
       await noShowAppointment.mutateAsync(id);
       toast.success('Pacient marcat ca absent');
@@ -150,39 +155,52 @@ export default function ReceptionQueuePage() {
   };
 
   const getWaitTime = (apt: typeof appointments[0]) => {
-    if (apt.status === 'checked_in') {
-      const now = new Date();
-      const startTime = new Date(apt.start);
-      const waitMins = differenceInMinutes(now, startTime);
-      if (waitMins > 0) {
-        return (
-          <span className={`small ${waitMins > 15 ? 'text-danger' : 'text-warning'}`}>
-            <i className="ti ti-clock me-1"></i>
-            Asteapta {waitMins} min
-          </span>
-        );
+    if (apt?.status === 'checked_in' && apt?.start) {
+      try {
+        const now = new Date();
+        const startTime = new Date(apt.start);
+        if (isNaN(startTime.getTime())) return null;
+        const waitMins = differenceInMinutes(now, startTime);
+        if (waitMins > 0) {
+          return (
+            <span className={`small ${waitMins > 15 ? 'text-danger' : 'text-warning'}`}>
+              <i className="ti ti-clock me-1"></i>
+              Asteapta {waitMins} min
+            </span>
+          );
+        }
+      } catch {
+        return null;
       }
     }
     return null;
   };
 
   const getTimeStatus = (apt: typeof appointments[0]) => {
-    const now = new Date();
-    const startTime = new Date(apt.start);
+    if (!apt?.start || !apt?.status) return null;
 
-    if (apt.status === 'completed' || apt.status === 'cancelled' || apt.status === 'no_show') {
-      return null;
-    }
+    try {
+      const now = new Date();
+      const startTime = new Date(apt.start);
 
-    if (isBefore(startTime, now)) {
-      const lateMins = differenceInMinutes(now, startTime);
-      if (lateMins > 0) {
-        return (
-          <Badge variant="soft-danger" className="ms-2">
-            -{lateMins} min
-          </Badge>
-        );
+      if (isNaN(startTime.getTime())) return null;
+
+      if (apt.status === 'completed' || apt.status === 'cancelled' || apt.status === 'no_show') {
+        return null;
       }
+
+      if (isBefore(startTime, now)) {
+        const lateMins = differenceInMinutes(now, startTime);
+        if (lateMins > 0) {
+          return (
+            <Badge variant="soft-danger" className="ms-2">
+              -{lateMins} min
+            </Badge>
+          );
+        }
+      }
+    } catch {
+      return null;
     }
 
     return null;

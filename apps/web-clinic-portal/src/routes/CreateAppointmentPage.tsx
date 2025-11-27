@@ -32,6 +32,14 @@ export default function CreateAppointmentPage() {
   const [searchParams] = useSearchParams();
   const createAppointment = useCreateAppointment();
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/appointments');
+    }
+  };
+
   // Get patientId from URL params or state
   const initialPatientId = searchParams.get('patientId') || location.state?.patientId || '';
   const isEditing = !!searchParams.get('edit');
@@ -122,9 +130,9 @@ export default function CreateAppointmentPage() {
       title={isEditing ? 'Editeaza Programare' : 'Programare Noua'}
       subtitle="Completeaza detaliile pentru a crea o programare"
       actions={
-        <Button variant="outline-secondary" onClick={() => navigate('/appointments')}>
+        <Button variant="outline-secondary" onClick={handleBack}>
           <i className="ti ti-arrow-left me-1"></i>
-          Inapoi la lista
+          Inapoi
         </Button>
       }
     >
@@ -241,9 +249,12 @@ export default function CreateAppointmentPage() {
                             ? format(new Date(formData.start), "yyyy-MM-dd'T'HH:mm")
                             : ''
                         }
-                        onChange={(e) =>
-                          setFormData({ ...formData, start: new Date(e.target.value) })
-                        }
+                        onChange={(e) => {
+                          const newDate = new Date(e.target.value);
+                          if (!isNaN(newDate.getTime())) {
+                            setFormData({ ...formData, start: newDate });
+                          }
+                        }}
                         required
                       />
                     </div>
@@ -264,9 +275,12 @@ export default function CreateAppointmentPage() {
                             ? format(new Date(formData.end), "yyyy-MM-dd'T'HH:mm")
                             : ''
                         }
-                        onChange={(e) =>
-                          setFormData({ ...formData, end: new Date(e.target.value) })
-                        }
+                        onChange={(e) => {
+                          const newDate = new Date(e.target.value);
+                          if (!isNaN(newDate.getTime())) {
+                            setFormData({ ...formData, end: newDate });
+                          }
+                        }}
                         required
                       />
                     </div>
@@ -286,8 +300,10 @@ export default function CreateAppointmentPage() {
                         onClick={() => {
                           if (formData.start) {
                             const startDate = new Date(formData.start);
-                            const endDate = new Date(startDate.getTime() + mins * 60000);
-                            setFormData({ ...formData, end: endDate });
+                            if (!isNaN(startDate.getTime())) {
+                              const endDate = new Date(startDate.getTime() + mins * 60000);
+                              setFormData({ ...formData, end: endDate });
+                            }
                           }
                         }}
                       >
@@ -337,7 +353,7 @@ export default function CreateAppointmentPage() {
                 variant="outline-secondary"
                 size="lg"
                 className="flex-fill"
-                onClick={() => navigate('/appointments')}
+                onClick={handleBack}
               >
                 <i className="ti ti-x me-1"></i>
                 Anuleaza

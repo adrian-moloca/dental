@@ -24,12 +24,12 @@ const filters: Array<{
   label: string;
   key: keyof ReceptionQueueFiltersProps['counts'];
 }> = [
-  { value: 'all', label: 'All', key: 'all' },
-  { value: 'pending', label: 'Pending', key: 'pending' },
-  { value: 'confirmed', label: 'Confirmed', key: 'confirmed' },
-  { value: 'in_progress', label: 'In Progress', key: 'in_progress' },
-  { value: 'completed', label: 'Completed', key: 'completed' },
-  { value: 'no_show', label: 'No Show', key: 'no_show' },
+  { value: 'all', label: 'Toate', key: 'all' },
+  { value: 'pending', label: 'In asteptare', key: 'pending' },
+  { value: 'confirmed', label: 'Confirmate', key: 'confirmed' },
+  { value: 'in_progress', label: 'In desfasurare', key: 'in_progress' },
+  { value: 'completed', label: 'Finalizate', key: 'completed' },
+  { value: 'no_show', label: 'Absenti', key: 'no_show' },
 ];
 
 export function ReceptionQueueFilters({
@@ -41,7 +41,7 @@ export function ReceptionQueueFilters({
     <div
       className="flex flex-wrap gap-2 p-4 bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-800"
       role="group"
-      aria-label="Filter appointments by status"
+      aria-label="Filtreaza programarile dupa status"
     >
       {filters.map((filter) => {
         const count = counts[filter.key];

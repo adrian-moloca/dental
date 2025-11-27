@@ -40,8 +40,8 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-[var(--bg)]',
         {
           // Primary: Teal with white text - 4.5:1 contrast
-          'bg-[var(--primary)] hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)] active:scale-[0.98] text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed':
-            variant === 'primary',
+          'bg-[var(--primary)] hover:bg-[var(--primary-hover)] active:bg-[var(--primary-active)] active:scale-[0.98] text-white shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed':
+            variant === 'primary', /* WCAG AA: Solid disabled state instead of opacity */
           // Ghost: Transparent with border, teal on hover
           'bg-transparent text-[var(--text)] border border-[var(--border)] hover:border-[var(--primary)] hover:text-[var(--primary)] hover:bg-[var(--surface-hover)]':
             variant === 'ghost',
@@ -49,8 +49,8 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
           'bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 hover:bg-[var(--primary)]/20 hover:border-[var(--primary)]/40':
             variant === 'soft',
           // Danger: Red for destructive actions
-          'bg-[var(--danger)] hover:bg-[#b91c1c] active:scale-[0.98] text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed':
-            variant === 'danger',
+          'bg-[var(--danger)] hover:bg-[#b91c1c] active:scale-[0.98] text-white shadow-sm disabled:bg-gray-400 disabled:cursor-not-allowed':
+            variant === 'danger', /* WCAG AA: Solid disabled state instead of opacity */
         },
         {
           'px-3 py-1.5 text-xs': size === 'sm',
@@ -58,7 +58,7 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
           'px-5 py-3 text-base': size === 'lg',
         },
         { 'w-full': fullWidth },
-        { 'opacity-50 cursor-not-allowed pointer-events-none': disabled && !loading },
+        { 'cursor-not-allowed pointer-events-none': disabled && !loading }, /* WCAG AA: Removed opacity for better contrast */
         className,
       )}
       {...rest}

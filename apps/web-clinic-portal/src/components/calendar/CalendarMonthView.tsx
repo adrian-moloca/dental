@@ -94,11 +94,17 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
     <div className="calendar-month">
       {/* Weekday headers */}
       <div className="calendar-month-header">
-        {WEEKDAY_NAMES.map((day) => (
-          <div key={day} className="calendar-month-day-header">
-            {day}
-          </div>
-        ))}
+        {WEEKDAY_NAMES.map((day, index) => {
+          const isWeekend = index >= 5; // Sam (5), Dum (6)
+          return (
+            <div
+              key={day}
+              className={`calendar-month-day-header ${isWeekend ? 'weekend' : ''}`}
+            >
+              {day}
+            </div>
+          );
+        })}
       </div>
 
       {/* Calendar grid */}
@@ -107,11 +113,12 @@ export const CalendarMonthView: React.FC<CalendarMonthViewProps> = ({
           const dayEvents = getEventsForDay(day);
           const isCurrentMonth = isSameMonth(day, date);
           const isTodayDate = isToday(day);
+          const isWeekendDay = day.getDay() === 0 || day.getDay() === 6; // Sunday or Saturday
 
           return (
             <div
               key={index}
-              className={`calendar-month-cell ${!isCurrentMonth ? 'other-month' : ''} ${isTodayDate ? 'today' : ''}`}
+              className={`calendar-month-cell ${!isCurrentMonth ? 'other-month' : ''} ${isTodayDate ? 'today' : ''} ${isWeekendDay ? 'weekend' : ''}`}
               onClick={() => handleDateClick(day)}
               role="button"
               tabIndex={0}

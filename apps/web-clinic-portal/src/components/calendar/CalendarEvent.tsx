@@ -14,7 +14,7 @@ export interface CalendarEvent {
   start: Date;
   end: Date;
   resourceId?: string;
-  status?: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+  status?: 'pending' | 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'checked_in';
   patientName?: string;
   providerName?: string;
   color?: string;
@@ -27,7 +27,9 @@ interface CalendarEventProps {
 }
 
 export const CalendarEventCard: React.FC<CalendarEventProps> = ({ event, style, onClick }) => {
-  const statusClass = event.status ? `status-${event.status}` : 'status-scheduled';
+  // Normalize status for CSS class (pending uses scheduled styling)
+  const normalizedStatus = event.status === 'pending' ? 'scheduled' : event.status;
+  const statusClass = normalizedStatus ? `status-${normalizedStatus}` : 'status-scheduled';
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -49,26 +51,41 @@ export const CalendarEventCard: React.FC<CalendarEventProps> = ({ event, style, 
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`${event.title}, ${format(event.start, 'HH:mm')} to ${format(event.end, 'HH:mm')}, ${event.status || 'scheduled'}`}
+      aria-label={`${event.patientName || event.title}, ${format(event.start, 'HH:mm')} până la ${format(event.end, 'HH:mm')}, ${getStatusLabel(event.status || 'scheduled')}`}
     >
+      {event.patientName && (
+        <div className="calendar-event-patient">
+          <i className="ti ti-user me-1"></i>
+          {event.patientName}
+        </div>
+      )}
       <div className="calendar-event-title">{event.title}</div>
       <div className="calendar-event-time">
         {format(event.start, 'HH:mm')} - {format(event.end, 'HH:mm')}
       </div>
-      {event.patientName && (
-        <div className="calendar-event-patient">
-          <i className="ti ti-user me-1" style={{ fontSize: '0.7rem' }}></i>
-          {event.patientName}
-        </div>
-      )}
       {event.providerName && (
         <div className="calendar-event-provider">
-          <i className="ti ti-stethoscope me-1" style={{ fontSize: '0.65rem' }}></i>
+          <i className="ti ti-stethoscope me-1"></i>
           {event.providerName}
         </div>
       )}
     </div>
   );
+};
+
+// Helper function for Romanian status labels
+function getStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    pending: 'În așteptare',
+    scheduled: 'Programat',
+    confirmed: 'Confirmat',
+    checked_in: 'Check-in efectuat',
+    in_progress: 'În desfășurare',
+    completed: 'Finalizat',
+    cancelled: 'Anulat',
+    no_show: 'Absent',
+  };
+  return labels[status] || status;
 };
 
 interface MonthEventProps {
@@ -81,16 +98,21 @@ export const CalendarMonthEvent: React.FC<MonthEventProps> = ({ event, onClick }
     if (event.color) return event.color;
 
     switch (event.status) {
+      case 'pending':
+      case 'scheduled':
+        return 'var(--gray-500)';
       case 'confirmed':
         return 'var(--success)';
+      case 'checked_in':
+        return 'var(--primary)';
       case 'in_progress':
         return 'var(--info)';
+      case 'completed':
+        return 'var(--gray-400)';
       case 'cancelled':
         return 'var(--danger)';
       case 'no_show':
         return 'var(--warning)';
-      case 'completed':
-        return 'var(--gray-400)';
       default:
         return 'var(--gray-500)';
     }
@@ -100,16 +122,21 @@ export const CalendarMonthEvent: React.FC<MonthEventProps> = ({ event, onClick }
     if (event.color) return `${event.color}20`;
 
     switch (event.status) {
+      case 'pending':
+      case 'scheduled':
+        return 'var(--gray-transparent)';
       case 'confirmed':
         return 'var(--success-transparent)';
+      case 'checked_in':
+        return 'var(--primary-transparent)';
       case 'in_progress':
         return 'var(--info-transparent)';
+      case 'completed':
+        return 'var(--light-300)';
       case 'cancelled':
         return 'var(--danger-transparent)';
       case 'no_show':
         return 'var(--warning-transparent)';
-      case 'completed':
-        return 'var(--light-300)';
       default:
         return 'var(--gray-transparent)';
     }

@@ -29,14 +29,14 @@ const adultTeeth = [
 ];
 
 const conditions = [
-  { value: 'healthy', label: 'Healthy', color: 'bg-green-500' },
-  { value: 'caries', label: 'Caries', color: 'bg-red-500' },
-  { value: 'filling', label: 'Filling', color: 'bg-blue-500' },
-  { value: 'crown', label: 'Crown', color: 'bg-purple-500' },
-  { value: 'missing', label: 'Missing', color: 'bg-gray-400' },
-  { value: 'implant', label: 'Implant', color: 'bg-indigo-500' },
-  { value: 'root_canal', label: 'Root Canal', color: 'bg-yellow-600' },
-  { value: 'bridge', label: 'Bridge', color: 'bg-cyan-500' },
+  { value: 'healthy', label: 'Sanatos', color: 'bg-success', textColor: 'text-white' },
+  { value: 'caries', label: 'Carie', color: 'bg-danger', textColor: 'text-white' },
+  { value: 'filling', label: 'Plomba', color: 'bg-primary', textColor: 'text-white' },
+  { value: 'crown', label: 'Coroana', color: 'bg-purple', textColor: 'text-white' },
+  { value: 'missing', label: 'Lipsa', color: 'bg-secondary', textColor: 'text-white' },
+  { value: 'implant', label: 'Implant', color: 'bg-indigo', textColor: 'text-white' },
+  { value: 'root_canal', label: 'Tratament de Canal', color: 'bg-warning', textColor: 'text-dark' },
+  { value: 'bridge', label: 'Punte Dentara', color: 'bg-info', textColor: 'text-white' },
 ];
 
 const surfaces = ['M', 'O', 'D', 'B', 'L']; // Mesial, Occlusal, Distal, Buccal, Lingual
@@ -107,138 +107,153 @@ export function OdontogramEditor({ patientId, data = [], onSave, readOnly = fals
   };
 
   return (
-    <div className="space-y-6">
+    <div className="vstack gap-4">
       {/* Legend */}
-      <div className="flex flex-wrap gap-3 p-4 bg-surface rounded-lg border border-white/10">
-        <span className="text-sm font-medium text-foreground/70">Legend:</span>
+      <div className="d-flex flex-wrap gap-3 p-4 bg-light rounded border">
+        <span className="text-muted small fw-medium">Legenda:</span>
         {conditions.map((cond) => (
-          <div key={cond.value} className="flex items-center gap-2">
-            <div className={`w-4 h-4 rounded ${cond.color}`} />
-            <span className="text-sm text-foreground">{cond.label}</span>
+          <div key={cond.value} className="d-flex align-items-center gap-2">
+            <div className={`badge-dot badge-dot-lg ${cond.color}`} />
+            <span className="small">{cond.label}</span>
           </div>
         ))}
       </div>
 
       {/* Odontogram Chart */}
-      <div className="space-y-8 p-6 bg-surface rounded-lg border border-white/10">
-        {/* Upper Jaw */}
-        <div>
-          <div className="text-xs font-medium text-foreground/50 text-center mb-2">UPPER JAW</div>
-          <div className="flex justify-center gap-1">
-            {adultTeeth[0].map((toothNumber) => (
-              <Tooth
-                key={toothNumber}
-                number={toothNumber}
-                condition={getToothCondition(toothNumber)}
-                selected={selectedTooth === toothNumber}
-                onClick={() => handleToothClick(toothNumber)}
-                readOnly={readOnly}
-              />
-            ))}
+      <div className="card border shadow-sm">
+        <div className="card-body p-4">
+          {/* Upper Jaw */}
+          <div className="mb-5">
+            <div className="text-center text-dark small fw-bold text-uppercase mb-3">Arcada Superioara</div>
+            <div className="d-flex justify-content-center gap-2">
+              {adultTeeth[0].map((toothNumber) => (
+                <Tooth
+                  key={toothNumber}
+                  number={toothNumber}
+                  condition={getToothCondition(toothNumber)}
+                  selected={selectedTooth === toothNumber}
+                  onClick={() => handleToothClick(toothNumber)}
+                  readOnly={readOnly}
+                />
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Lower Jaw */}
-        <div>
-          <div className="flex justify-center gap-1">
-            {adultTeeth[1].map((toothNumber) => (
-              <Tooth
-                key={toothNumber}
-                number={toothNumber}
-                condition={getToothCondition(toothNumber)}
-                selected={selectedTooth === toothNumber}
-                onClick={() => handleToothClick(toothNumber)}
-                readOnly={readOnly}
-              />
-            ))}
+          {/* Lower Jaw */}
+          <div>
+            <div className="d-flex justify-content-center gap-2">
+              {adultTeeth[1].map((toothNumber) => (
+                <Tooth
+                  key={toothNumber}
+                  number={toothNumber}
+                  condition={getToothCondition(toothNumber)}
+                  selected={selectedTooth === toothNumber}
+                  onClick={() => handleToothClick(toothNumber)}
+                  readOnly={readOnly}
+                />
+              ))}
+            </div>
+            <div className="text-center text-dark small fw-bold text-uppercase mt-3">Arcada Inferioara</div>
           </div>
-          <div className="text-xs font-medium text-foreground/50 text-center mt-2">LOWER JAW</div>
         </div>
       </div>
 
       {/* Condition Editor */}
       {!readOnly && selectedTooth && (
-        <div className="p-6 bg-surface rounded-lg border border-white/10 space-y-4">
-          <h3 className="text-lg font-semibold text-foreground">
-            Edit Tooth #{selectedTooth}
-          </h3>
+        <div className="card border shadow-sm">
+          <div className="card-body p-4">
+            <h5 className="card-title mb-4 text-dark">
+              <i className="ti ti-dental me-2 text-primary"></i>
+              Editare Dinte #{selectedTooth}
+            </h5>
 
-          {/* Condition Selection */}
-          <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-2">
-              Condition
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {conditions.map((cond) => (
-                <button
-                  key={cond.value}
-                  onClick={() => setSelectedCondition(cond.value)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    selectedCondition === cond.value
-                      ? 'bg-brand text-white'
-                      : 'bg-surface-hover text-foreground/70 hover:bg-surface-hover/80'
-                  }`}
-                >
-                  {cond.label}
-                </button>
-              ))}
+            {/* Condition Selection */}
+            <div className="mb-4">
+              <label className="form-label text-dark fw-semibold mb-2">
+                Conditie Dentara
+              </label>
+              <div className="row g-2">
+                {conditions.map((cond) => (
+                  <div key={cond.value} className="col-md-3 col-6">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCondition(cond.value)}
+                      className={`btn w-100 ${
+                        selectedCondition === cond.value
+                          ? 'btn-primary'
+                          : 'btn-outline-secondary'
+                      }`}
+                    >
+                      {cond.label}
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Surface Selection */}
-          <div>
-            <label className="block text-sm font-medium text-foreground/70 mb-2">
-              Surfaces (optional)
-            </label>
-            <div className="flex gap-2">
-              {surfaces.map((surface) => (
-                <button
-                  key={surface}
-                  onClick={() => toggleSurface(surface)}
-                  className={`w-12 h-12 rounded-lg text-sm font-bold transition-all ${
-                    selectedSurfaces.includes(surface)
-                      ? 'bg-brand text-white'
-                      : 'bg-surface-hover text-foreground/70 hover:bg-surface-hover/80'
-                  }`}
-                >
-                  {surface}
-                </button>
-              ))}
+            {/* Surface Selection */}
+            <div className="mb-4">
+              <label className="form-label text-dark fw-semibold mb-2">
+                Suprafete Afectate (optional)
+              </label>
+              <div className="d-flex gap-2 mb-2">
+                {surfaces.map((surface) => (
+                  <button
+                    key={surface}
+                    type="button"
+                    onClick={() => toggleSurface(surface)}
+                    className={`btn btn-square ${
+                      selectedSurfaces.includes(surface)
+                        ? 'btn-primary'
+                        : 'btn-outline-secondary'
+                    }`}
+                    style={{ width: '3rem', height: '3rem' }}
+                  >
+                    <strong>{surface}</strong>
+                  </button>
+                ))}
+              </div>
+              <small className="text-secondary">
+                M: Mezial | O: Ocluzal | D: Distal | B: Bucal | L: Lingual
+              </small>
             </div>
-            <p className="text-xs text-foreground/50 mt-2">
-              M: Mesial, O: Occlusal, D: Distal, B: Buccal, L: Lingual
-            </p>
-          </div>
 
-          {/* Actions */}
-          <div className="flex gap-3">
-            <button
-              onClick={handleApplyCondition}
-              className="px-6 py-2 bg-brand text-white rounded-lg font-medium hover:bg-brand/90 transition-colors"
-            >
-              Apply
-            </button>
-            <button
-              onClick={() => {
-                setSelectedTooth(null);
-                setSelectedSurfaces([]);
-              }}
-              className="px-6 py-2 bg-surface-hover text-foreground rounded-lg font-medium hover:bg-surface-hover/80 transition-colors"
-            >
-              Cancel
-            </button>
+            {/* Actions */}
+            <div className="d-flex gap-2">
+              <button
+                type="button"
+                onClick={handleApplyCondition}
+                className="btn btn-primary"
+              >
+                <i className="ti ti-check me-1"></i>
+                Aplica Conditia
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedTooth(null);
+                  setSelectedSurfaces([]);
+                }}
+                className="btn btn-outline-secondary"
+              >
+                <i className="ti ti-x me-1"></i>
+                Renunta
+              </button>
+            </div>
           </div>
         </div>
       )}
 
       {/* Save Button */}
       {!readOnly && (
-        <div className="flex justify-end">
+        <div className="d-flex justify-content-end">
           <button
+            type="button"
             onClick={handleSave}
-            className="px-8 py-3 bg-brand text-white rounded-lg font-semibold hover:bg-brand/90 transition-colors"
+            className="btn btn-success btn-lg"
           >
-            Save Odontogram
+            <i className="ti ti-device-floppy me-2"></i>
+            Salveaza Odontograma
           </button>
         </div>
       )}
@@ -258,24 +273,41 @@ function Tooth({ number, condition, selected, onClick, readOnly }: ToothProps) {
   const conditionConfig = conditions.find((c) => c.value === condition) || conditions[0];
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="text-xs text-foreground/50 mb-1">{number}</div>
+    <div className="d-flex flex-column align-items-center">
+      <div
+        className="text-dark fw-semibold mb-1"
+        style={{ fontSize: '0.75rem', lineHeight: 1 }}
+      >
+        {number}
+      </div>
       <button
+        type="button"
         onClick={onClick}
         disabled={readOnly}
-        className={`w-8 h-12 rounded-lg transition-all relative ${
+        className={`btn position-relative p-0 transition-all ${
           conditionConfig.color
         } ${
-          selected ? 'ring-4 ring-brand scale-110' : ''
-        } ${
-          !readOnly ? 'hover:scale-105 cursor-pointer' : 'cursor-default'
+          selected ? 'border border-primary border-3 shadow-lg' : 'border border-dark border-opacity-25'
         }`}
-        aria-label={`Tooth ${number}, condition: ${conditionConfig.label}`}
+        style={{
+          width: '2.25rem',
+          height: '3.25rem',
+          borderRadius: '0.375rem',
+          cursor: readOnly ? 'default' : 'pointer',
+          transform: selected ? 'scale(1.15)' : 'scale(1)',
+          transition: 'transform 0.15s ease-in-out',
+        }}
+        aria-label={`Dinte ${number}, conditie: ${conditionConfig.label}`}
+        title={`Dinte ${number} - ${conditionConfig.label}`}
       >
         {condition === 'missing' && (
-          <div className="absolute inset-0 flex items-center justify-center text-white text-2xl font-bold">
+          <span
+            className="position-absolute top-50 start-50 translate-middle fw-bold"
+            style={{ fontSize: '1.5rem', color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+            aria-hidden="true"
+          >
             ×
-          </div>
+          </span>
         )}
       </button>
     </div>

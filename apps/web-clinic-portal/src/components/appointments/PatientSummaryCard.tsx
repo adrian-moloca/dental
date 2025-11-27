@@ -27,7 +27,7 @@ export function PatientSummaryCard({ patient }: PatientSummaryCardProps) {
   };
 
   const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString('ro-RO', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -44,7 +44,7 @@ export function PatientSummaryCard({ patient }: PatientSummaryCardProps) {
             </h5>
             <div className="d-flex align-items-center gap-2 mt-1">
               <span className="text-muted small">
-                {calculateAge(patient.dateOfBirth)} years old
+                {calculateAge(patient.dateOfBirth)} ani
               </span>
               {patient.gender && (
                 <>
@@ -88,7 +88,7 @@ export function PatientSummaryCard({ patient }: PatientSummaryCardProps) {
           {/* Date of Birth */}
           <div className="d-flex align-items-center gap-2 small">
             <i className="ti ti-calendar text-muted" aria-hidden="true"></i>
-            <span className="text-muted">Born:</span>
+            <span className="text-muted">Nascut:</span>
             <span>{formatDate(patient.dateOfBirth)}</span>
           </div>
 
@@ -108,7 +108,7 @@ export function PatientSummaryCard({ patient }: PatientSummaryCardProps) {
             <div className="d-flex align-items-start gap-2 small pt-2 border-top">
               <i className="ti ti-alert-circle text-warning mt-1" aria-hidden="true"></i>
               <div>
-                <span className="text-muted">Emergency:</span>{' '}
+                <span className="text-muted">Contact urgenta:</span>{' '}
                 <span>
                   {patient.emergencyContact.name} ({patient.emergencyContact.relationship})
                 </span>
@@ -126,7 +126,7 @@ export function PatientSummaryCard({ patient }: PatientSummaryCardProps) {
             <div className="d-flex align-items-start gap-2 small pt-2 border-top">
               <i className="ti ti-info-circle text-info mt-1" aria-hidden="true"></i>
               <div>
-                <span className="text-muted">Notes:</span>{' '}
+                <span className="text-muted">Note:</span>{' '}
                 <span>{patient.notes}</span>
               </div>
             </div>

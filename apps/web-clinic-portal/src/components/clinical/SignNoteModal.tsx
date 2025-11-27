@@ -21,7 +21,7 @@ interface SignNoteModalProps {
 
 function formatDate(isoString: string): string {
   const date = new Date(isoString);
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('ro-RO', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -30,8 +30,8 @@ function formatDate(isoString: string): string {
 }
 
 function formatTime(): string {
-  return new Date().toLocaleTimeString('en-US', {
-    hour: 'numeric',
+  return new Date().toLocaleTimeString('ro-RO', {
+    hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
   });
@@ -137,7 +137,7 @@ export function SignNoteModal({
       setError(null);
 
       if (!password.trim()) {
-        setError('Password is required to sign the note');
+        setError('Parola este necesara pentru a semna nota');
         return;
       }
 
@@ -151,9 +151,9 @@ export function SignNoteModal({
         onClose();
       } catch (err: any) {
         if (err?.response?.status === 401) {
-          setError('Invalid password. Please check your credentials and try again.');
+          setError('Parola invalida. Va rugam verificati credentialele si incercati din nou.');
         } else {
-          setError(err?.response?.data?.message || 'Failed to sign note. Please try again.');
+          setError(err?.response?.data?.message || 'Nu s-a putut semna nota. Va rugam incercati din nou.');
         }
       }
     },
@@ -170,11 +170,11 @@ export function SignNoteModal({
   if (!isOpen) return null;
 
   const noteTypeLabel = {
-    soap: 'SOAP Note',
-    progress: 'Progress Note',
-    consult: 'Consultation Note',
-    emergency: 'Emergency Note',
-    operative: 'Operative Note',
+    soap: 'Nota SOAP',
+    progress: 'Nota de Progres',
+    consult: 'Nota de Consultatie',
+    emergency: 'Nota de Urgenta',
+    operative: 'Nota Operatorie',
   }[note.type];
 
   return (
@@ -193,26 +193,26 @@ export function SignNoteModal({
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-hidden bg-surface border border-white/10 rounded-xl shadow-2xl">
+      <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-hidden bg-surface border-2 border-border rounded-xl shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div className="flex items-center justify-between px-6 py-4 border-b-2 border-border">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-brand/10 rounded-lg">
-              <LockIcon className="w-5 h-5 text-brand" />
+            <div className="p-2 bg-teal-100 rounded-lg">
+              <LockIcon className="w-5 h-5 text-teal-700" />
             </div>
             <div>
-              <h2 id={dialogTitleId} className="text-lg font-semibold text-foreground">
-                Sign Clinical Note
+              <h2 id={dialogTitleId} className="text-lg font-bold text-foreground">
+                Semneaza Nota Clinica
               </h2>
-              <p id={dialogDescId} className="text-sm text-foreground/60">
-                Review and digitally sign this {noteTypeLabel?.toLowerCase()}
+              <p id={dialogDescId} className="text-sm font-medium text-text-tertiary">
+                Revizuieste si semneaza digital aceasta {noteTypeLabel?.toLowerCase()}
               </p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="p-2 text-foreground/40 hover:text-foreground hover:bg-white/5 rounded-lg transition-colors"
-            aria-label="Close dialog"
+            className="p-2 text-text-muted hover:text-foreground hover:bg-surface-hover rounded-lg transition-colors border border-border-subtle"
+            aria-label="Inchide fereastra"
           >
             <Icon name="x" className="w-5 h-5" />
           </button>
@@ -223,100 +223,100 @@ export function SignNoteModal({
           {/* Note Preview */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-foreground/70 uppercase tracking-wider">
-                Note Preview
+              <h3 className="text-sm font-bold text-text-secondary uppercase tracking-wider">
+                Previzualizare Nota
               </h3>
-              <span className="text-xs text-foreground/50">
+              <span className="text-xs font-medium text-text-muted">
                 {noteTypeLabel} - {formatDate(note.encounterDate)}
               </span>
             </div>
 
-            <div className="p-4 bg-surface-hover border border-white/5 rounded-lg space-y-4">
-              <h4 className="font-medium text-foreground">{note.title}</h4>
+            <div className="p-4 bg-surface-hover border-2 border-border rounded-lg space-y-4">
+              <h4 className="font-bold text-foreground">{note.title}</h4>
 
               {note.soap ? (
                 <div className="space-y-3">
                   {note.soap.subjective && (
                     <div>
-                      <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
-                        Subjective
+                      <span className="text-xs font-bold text-amber-700 uppercase tracking-wider">
+                        Subiectiv
                       </span>
-                      <p className="mt-1 text-sm text-foreground/80 whitespace-pre-wrap">
+                      <p className="mt-1 text-sm text-text-secondary whitespace-pre-wrap">
                         {note.soap.subjective}
                       </p>
                     </div>
                   )}
                   {note.soap.objective && (
                     <div>
-                      <span className="text-xs font-semibold text-blue-400 uppercase tracking-wider">
-                        Objective
+                      <span className="text-xs font-bold text-blue-700 uppercase tracking-wider">
+                        Obiectiv
                       </span>
-                      <p className="mt-1 text-sm text-foreground/80 whitespace-pre-wrap">
+                      <p className="mt-1 text-sm text-text-secondary whitespace-pre-wrap">
                         {note.soap.objective}
                       </p>
                     </div>
                   )}
                   {note.soap.assessment && (
                     <div>
-                      <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">
-                        Assessment
+                      <span className="text-xs font-bold text-purple-700 uppercase tracking-wider">
+                        Evaluare
                       </span>
-                      <p className="mt-1 text-sm text-foreground/80 whitespace-pre-wrap">
+                      <p className="mt-1 text-sm text-text-secondary whitespace-pre-wrap">
                         {note.soap.assessment}
                       </p>
                     </div>
                   )}
                   {note.soap.plan && (
                     <div>
-                      <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+                      <span className="text-xs font-bold text-emerald-700 uppercase tracking-wider">
                         Plan
                       </span>
-                      <p className="mt-1 text-sm text-foreground/80 whitespace-pre-wrap">
+                      <p className="mt-1 text-sm text-text-secondary whitespace-pre-wrap">
                         {note.soap.plan}
                       </p>
                     </div>
                   )}
                 </div>
               ) : note.content ? (
-                <p className="text-sm text-foreground/80 whitespace-pre-wrap">{note.content}</p>
+                <p className="text-sm text-text-secondary whitespace-pre-wrap">{note.content}</p>
               ) : (
-                <p className="text-sm text-foreground/50 italic">No content</p>
+                <p className="text-sm text-text-muted italic">Fara continut</p>
               )}
             </div>
           </div>
 
           {/* Signature Information */}
-          <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-lg space-y-3">
-            <h3 className="text-sm font-medium text-emerald-400">Signature Details</h3>
+          <div className="p-4 bg-emerald-50 border-2 border-emerald-200 rounded-lg space-y-3">
+            <h3 className="text-sm font-bold text-emerald-800">Detalii Semnatura</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-foreground/50">Provider</span>
-                <p className="font-medium text-foreground">
+                <span className="text-text-muted font-medium">Furnizor</span>
+                <p className="font-semibold text-foreground">
                   {providerName}
                   {providerCredentials && (
-                    <span className="text-foreground/60">, {providerCredentials}</span>
+                    <span className="text-text-tertiary">, {providerCredentials}</span>
                   )}
                 </p>
               </div>
               <div>
-                <span className="text-foreground/50">Timestamp</span>
-                <p className="font-medium text-foreground">
+                <span className="text-text-muted font-medium">Data si Ora</span>
+                <p className="font-semibold text-foreground">
                   {formatDate(new Date().toISOString())}
                   <br />
-                  <span className="text-foreground/60">{currentTime}</span>
+                  <span className="text-text-tertiary">{currentTime}</span>
                 </p>
               </div>
             </div>
           </div>
 
           {/* Warning */}
-          <div className="flex items-start gap-3 p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
-            <WarningIcon className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-3 p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
+            <WarningIcon className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-medium text-amber-400">This action cannot be undone</p>
-              <p className="text-foreground/60 mt-1">
-                Once signed, this clinical note will become immutable. Any future changes will
-                require creating an amendment, which will be tracked in the note history.
+              <p className="font-bold text-amber-800">Aceasta actiune nu poate fi anulata</p>
+              <p className="text-amber-900 mt-1 font-medium">
+                Odata semnata, aceasta nota clinica va deveni imutabila. Orice modificari viitoare
+                vor necesita crearea unui amendament, care va fi urmarit in istoricul notei.
               </p>
             </div>
           </div>
@@ -326,9 +326,9 @@ export function SignNoteModal({
             <div>
               <label
                 htmlFor={passwordInputId}
-                className="block text-sm font-medium text-foreground/70 mb-2"
+                className="block text-sm font-semibold text-text-secondary mb-2"
               >
-                Enter your password to sign
+                Introduceti parola pentru a semna
               </label>
               <div className="relative">
                 <input
@@ -339,11 +339,11 @@ export function SignNoteModal({
                     setPassword(e.target.value);
                     setError(null);
                   }}
-                  placeholder="Enter your account password"
-                  className={`w-full px-4 py-3 pr-12 bg-surface border rounded-lg text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 transition-colors ${
+                  placeholder="Introduceti parola contului"
+                  className={`w-full px-4 py-3 pr-12 bg-surface border-2 rounded-lg text-foreground placeholder:text-text-muted focus:outline-none focus:ring-2 transition-colors ${
                     error
-                      ? 'border-red-500/50 focus:ring-red-500/50'
-                      : 'border-white/10 focus:ring-brand'
+                      ? 'border-red-500 focus:ring-red-500 focus:border-red-500'
+                      : 'border-border focus:ring-brand focus:border-brand'
                   }`}
                   autoComplete="current-password"
                   autoFocus
@@ -353,8 +353,8 @@ export function SignNoteModal({
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-foreground/40 hover:text-foreground transition-colors"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-foreground transition-colors"
+                  aria-label={showPassword ? 'Ascunde parola' : 'Afiseaza parola'}
                 >
                   {showPassword ? (
                     <EyeSlashIcon className="w-5 h-5" />
@@ -364,7 +364,7 @@ export function SignNoteModal({
                 </button>
               </div>
               {error && (
-                <p id="password-error" className="mt-2 text-sm text-red-400" role="alert">
+                <p id="password-error" className="mt-2 text-sm font-semibold text-red-700" role="alert">
                   {error}
                 </p>
               )}
@@ -373,28 +373,28 @@ export function SignNoteModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10 bg-surface-hover/50">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t-2 border-border bg-surface-hover">
           <button
             onClick={handleClose}
-            className="px-4 py-2 text-foreground/70 hover:text-foreground hover:bg-white/5 rounded-lg font-medium transition-colors"
+            className="px-4 py-2 text-text-secondary border-2 border-border hover:text-foreground hover:bg-white rounded-lg font-semibold transition-colors"
             disabled={signNote.isPending}
           >
-            Cancel
+            Anuleaza
           </button>
           <button
             onClick={handleSubmit}
             disabled={signNote.isPending || !password.trim()}
-            className="flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 text-white rounded-lg font-bold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
           >
             {signNote.isPending ? (
               <>
                 <Icon name="loading" className="w-4 h-4 animate-spin" />
-                Signing...
+                Se semneaza...
               </>
             ) : (
               <>
                 <LockIcon className="w-4 h-4" />
-                Sign Note
+                Semneaza Nota
               </>
             )}
           </button>

@@ -35,7 +35,7 @@ export function Input({ label, hint, error, success, fullWidth, className, icon,
           className={clsx(
             'w-full rounded-lg border bg-[var(--surface)] px-3 py-2.5 text-[var(--text)] placeholder:text-[var(--text-tertiary)] transition-all duration-200',
             'focus:border-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/30',
-            'disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-[var(--surface-card)]',
+            'disabled:cursor-not-allowed disabled:bg-[var(--surface-card)] disabled:text-[var(--text-muted)]', /* WCAG AA: Removed opacity, using solid color */
             error && 'border-[var(--danger)] focus:ring-[var(--danger)]/30 pr-10',
             success && 'border-[var(--success)] focus:ring-[var(--success)]/30 pr-10',
             !error && !success && 'border-[var(--border)]',

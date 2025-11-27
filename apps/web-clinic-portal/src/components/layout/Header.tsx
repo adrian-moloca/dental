@@ -30,25 +30,25 @@ interface Notification {
 const mockNotifications: Notification[] = [
   {
     id: '1',
-    title: 'New Appointment',
-    message: 'John Doe scheduled for 10:00 AM tomorrow',
-    time: '5 min ago',
+    title: 'Programare Noua',
+    message: 'Ion Popescu programat pentru maine la 10:00',
+    time: 'Acum 5 min',
     type: 'appointment',
     read: false,
   },
   {
     id: '2',
-    title: 'Payment Received',
-    message: 'Invoice #INV-2024-0042 paid - $250.00',
-    time: '1 hour ago',
+    title: 'Plata Primita',
+    message: 'Factura #INV-2024-0042 achitata - 250 RON',
+    time: 'Acum 1 ora',
     type: 'payment',
     read: false,
   },
   {
     id: '3',
-    title: 'Low Stock Alert',
-    message: 'Dental Composite running low (5 units)',
-    time: '2 hours ago',
+    title: 'Alerta Stoc Scazut',
+    message: 'Compozit Dentar stoc scazut (5 unitati)',
+    time: 'Acum 2 ore',
     type: 'alert',
     read: true,
   },
@@ -150,7 +150,7 @@ export function Header() {
           <input
             type="text"
             className="search-input"
-            placeholder="Search patients, appointments..."
+            placeholder="Cauta pacienti, programari..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -170,7 +170,7 @@ export function Header() {
           type="button"
           className="header-icon-btn theme-toggle"
           onClick={toggleTheme}
-          title={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+          title={`Comuta la modul ${theme === 'light' ? 'inchis' : 'luminos'}`}
         >
           <i className="ti ti-sun light-icon"></i>
           <i className="ti ti-moon dark-icon"></i>
@@ -181,7 +181,7 @@ export function Header() {
           type="button"
           className="header-icon-btn fullscreen-toggle"
           onClick={toggleFullscreen}
-          title={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+          title={isFullscreen ? 'Iesire ecran complet' : 'Intrare ecran complet'}
         >
           <i className={`ti ti-${isFullscreen ? 'arrows-minimize' : 'arrows-maximize'}`}></i>
         </button>
@@ -202,8 +202,8 @@ export function Header() {
           {showNotifications && (
             <div className="dropdown-menu show">
               <div className="dropdown-header">
-                <h6>Notifications</h6>
-                <span className="badge badge-primary">{unreadCount} New</span>
+                <h6>Notificari</h6>
+                <span className="badge badge-primary">{unreadCount} Noi</span>
               </div>
               <div className="notifications-list">
                 {mockNotifications.map((notification) => (
@@ -221,7 +221,7 @@ export function Header() {
                 ))}
               </div>
               <div className="dropdown-footer">
-                <Link to="/notifications">View All Notifications</Link>
+                <Link to="/notifications">Vezi Toate Notificarile</Link>
               </div>
             </div>
           )}
@@ -238,8 +238,8 @@ export function Header() {
               <span>{userInitials}</span>
             </div>
             <div className="user-info">
-              <h6>{user?.email?.split('@')[0] || 'User'}</h6>
-              <span>{user?.roles?.[0] || 'Staff'}</span>
+              <h6>{user?.email?.split('@')[0] || 'Utilizator'}</h6>
+              <span>{user?.roles?.[0] || 'Personal'}</span>
             </div>
             <i className="ti ti-chevron-down dropdown-icon"></i>
           </button>
@@ -248,20 +248,20 @@ export function Header() {
             <div className="dropdown-menu show">
               <Link to="/profile" className="dropdown-item">
                 <i className="ti ti-user"></i>
-                My Profile
+                Profilul Meu
               </Link>
               <Link to="/settings/security" className="dropdown-item">
                 <i className="ti ti-settings"></i>
-                Settings
+                Setari
               </Link>
               <Link to="/settings/sessions" className="dropdown-item">
                 <i className="ti ti-device-laptop"></i>
-                Active Sessions
+                Sesiuni Active
               </Link>
               <div className="dropdown-divider"></div>
               <button className="dropdown-item text-danger" onClick={handleLogout}>
                 <i className="ti ti-logout"></i>
-                Logout
+                Deconectare
               </button>
             </div>
           )}

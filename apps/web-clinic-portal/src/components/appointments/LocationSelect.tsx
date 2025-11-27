@@ -43,7 +43,7 @@ export function LocationSelect({
   const formatLocationName = (location: ClinicLocation) => {
     let name = location.name;
     if (location.floor) {
-      name += ` (Floor ${location.floor})`;
+      name += ` (Etaj ${location.floor})`;
     }
     return name;
   };
@@ -72,14 +72,14 @@ export function LocationSelect({
         >
           <option value="">
             {!clinicId
-              ? 'Select a clinic first'
+              ? 'Selecteaza mai intai o clinica'
               : isLoading
-              ? 'Loading locations...'
+              ? 'Se incarca locatii...'
               : isError
-              ? 'Error loading locations'
+              ? 'Eroare la incarcarea locatiilor'
               : locations && locations.length === 0
-              ? 'No locations available'
-              : 'Select a location'}
+              ? 'Nicio locatie disponibila'
+              : 'Selecteaza o locatie'}
           </option>
           {locations?.map((location) => (
             <option key={location.id} value={location.id}>
@@ -91,7 +91,7 @@ export function LocationSelect({
         {isLoading && (
           <div className="position-absolute end-0 top-50 translate-middle-y pe-3" style={{ pointerEvents: 'none' }}>
             <div className="spinner-border spinner-border-sm text-muted" role="status">
-              <span className="visually-hidden">Loading...</span>
+              <span className="visually-hidden">Se incarca...</span>
             </div>
           </div>
         )}
@@ -107,7 +107,7 @@ export function LocationSelect({
       {isError && !error && (
         <div className="form-text text-warning">
           <i className="ti ti-alert-triangle me-1"></i>
-          Unable to load locations. Please try again.
+          Nu s-au putut incarca locatiile. Va rugam incercati din nou.
         </div>
       )}
     </div>

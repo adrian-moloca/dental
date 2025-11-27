@@ -56,6 +56,7 @@ export const Calendar: React.FC<CalendarProps> = ({
 }) => {
   const [currentView, setCurrentView] = useState<CalendarView>(initialView);
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
+  const [scrollToNow, setScrollToNow] = useState<number>(0); // Trigger for scroll
 
   // Calculate title based on view
   const headerTitle = useMemo(() => {
@@ -121,6 +122,8 @@ export const Calendar: React.FC<CalendarProps> = ({
     const today = new Date();
     setCurrentDate(today);
     onDateChange?.(today);
+    // Trigger scroll to current time
+    setScrollToNow(Date.now());
   }, [onDateChange]);
 
   const handleViewChange = useCallback(
@@ -193,6 +196,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             resources={resources}
             onEventClick={onEventClick}
             onSlotClick={onSlotClick}
+            scrollToNow={scrollToNow}
           />
         );
       case 'week':
@@ -203,6 +207,7 @@ export const Calendar: React.FC<CalendarProps> = ({
             resources={resources}
             onEventClick={onEventClick}
             onSlotClick={onSlotClick}
+            scrollToNow={scrollToNow}
           />
         );
       case 'month':

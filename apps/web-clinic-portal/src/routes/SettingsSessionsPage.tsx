@@ -60,7 +60,7 @@ export default function SettingsSessionsPage() {
   // Error state
   if (error) {
     return (
-      <AppShell title="Active Sessions" subtitle="Manage your devices">
+      <AppShell title="Sesiuni Active" subtitle="Gestioneaza dispozitivele tale">
         <Card tone="glass" padding="lg" className="text-red-300 border border-red-500/30">
           <div className="flex items-start gap-3">
             <svg
@@ -78,7 +78,7 @@ export default function SettingsSessionsPage() {
               />
             </svg>
             <div>
-              <h3 className="font-semibold mb-1">Error loading sessions</h3>
+              <h3 className="font-semibold mb-1">Eroare la incarcarea sesiunilor</h3>
               <p className="text-sm">{(error as Error).message}</p>
             </div>
           </div>
@@ -89,8 +89,8 @@ export default function SettingsSessionsPage() {
 
   return (
     <AppShell
-      title="Active Sessions"
-      subtitle="Manage where you're signed in"
+      title="Sesiuni Active"
+      subtitle="Gestioneaza dispozitivele unde esti autentificat"
       actions={
         otherSessionsCount > 0 ? (
           <Button
@@ -98,7 +98,7 @@ export default function SettingsSessionsPage() {
             onClick={() => setShowRevokeAllModal(true)}
             disabled={revokeAllOtherSessionsMutation.isPending}
           >
-            Revoke All Other Sessions
+            Revoca Toate Celelalte Sesiuni
           </Button>
         ) : undefined
       }
@@ -122,10 +122,10 @@ export default function SettingsSessionsPage() {
               />
             </svg>
             <div className="flex-1">
-              <h3 className="font-semibold text-white mb-1">Security Overview</h3>
+              <h3 className="font-semibold text-white mb-1">Prezentare Securitate</h3>
               <p className="text-sm text-slate-300">
-                These are the devices and browsers where you're currently signed in to your DentalOS account.
-                If you see a session you don't recognize, revoke it immediately and consider changing your password.
+                Acestea sunt dispozitivele si browserele unde esti conectat in contul tau DentalOS.
+                Daca vezi o sesiune pe care nu o recunosti, revoca-o imediat si ia in considerare schimbarea parolei.
               </p>
             </div>
           </div>
@@ -133,11 +133,11 @@ export default function SettingsSessionsPage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="space-y-4" role="status" aria-label="Loading sessions">
+          <div className="space-y-4" role="status" aria-label="Se incarca sesiunile">
             {[...Array(3)].map((_, i) => (
               <SkeletonCard key={i} />
             ))}
-            <span className="sr-only">Loading session data...</span>
+            <span className="sr-only">Se incarca datele sesiunilor...</span>
           </div>
         )}
 
@@ -159,9 +159,9 @@ export default function SettingsSessionsPage() {
                   d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"
                 />
               </svg>
-              <h3 className="text-lg font-semibold text-white mb-1">No Active Sessions</h3>
+              <h3 className="text-lg font-semibold text-white mb-1">Nicio Sesiune Activa</h3>
               <p className="text-sm text-slate-400">
-                You don't have any active sessions at the moment.
+                Nu ai nicio sesiune activa in acest moment.
               </p>
             </div>
           </Card>
@@ -169,7 +169,7 @@ export default function SettingsSessionsPage() {
 
         {/* Sessions List */}
         {!isLoading && sortedSessions.length > 0 && (
-          <div className="space-y-4" role="list" aria-label="Active sessions">
+          <div className="space-y-4" role="list" aria-label="Sesiuni active">
             {sortedSessions.map((session) => (
               <div key={session.id} role="listitem">
                 <SessionCard
@@ -189,9 +189,9 @@ export default function SettingsSessionsPage() {
         {!isLoading && sortedSessions.length > 0 && (
           <Card tone="glass" padding="md">
             <p className="text-sm text-slate-400 text-center">
-              {sortedSessions.length} active session{sortedSessions.length !== 1 ? 's' : ''}
+              {sortedSessions.length} sesiune{sortedSessions.length !== 1 ? ' activa' : ' active'}
               {otherSessionsCount > 0 && (
-                <span> ({otherSessionsCount} other device{otherSessionsCount !== 1 ? 's' : ''})</span>
+                <span> ({otherSessionsCount} alt{otherSessionsCount !== 1 ? 'e dispozitiv' : ' dispozitive'})</span>
               )}
             </p>
           </Card>
@@ -202,13 +202,13 @@ export default function SettingsSessionsPage() {
       <Modal
         open={sessionToRevoke !== null}
         onClose={() => setSessionToRevoke(null)}
-        title="Revoke Session?"
+        title="Revoca Sesiunea?"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-300">
-            Are you sure you want to revoke this session? This device will be signed out immediately
-            and will need to sign in again to access DentalOS.
+            Esti sigur ca vrei sa revoci aceasta sesiune? Acest dispozitiv va fi deconectat imediat
+            si va trebui sa se autentifice din nou pentru a accesa DentalOS.
           </p>
 
           <div className="flex gap-3 justify-end">
@@ -217,7 +217,7 @@ export default function SettingsSessionsPage() {
               onClick={() => setSessionToRevoke(null)}
               disabled={revokeSessionMutation.isPending}
             >
-              Cancel
+              Anuleaza
             </Button>
             <Button
               variant="primary"
@@ -225,7 +225,7 @@ export default function SettingsSessionsPage() {
               loading={revokeSessionMutation.isPending}
               disabled={revokeSessionMutation.isPending}
             >
-              Revoke Session
+              Revoca Sesiunea
             </Button>
           </div>
         </div>
@@ -235,13 +235,13 @@ export default function SettingsSessionsPage() {
       <Modal
         open={showRevokeAllModal}
         onClose={() => setShowRevokeAllModal(false)}
-        title="Revoke All Other Sessions?"
+        title="Revoca Toate Celelalte Sesiuni?"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-sm text-slate-300">
-            Are you sure you want to revoke all other sessions? This will sign out all devices except your
-            current one. Those devices will need to sign in again to access DentalOS.
+            Esti sigur ca vrei sa revoci toate celelalte sesiuni? Aceasta va deconecta toate dispozitivele cu exceptia
+            celui curent. Acele dispozitive vor trebui sa se autentifice din nou pentru a accesa DentalOS.
           </p>
 
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
@@ -261,8 +261,8 @@ export default function SettingsSessionsPage() {
                 />
               </svg>
               <p className="text-xs text-yellow-200">
-                This will affect {otherSessionsCount} active session{otherSessionsCount !== 1 ? 's' : ''}.
-                Your current session will remain active.
+                Aceasta va afecta {otherSessionsCount} sesiune{otherSessionsCount !== 1 ? ' activa' : ' active'}.
+                Sesiunea ta curenta va ramane activa.
               </p>
             </div>
           </div>
@@ -273,7 +273,7 @@ export default function SettingsSessionsPage() {
               onClick={() => setShowRevokeAllModal(false)}
               disabled={revokeAllOtherSessionsMutation.isPending}
             >
-              Cancel
+              Anuleaza
             </Button>
             <Button
               variant="primary"
@@ -281,7 +281,7 @@ export default function SettingsSessionsPage() {
               loading={revokeAllOtherSessionsMutation.isPending}
               disabled={revokeAllOtherSessionsMutation.isPending}
             >
-              Revoke All Other Sessions
+              Revoca Toate Celelalte Sesiuni
             </Button>
           </div>
         </div>

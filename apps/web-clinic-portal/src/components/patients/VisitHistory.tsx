@@ -34,11 +34,11 @@ export function VisitHistory({ visits, patientId, isLoading }: VisitHistoryProps
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    if (diffDays < 365) return `${Math.floor(diffDays / 30)} months ago`;
+    if (diffDays === 0) return 'Astazi';
+    if (diffDays === 1) return 'Ieri';
+    if (diffDays < 7) return `acum ${diffDays} zile`;
+    if (diffDays < 30) return `acum ${Math.floor(diffDays / 7)} saptamani`;
+    if (diffDays < 365) return `acum ${Math.floor(diffDays / 30)} luni`;
 
     return date.toLocaleDateString('ro-RO', {
       year: 'numeric',
@@ -59,11 +59,11 @@ export function VisitHistory({ visits, patientId, isLoading }: VisitHistoryProps
   const getStatusBadge = (status: Visit['status']) => {
     switch (status) {
       case 'completed':
-        return <Badge tone="success">Completed</Badge>;
+        return <Badge tone="success">Finalizat</Badge>;
       case 'no_show':
-        return <Badge tone="warning">No Show</Badge>;
+        return <Badge tone="warning">Absent</Badge>;
       case 'cancelled':
-        return <Badge tone="neutral">Cancelled</Badge>;
+        return <Badge tone="neutral">Anulat</Badge>;
       default:
         return null;
     }
@@ -102,8 +102,8 @@ export function VisitHistory({ visits, patientId, isLoading }: VisitHistoryProps
               <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
           </div>
-          <p className="text-sm text-slate-400">No visit history yet</p>
-          <p className="text-xs text-slate-500 mt-1">Completed appointments will appear here</p>
+          <p className="text-sm text-slate-400">Inca nu exista istoric de vizite</p>
+          <p className="text-xs text-slate-500 mt-1">Programarile finalizate vor aparea aici</p>
         </div>
       </Card>
     );
@@ -112,14 +112,14 @@ export function VisitHistory({ visits, patientId, isLoading }: VisitHistoryProps
   return (
     <Card padding="lg" tone="glass" className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-white">Recent Visits</h3>
+        <h3 className="text-sm font-semibold text-white">Vizite Recente</h3>
         <Button
           as={Link}
           to={`/appointments?patientId=${patientId}&status=completed`}
           variant="ghost"
           size="sm"
         >
-          View All
+          Vezi Toate
         </Button>
       </div>
 
@@ -156,7 +156,7 @@ export function VisitHistory({ visits, patientId, isLoading }: VisitHistoryProps
 
                 {visit.providerName && (
                   <p className="text-xs text-slate-400 mb-1">
-                    Provider: <span className="text-slate-300">{visit.providerName}</span>
+                    Medic: <span className="text-slate-300">{visit.providerName}</span>
                   </p>
                 )}
 
@@ -176,7 +176,7 @@ export function VisitHistory({ visits, patientId, isLoading }: VisitHistoryProps
                   variant="ghost"
                   size="sm"
                 >
-                  View Notes
+                  Vezi Notite
                 </Button>
               )}
             </div>
@@ -192,7 +192,7 @@ export function VisitHistory({ visits, patientId, isLoading }: VisitHistoryProps
             variant="soft"
             fullWidth
           >
-            View {visits.length - 3} More Visits
+            Vezi {visits.length - 3} Vizite Suplimentare
           </Button>
         </div>
       )}

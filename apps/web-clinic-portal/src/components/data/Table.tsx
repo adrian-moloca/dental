@@ -91,19 +91,20 @@ export function Table<T>({
           </span>
           <div className="flex items-center gap-2">
             <button
-              className="px-3 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] disabled:opacity-40 transition-colors"
+              className="px-3 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] disabled:bg-[var(--surface-card)] disabled:text-[var(--text-muted)] disabled:cursor-not-allowed transition-colors"
               onClick={() => onPageChange?.((page ?? 1) - 1)}
               disabled={!onPageChange || (page ?? 1) <= 1}
             >
               Prev
             </button>
             <button
-              className="px-3 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] disabled:opacity-40 transition-colors"
+              className="px-3 py-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-hover)] disabled:bg-[var(--surface-card)] disabled:text-[var(--text-muted)] disabled:cursor-not-allowed transition-colors"
               onClick={() => onPageChange?.((page ?? 1) + 1)}
               disabled={!onPageChange || (page ?? 1) >= pages}
             >
               Next
             </button>
+            {/* WCAG AA: Solid disabled state with readable text color */}
           </div>
         </div>
       )}

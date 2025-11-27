@@ -97,18 +97,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label htmlFor={inputId} className="form-label">
             {label}
-            {required && <span className="required">*</span>}
+            {required && <span className="text-danger ms-1">*</span>}
           </label>
         )}
         {content}
         {error && (
-          <div id={`${inputId}-error`} className="invalid-feedback" style={{ display: 'block' }}>
+          <div id={`${inputId}-error`} className="invalid-feedback d-flex align-items-center gap-1" style={{ display: 'block' }}>
             <i className="ti ti-alert-circle"></i>
-            {error}
+            <span>{error}</span>
           </div>
         )}
         {helperText && !error && (
-          <small id={`${inputId}-helper`} className="form-text">
+          <small id={`${inputId}-helper`} className="form-text text-muted">
             {helperText}
           </small>
         )}
@@ -155,17 +155,17 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label htmlFor={inputId} className="form-label">
             {label}
-            {required && <span className="required">*</span>}
+            {required && <span className="text-danger ms-1">*</span>}
           </label>
         )}
         {textareaElement}
         {error && (
-          <div className="invalid-feedback" style={{ display: 'block' }}>
+          <div className="invalid-feedback d-flex align-items-center gap-1" style={{ display: 'block' }}>
             <i className="ti ti-alert-circle"></i>
-            {error}
+            <span>{error}</span>
           </div>
         )}
-        {helperText && !error && <small className="form-text">{helperText}</small>}
+        {helperText && !error && <small className="form-text text-muted">{helperText}</small>}
       </div>
     );
   }
@@ -235,18 +235,18 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
         {label && (
           <label htmlFor={inputId} className="form-label">
             {label}
-            {required && <span className="required">*</span>}
+            {required && <span className="text-danger ms-1">*</span>}
           </label>
         )}
         {content}
         {error && (
-          <div id={`${inputId}-error`} className="invalid-feedback" style={{ display: 'block' }}>
+          <div id={`${inputId}-error`} className="invalid-feedback d-flex align-items-center gap-1" style={{ display: 'block' }}>
             <i className="ti ti-alert-circle"></i>
-            {error}
+            <span>{error}</span>
           </div>
         )}
         {helperText && !error && (
-          <small id={`${inputId}-helper`} className="form-text">
+          <small id={`${inputId}-helper`} className="form-text text-muted">
             {helperText}
           </small>
         )}

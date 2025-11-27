@@ -76,6 +76,14 @@ export default function PatientDetailsPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/patients');
+    }
+  };
+
   // Fetch patient data
   const { data: patientData, isLoading, error } = usePatient(id);
   const { data: balanceData } = usePatientBalance(id);
@@ -89,7 +97,7 @@ export default function PatientDetailsPage() {
 
   // Calculate stats
   const totalVisits = appointmentsData?.data?.filter((a: { status: string }) => a.status === 'completed')?.length || 0;
-  const outstandingBalance = balanceData?.data?.currentBalance || 0;
+  const outstandingBalance = balanceData?.data?.currentBalance ?? 0;
   const lastVisit = appointmentsData?.data?.find((a: { status: string }) => a.status === 'completed');
   const nextAppointment = appointmentsData?.data?.find(
     (a: { status: string }) => a.status === 'scheduled' || a.status === 'confirmed'
@@ -107,6 +115,7 @@ export default function PatientDetailsPage() {
   // Handle delete
   const handleDelete = async () => {
     if (!id) return;
+    if (deletePatient.isPending) return; // Prevent double-click
     if (!window.confirm('Esti sigur ca vrei sa stergi acest pacient? Aceasta actiune nu poate fi anulata.')) {
       return;
     }
@@ -156,9 +165,9 @@ export default function PatientDetailsPage() {
                 <i className="ti ti-refresh me-1"></i>
                 Reincearca
               </Button>
-              <Button variant="outline-secondary" onClick={() => navigate('/patients')}>
+              <Button variant="outline-secondary" onClick={handleBack}>
                 <i className="ti ti-arrow-left me-1"></i>
-                Inapoi la Pacienti
+                Inapoi
               </Button>
             </div>
           </CardBody>
@@ -179,7 +188,7 @@ export default function PatientDetailsPage() {
       subtitle="Profil complet, contact si istoricul pacientului"
       actions={
         <div className="d-flex gap-2">
-          <Button variant="outline-secondary" onClick={() => navigate('/patients')}>
+          <Button variant="outline-secondary" onClick={handleBack}>
             <i className="ti ti-arrow-left me-1"></i>
             Inapoi
           </Button>
@@ -211,10 +220,13 @@ export default function PatientDetailsPage() {
                     <StatusBadge status="active">Activ</StatusBadge>
                   </div>
                   <div className="text-muted small">
-                    <i className="ti ti-calendar me-1"></i>
-                    {patient.dateOfBirth &&
-                      format(new Date(patient.dateOfBirth), 'dd MMMM yyyy', { locale: ro })}
-                    {' • '}
+                    {patient.dateOfBirth && (
+                      <>
+                        <i className="ti ti-calendar me-1"></i>
+                        {format(new Date(patient.dateOfBirth), 'dd MMMM yyyy', { locale: ro })}
+                      </>
+                    )}
+                    {patient.dateOfBirth && patient.gender && ' • '}
                     {patient.gender && (
                       <>
                         <i className="ti ti-user me-1"></i>
@@ -372,7 +384,13 @@ export default function PatientDetailsPage() {
           <StatsCard
             value={
               lastVisit?.startTime
-                ? format(new Date(lastVisit.startTime), 'dd MMM yyyy', { locale: ro })
+                ? (() => {
+                    try {
+                      return format(new Date(lastVisit.startTime), 'dd MMM yyyy', { locale: ro });
+                    } catch {
+                      return 'N/A';
+                    }
+                  })()
                 : 'N/A'
             }
             label="Ultima Vizita"
@@ -384,7 +402,13 @@ export default function PatientDetailsPage() {
           <StatsCard
             value={
               nextAppointment?.startTime
-                ? format(new Date(nextAppointment.startTime), 'dd MMM yyyy', { locale: ro })
+                ? (() => {
+                    try {
+                      return format(new Date(nextAppointment.startTime), 'dd MMM yyyy', { locale: ro });
+                    } catch {
+                      return 'Niciuna';
+                    }
+                  })()
                 : 'Niciuna'
             }
             label="Urmatoarea Programare"

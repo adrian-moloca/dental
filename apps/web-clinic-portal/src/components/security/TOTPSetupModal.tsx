@@ -132,7 +132,7 @@ export function TOTPSetupModal({
               />
             </svg>
             <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              Generating your secure key...
+              Se genereaza cheia ta de securitate...
             </p>
           </div>
         </DialogContent>
@@ -146,9 +146,9 @@ export function TOTPSetupModal({
       <Dialog open={open} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Two-Factor Authentication Enabled</DialogTitle>
+            <DialogTitle>Autentificare cu Doi Factori Activata</DialogTitle>
             <DialogDescription>
-              Save these backup codes in a secure location. You can use them to access your account if you lose your device.
+              Salveaza aceste coduri de rezerva intr-o locatie sigura. Le poti folosi pentru accesarea contului tau daca pierzi dispozitivul.
             </DialogDescription>
           </DialogHeader>
 
@@ -170,7 +170,7 @@ export function TOTPSetupModal({
                 />
               </svg>
               <p className="text-sm text-success-800 dark:text-success-200">
-                Two-factor authentication has been successfully enabled for your account.
+                Autentificarea cu doi factori a fost activata cu succes pentru contul tau.
               </p>
             </div>
 
@@ -178,9 +178,9 @@ export function TOTPSetupModal({
             <div className="p-4 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                  Backup Codes
+                  Coduri de Rezerva
                 </p>
-                <Badge tone="warning">Save These</Badge>
+                <Badge tone="warning">Salveaza Acestea</Badge>
               </div>
               <div className="grid grid-cols-2 gap-2 font-mono text-sm">
                 {backupCodes.map((code, index) => (
@@ -193,14 +193,14 @@ export function TOTPSetupModal({
                 ))}
               </div>
               <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-3">
-                Each code can only be used once. Store them safely.
+                Fiecare cod poate fi folosit o singura data. Pastreaza-le in siguranta.
               </p>
             </div>
           </div>
 
           <DialogFooter>
             <Button variant="primary" onClick={handleComplete}>
-              I've Saved My Backup Codes
+              Am Salvat Codurile de Rezerva
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -213,9 +213,9 @@ export function TOTPSetupModal({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Set Up Two-Factor Authentication</DialogTitle>
+          <DialogTitle>Configureaza Autentificarea cu Doi Factori</DialogTitle>
           <DialogDescription>
-            Scan the QR code with your authenticator app, then enter the verification code.
+            Scaneaza codul QR cu aplicatia ta de autentificare, apoi introdu codul de verificare.
           </DialogDescription>
         </DialogHeader>
 
@@ -227,7 +227,7 @@ export function TOTPSetupModal({
                 1
               </div>
               <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                Scan QR Code
+                Scaneaza Codul QR
               </h3>
             </div>
 
@@ -244,14 +244,14 @@ export function TOTPSetupModal({
             )}
 
             <p className="text-xs text-neutral-600 dark:text-neutral-400 text-center">
-              Use Google Authenticator, Authy, or any TOTP-compatible app
+              Foloseste Google Authenticator, Authy, sau orice aplicatie compatibila TOTP
             </p>
           </div>
 
           {/* Manual Entry Alternative */}
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-              Can't scan? Enter manually
+              Nu poti scana? Introdu manual
             </h3>
             <div className="flex items-center gap-2 p-3 rounded-lg bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
               <code className="flex-1 text-sm font-mono text-neutral-900 dark:text-neutral-100 break-all">
@@ -303,7 +303,7 @@ export function TOTPSetupModal({
                 2
               </div>
               <h3 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                Enter Verification Code
+                Introdu Codul de Verificare
               </h3>
             </div>
 
@@ -317,7 +317,7 @@ export function TOTPSetupModal({
               }}
               maxLength={6}
               error={verificationError}
-              hint="Enter the 6-digit code from your authenticator app"
+              hint="Introdu codul de 6 cifre din aplicatia ta de autentificare"
               className="text-center text-2xl tracking-widest font-mono"
               autoFocus
               aria-label="Verification code"
@@ -327,7 +327,7 @@ export function TOTPSetupModal({
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isVerifying}>
-            Cancel
+            Anuleaza
           </Button>
           <Button
             variant="primary"
@@ -335,7 +335,7 @@ export function TOTPSetupModal({
             disabled={verificationCode.length !== 6 || isVerifying}
             loading={isVerifying}
           >
-            Verify and Enable
+            Verifica si Activeaza
           </Button>
         </DialogFooter>
       </DialogContent>

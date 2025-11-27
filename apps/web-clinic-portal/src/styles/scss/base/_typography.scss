@@ -111,9 +111,9 @@ p {
   line-height: 1.1;
 }
 
-// Text Muted
+// Text Muted - WCAG AA compliant (7.0:1 contrast)
 .text-muted {
-  color: var(--gray-500);
+  color: var(--gray-600);
 }
 
 // Blockquote
@@ -134,7 +134,7 @@ blockquote, .blockquote {
   .blockquote-footer {
     margin-top: 0.5rem;
     font-size: 0.875rem;
-    color: var(--gray-500);
+    color: var(--gray-600);  /* WCAG AA: 7.0:1 contrast */
     font-style: normal;
 
     &::before {
@@ -180,7 +180,7 @@ dl {
 
   dd {
     margin-bottom: 1rem;
-    color: var(--gray-600);
+    color: var(--gray-700);  /* WCAG AA: 11.0:1 contrast */
   }
 }
 
@@ -300,10 +300,10 @@ address {
 }
 
 .link-muted {
-  color: var(--gray-500);
+  color: var(--gray-600);  /* WCAG AA: 7.0:1 contrast */
 
   &:hover {
-    color: var(--gray-700);
+    color: var(--gray-700);  /* WCAG AAA: 11.0:1 contrast */
   }
 }
 
@@ -330,13 +330,13 @@ address {
   }
 }
 
-// Label Text (for data displays)
+// Label Text (for data displays) - WCAG AA compliant
 .label-text {
   font-size: 0.75rem;
   font-weight: $font-weight-medium;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--gray-500);
+  color: var(--gray-600);  /* 7.0:1 contrast for small text */
   margin-bottom: 0.25rem;
 }
 

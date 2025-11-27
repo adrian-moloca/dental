@@ -128,7 +128,7 @@ function NavItemLink({ item, depth = 0 }: { item: NavItem; depth?: number }) {
           className={clsx(
             'flex items-center gap-3 rounded-lg pr-3 py-2.5 text-sm font-medium',
             paddingLeft,
-            'text-[var(--text-tertiary)] border border-transparent opacity-50 cursor-not-allowed'
+            'text-[var(--text-muted)] border border-transparent cursor-not-allowed' /* Removed opacity, using solid text-muted for WCAG AA */
           )}
           aria-disabled="true"
           title={`${item.label} - In curand`}
@@ -136,7 +136,7 @@ function NavItemLink({ item, depth = 0 }: { item: NavItem; depth?: number }) {
           <Icon name={item.icon} className="w-5 h-5 flex-shrink-0" aria-hidden={true} />
           <span className="flex-1">{item.label}</span>
           {item.badge && (
-            <span className="text-[11px] rounded-full bg-[var(--surface-card)] px-2 py-0.5 text-[var(--text-tertiary)] border border-[var(--border)]">
+            <span className="text-[11px] rounded-full bg-[var(--surface-card)] px-2 py-0.5 text-[var(--text-secondary)] border border-[var(--border)]">
               {item.badge}
             </span>
           )}

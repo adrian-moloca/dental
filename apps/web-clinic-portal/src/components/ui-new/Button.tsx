@@ -84,8 +84,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           sizeClass,
           {
             'btn-icon': iconOnly,
-            'btn-block': block,
-            'btn-loading': loading,
+            'w-100': block,
           },
           className
         )}
@@ -94,19 +93,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         aria-busy={loading ? 'true' : undefined}
         {...props}
       >
-        {loading ? (
-          <span className="btn-text">
-            {icon && <i className={icon}></i>}
-            {!iconOnly && children}
-            {iconRight && <i className={iconRight}></i>}
-          </span>
-        ) : (
-          <>
-            {icon && <i className={icon}></i>}
-            {!iconOnly && children}
-            {iconRight && <i className={iconRight}></i>}
-          </>
+        {loading && (
+          <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
         )}
+        {icon && !loading && <i className={icon}></i>}
+        {!iconOnly && children}
+        {iconRight && !loading && <i className={iconRight}></i>}
       </button>
     );
   }

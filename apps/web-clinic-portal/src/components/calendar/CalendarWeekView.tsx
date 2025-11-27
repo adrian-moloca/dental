@@ -29,10 +29,11 @@ interface CalendarWeekViewProps {
   resources?: Resource[];
   onEventClick?: (event: CalendarEvent) => void;
   onSlotClick?: (date: Date, resourceId?: string) => void;
+  scrollToNow?: number;
 }
 
 const START_HOUR = 7;
-const END_HOUR = 20;
+const END_HOUR = 21; // 8pm (20:00) is the last hour shown
 const SLOT_DURATION = 30; // minutes
 const SLOT_HEIGHT = 60; // pixels
 const BUSINESS_START = 8;
@@ -44,6 +45,7 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
   resources = [{ id: 'default', title: 'Cabinet 1' }],
   onEventClick,
   onSlotClick,
+  scrollToNow,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -65,22 +67,27 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
     return slots;
   }, [date]);
 
-  // Auto-scroll to current time on mount
+  // Auto-scroll to current time on mount and when scrollToNow changes
   useEffect(() => {
     if (scrollContainerRef.current) {
       const now = new Date();
       const currentHour = now.getHours();
       if (currentHour >= START_HOUR && currentHour < END_HOUR) {
         const scrollPosition = ((currentHour - START_HOUR) * 2 * SLOT_HEIGHT) - 100;
-        scrollContainerRef.current.scrollTop = Math.max(0, scrollPosition);
+        scrollContainerRef.current.scrollTo({
+          top: Math.max(0, scrollPosition),
+          behavior: scrollToNow ? 'smooth' : 'auto',
+        });
       }
     }
-  }, [date]);
+  }, [date, scrollToNow]);
 
-  // Check if slot is in business hours
+  // Check if slot is in business hours (Monday-Friday, 8am-7pm)
   const isBusinessHour = (time: Date) => {
     const hour = time.getHours();
     const day = time.getDay();
+    // day: 0=Sunday, 1=Monday, ..., 6=Saturday
+    // Business hours: Monday(1) to Friday(5), 8am-7pm
     return day >= 1 && day <= 5 && hour >= BUSINESS_START && hour < BUSINESS_END;
   };
 
@@ -143,25 +150,28 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
 
   return (
     <div className="calendar-body" ref={scrollContainerRef}>
-      <div className="calendar-grid">
-        {/* Week header */}
-        <div className="calendar-week-header">
-          <div className="calendar-week-time-header">Ora</div>
-          {weekDays.map((day) => (
-            <div
-              key={day.toISOString()}
-              className={`calendar-week-day-header ${isToday(day) ? 'today' : ''}`}
-            >
-              <div className="calendar-week-day-name">
-                {format(day, 'EEE', { locale: ro })}
-              </div>
-              <div className="calendar-week-day-number">
-                {format(day, 'd')}
-              </div>
+      {/* Week header */}
+      <div className="calendar-week-header">
+        <div className="calendar-week-time-header">Ora</div>
+        {weekDays.map((day) => {
+          const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+          return (
+          <div
+            key={day.toISOString()}
+            className={`calendar-week-day-header ${isToday(day) ? 'today' : ''} ${isWeekend ? 'weekend' : ''}`}
+          >
+            <div className="calendar-week-day-name">
+              {format(day, 'EEE', { locale: ro })}
             </div>
-          ))}
-        </div>
+            <div className="calendar-week-day-number">
+              {format(day, 'd')}
+            </div>
+          </div>
+          );
+        })}
+      </div>
 
+      <div className="calendar-grid">
         {/* Time column */}
         <div className="calendar-time-column">
           {timeSlots.map((time, index) => (
@@ -181,8 +191,10 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
 
         {/* Week columns */}
         <div className="calendar-week-columns">
-          {weekDays.map((day) => (
-            <div key={day.toISOString()} className="calendar-week-column">
+          {weekDays.map((day) => {
+            const isWeekend = day.getDay() === 0 || day.getDay() === 6; // Sunday or Saturday
+            return (
+            <div key={day.toISOString()} className={`calendar-week-column ${isWeekend ? 'weekend' : ''}`}>
               {/* Time slots for this day */}
               {timeSlots.map((time, slotIndex) => {
                 const slotTime = setHours(setMinutes(day, time.getMinutes()), time.getHours());
@@ -222,7 +234,8 @@ export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
                 />
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

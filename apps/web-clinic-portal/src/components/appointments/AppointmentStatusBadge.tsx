@@ -15,25 +15,25 @@ interface AppointmentStatusBadgeProps {
 export function AppointmentStatusBadge({ status, confirmed, className }: AppointmentStatusBadgeProps) {
   const getStatusDisplay = () => {
     if (status === 'pending' && !confirmed) {
-      return { text: 'Needs Confirmation', tone: 'warning' as const };
+      return { text: 'Necesita confirmare', tone: 'warning' as const };
     }
     if (status === 'pending' && confirmed) {
-      return { text: 'Confirmed', tone: 'success' as const };
+      return { text: 'Confirmat', tone: 'success' as const };
     }
 
     switch (status) {
       case 'confirmed':
-        return { text: 'Confirmed', tone: 'success' as const };
+        return { text: 'Confirmat', tone: 'success' as const };
       case 'in_progress':
-        return { text: 'In Progress', tone: 'warning' as const };
+        return { text: 'In desfasurare', tone: 'warning' as const };
       case 'completed':
-        return { text: 'Completed', tone: 'success' as const };
+        return { text: 'Finalizat', tone: 'success' as const };
       case 'cancelled':
-        return { text: 'Cancelled', tone: 'neutral' as const };
+        return { text: 'Anulat', tone: 'neutral' as const };
       case 'no_show':
-        return { text: 'No Show', tone: 'warning' as const };
+        return { text: 'Absent', tone: 'warning' as const };
       default:
-        return { text: 'Pending', tone: 'neutral' as const };
+        return { text: 'In asteptare', tone: 'neutral' as const };
     }
   };
 

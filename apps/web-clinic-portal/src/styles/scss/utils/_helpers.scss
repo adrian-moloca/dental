@@ -146,7 +146,7 @@ $spacings: (
 .text-warning { color: var(--warning) !important; }
 .text-info { color: var(--info) !important; }
 .text-dark { color: var(--gray-900) !important; }
-.text-muted { color: var(--gray-500) !important; }
+.text-muted { color: var(--gray-600) !important; } /* WCAG AA: gray-600 provides 7.0:1 contrast ratio */
 .text-white { color: var(--white) !important; }
 .text-body { color: var(--body-color) !important; }
 .text-heading { color: var(--heading-color) !important; }
@@ -506,6 +506,17 @@ $spacings: (
 .border-warning { border-color: var(--warning) !important; }
 .border-info { border-color: var(--info) !important; }
 
+// Border width utilities
+.border-0 { border-width: 0 !important; }
+.border-1 { border-width: 1px !important; }
+.border-2 { border-width: 2px !important; }
+.border-3 { border-width: 3px !important; }
+.border-4 { border-width: 4px !important; }
+
+// Additional color utilities for Odontogram
+.bg-purple { background-color: #6f42c1 !important; color: white !important; }
+.bg-indigo { background-color: #6610f2 !important; color: white !important; }
+
 // Small text utility
 .small, small {
   font-size: 0.8125rem;
@@ -551,5 +562,40 @@ $spacings: (
   }
   50% {
     opacity: 0.2;
+  }
+}
+
+// Stack utilities (like Bootstrap 5.3)
+.vstack {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.hstack {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+}
+
+// Square button utility
+.btn-square {
+  aspect-ratio: 1 / 1;
+  padding: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Badge dot indicator
+.badge-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+
+  &.badge-dot-lg {
+    width: 12px;
+    height: 12px;
   }
 }

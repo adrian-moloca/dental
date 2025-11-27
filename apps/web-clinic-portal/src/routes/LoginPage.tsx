@@ -5,18 +5,22 @@
  */
 
 import { useState, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { Button, Input, PasswordInput } from '../components/ui-new';
 import dentalClinicImage from '../assets/dental-clinic-future.png';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isLoading, error } = useAuthStore();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+
+  // Get success message from location state
+  const successMessage = (location.state as { message?: string })?.message;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -158,6 +162,17 @@ export default function LoginPage() {
                           Ai uitat parola?
                         </Link>
                       </div>
+
+                      {/* Success Message */}
+                      {successMessage && (
+                        <div
+                          className="alert alert-success d-flex align-items-center gap-2 py-2 mb-3"
+                          role="alert"
+                        >
+                          <i className="ti ti-check-circle"></i>
+                          <span>{successMessage}</span>
+                        </div>
+                      )}
 
                       {/* Error Message */}
                       {error && (

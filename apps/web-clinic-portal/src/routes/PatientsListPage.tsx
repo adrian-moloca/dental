@@ -45,11 +45,13 @@ export default function PatientsListPage() {
     setCurrentPage(1);
   };
 
-  const totalPages = data ? Math.ceil(data.total / pageSize) : 0;
+  const totalPages = data?.total ? Math.ceil(data.total / pageSize) : 0;
 
   // Calculate age from date of birth
-  const calculateAge = (dob: string | Date) => {
+  const calculateAge = (dob: string | Date | null | undefined): number => {
+    if (!dob) return 0;
     const birthDate = new Date(dob);
+    if (isNaN(birthDate.getTime())) return 0;
     const today = new Date();
     let age = today.getFullYear() - birthDate.getFullYear();
     const m = today.getMonth() - birthDate.getMonth();
@@ -60,8 +62,8 @@ export default function PatientsListPage() {
   };
 
   // Get initials from name
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  const getInitials = (firstName: string | undefined, lastName: string | undefined): string => {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase() || 'PA';
   };
 
   // Loading skeleton
@@ -239,11 +241,15 @@ export default function PatientsListPage() {
                     <TableCell>
                       <div>
                         <span>
-                          {new Date(patient.dateOfBirth).toLocaleDateString('ro-RO')}
+                          {patient.dateOfBirth
+                            ? new Date(patient.dateOfBirth).toLocaleDateString('ro-RO')
+                            : 'N/A'}
                         </span>
-                        <small className="d-block text-muted">
-                          {calculateAge(patient.dateOfBirth)} ani
-                        </small>
+                        {patient.dateOfBirth && (
+                          <small className="d-block text-muted">
+                            {calculateAge(patient.dateOfBirth)} ani
+                          </small>
+                        )}
                       </div>
                     </TableCell>
 

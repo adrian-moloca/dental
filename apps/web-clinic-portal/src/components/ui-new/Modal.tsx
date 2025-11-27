@@ -131,18 +131,18 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
             <div className="modal-header">
               {title && (
                 <h5 id="modal-title" className="modal-title">
-                  {icon && <i className={icon}></i>}
+                  {icon && <i className={`${icon} me-2`}></i>}
                   {title}
                 </h5>
               )}
               {closable && (
                 <button
                   type="button"
-                  className="modal-close"
+                  className="btn-close"
                   onClick={onClose}
-                  aria-label="Close modal"
+                  aria-label="Inchide"
+                  title="Inchide"
                 >
-                  <i className="ti ti-x"></i>
                 </button>
               )}
             </div>

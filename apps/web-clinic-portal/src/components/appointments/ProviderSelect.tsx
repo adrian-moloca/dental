@@ -56,10 +56,10 @@ export function ProviderSelect({
         >
           <option value="">
             {isLoading
-              ? 'Loading providers...'
+              ? 'Se incarca medici...'
               : isError
-              ? 'Error loading providers'
-              : 'Select a provider'}
+              ? 'Eroare la incarcarea medicilor'
+              : 'Selecteaza un medic'}
           </option>
           {providers?.map((provider) => (
             <option key={provider.id} value={provider.id}>
@@ -72,7 +72,7 @@ export function ProviderSelect({
         {isLoading && (
           <div className="position-absolute end-0 top-50 translate-middle-y pe-3" style={{ pointerEvents: 'none' }}>
             <div className="spinner-border spinner-border-sm text-muted" role="status">
-              <span className="visually-hidden">Loading...</span>
+              <span className="visually-hidden">Se incarca...</span>
             </div>
           </div>
         )}
@@ -88,7 +88,7 @@ export function ProviderSelect({
       {isError && !error && (
         <div className="form-text text-warning">
           <i className="ti ti-alert-triangle me-1"></i>
-          Unable to load providers. Please try again.
+          Nu s-au putut incarca medicii. Va rugam incercati din nou.
         </div>
       )}
     </div>

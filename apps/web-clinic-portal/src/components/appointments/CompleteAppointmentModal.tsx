@@ -89,30 +89,30 @@ export function CompleteAppointmentModal({
   if (!appointment) return null;
 
   return (
-    <Modal open={open} onClose={handleClose} title="Complete Appointment" size="lg">
+    <Modal open={open} onClose={handleClose} title="Finalizare Programare" size="lg">
       <div className="space-y-6">
         <div className="bg-white/5 rounded-lg p-4 border border-white/10">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-slate-400">Patient</span>
+              <span className="text-slate-400">Pacient</span>
               <p className="text-white font-medium mt-1">
                 {appointment.patientId}
               </p>
             </div>
             <div>
-              <span className="text-slate-400">Provider</span>
+              <span className="text-slate-400">Doctor</span>
               <p className="text-white font-medium mt-1">
                 {appointment.providerId}
               </p>
             </div>
             <div>
-              <span className="text-slate-400">Date & Time</span>
+              <span className="text-slate-400">Data si Ora</span>
               <p className="text-white font-medium mt-1">
-                {new Date(appointment.start).toLocaleString()}
+                {new Date(appointment.start).toLocaleString('ro-RO')}
               </p>
             </div>
             <div>
-              <span className="text-slate-400">Service Code</span>
+              <span className="text-slate-400">Cod Serviciu</span>
               <p className="text-white font-medium mt-1">
                 {appointment.serviceCode}
               </p>
@@ -122,21 +122,21 @@ export function CompleteAppointmentModal({
 
         <div>
           <label className="block text-sm font-medium text-white mb-2">
-            Add Procedures Performed
+            Adauga Proceduri Efectuate
           </label>
           <ProcedureSelector
             onSelect={handleSelectProcedure}
             disabled={isLoading}
           />
           <p className="text-xs text-slate-400 mt-1">
-            Search by CDT code (e.g., D0120) or procedure name
+            Cauta dupa codul CDT (ex: D0120) sau numele procedurii
           </p>
         </div>
 
         {selectedProcedures.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-white mb-2">
-              Selected Procedures
+              Proceduri Selectate
             </label>
             <SelectedProceduresList
               procedures={selectedProcedures}
@@ -149,14 +149,14 @@ export function CompleteAppointmentModal({
 
         <div className="bg-[var(--brand)]/10 border border-[var(--brand)]/30 rounded-lg p-4">
           <div className="flex items-center justify-between">
-            <span className="text-white font-semibold">Total Amount</span>
+            <span className="text-white font-semibold">Total</span>
             <span className="text-2xl font-bold text-[var(--brand)]">
-              ${total.toFixed(2)}
+              {total.toFixed(2)} RON
             </span>
           </div>
           {selectedProcedures.length > 0 && (
             <p className="text-xs text-slate-400 mt-2">
-              A draft invoice will be generated automatically
+              O factura proforma va fi generata automat
             </p>
           )}
         </div>
@@ -168,7 +168,7 @@ export function CompleteAppointmentModal({
             disabled={isLoading}
             fullWidth
           >
-            Cancel
+            Anuleaza
           </Button>
           <Button
             variant="primary"
@@ -178,8 +178,8 @@ export function CompleteAppointmentModal({
             fullWidth
           >
             {selectedProcedures.length > 0
-              ? 'Complete & Generate Invoice'
-              : 'Complete Without Invoice'}
+              ? 'Finalizeaza si Genereaza Factura'
+              : 'Finalizeaza Fara Factura'}
           </Button>
         </div>
       </div>

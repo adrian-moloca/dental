@@ -51,8 +51,8 @@ export function MFAStatusCard({
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Multi-Factor Authentication</CardTitle>
-          <CardDescription>Loading MFA status...</CardDescription>
+          <CardTitle>Autentificare Multi-Factor</CardTitle>
+          <CardDescription>Se incarca statusul MFA...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
@@ -87,15 +87,15 @@ export function MFAStatusCard({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Multi-Factor Authentication</CardTitle>
+          <CardTitle>Autentificare Multi-Factor</CardTitle>
           <Badge tone={enabled ? 'success' : 'neutral'}>
-            {enabled ? 'Enabled' : 'Disabled'}
+            {enabled ? 'Activat' : 'Dezactivat'}
           </Badge>
         </div>
         <CardDescription>
           {enabled
-            ? 'Your account is protected with two-factor authentication using an authenticator app.'
-            : 'Add an extra layer of security to your account by requiring a code from your authenticator app when signing in.'}
+            ? 'Contul tau este protejat cu autentificare cu doi factori folosind o aplicatie de autentificare.'
+            : 'Adauga un nivel suplimentar de securitate contului tau prin solicitarea unui cod din aplicatia ta de autentificare la conectare.'}
         </CardDescription>
       </CardHeader>
 
@@ -127,11 +127,11 @@ export function MFAStatusCard({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                {enabled ? 'Two-factor authentication is active' : 'Two-factor authentication is not set up'}
+                {enabled ? 'Autentificarea cu doi factori este activa' : 'Autentificarea cu doi factori nu este configurata'}
               </p>
               {enabled && enrolledAt && (
                 <p className="text-xs text-neutral-600 dark:text-neutral-400 mt-1">
-                  Enabled on {new Date(enrolledAt).toLocaleDateString('en-US', {
+                  Activat pe {new Date(enrolledAt).toLocaleDateString('ro-RO', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric',
@@ -145,13 +145,13 @@ export function MFAStatusCard({
           {!enabled && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                How it works:
+                Cum functioneaza:
               </p>
               <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1 ml-4 list-disc">
-                <li>Download an authenticator app (Google Authenticator, Authy, or similar)</li>
-                <li>Scan the QR code we provide with your app</li>
-                <li>Enter the 6-digit code to verify setup</li>
-                <li>Save backup codes in case you lose access to your device</li>
+                <li>Descarca o aplicatie de autentificare (Google Authenticator, Authy, sau similara)</li>
+                <li>Scaneaza codul QR pe care il furnizam cu aplicatia ta</li>
+                <li>Introdu codul de 6 cifre pentru a verifica configurarea</li>
+                <li>Salveaza codurile de rezerva in caz ca pierzi accesul la dispozitivul tau</li>
               </ul>
             </div>
           )}
@@ -166,14 +166,14 @@ export function MFAStatusCard({
               onClick={onViewBackupCodes}
               className="w-full sm:w-auto"
             >
-              View Backup Codes
+              Vezi Codurile de Rezerva
             </Button>
             <Button
               variant="danger"
               onClick={onDisableMfa}
               className="w-full sm:w-auto"
             >
-              Disable MFA
+              Dezactiveaza MFA
             </Button>
           </>
         ) : (
@@ -182,7 +182,7 @@ export function MFAStatusCard({
             onClick={onEnableMfa}
             className="w-full sm:w-auto"
           >
-            Enable MFA
+            Activeaza MFA
           </Button>
         )}
       </CardFooter>

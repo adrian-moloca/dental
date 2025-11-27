@@ -105,14 +105,14 @@ export interface StatusBadgeProps extends HTMLAttributes<HTMLSpanElement> {
 export const StatusBadge = forwardRef<HTMLSpanElement, StatusBadgeProps>(
   ({ status, className, children, ...props }, ref) => {
     const statusLabels: Record<StatusBadgeProps['status'], string> = {
-      active: 'Active',
-      inactive: 'Inactive',
-      pending: 'Pending',
-      completed: 'Completed',
-      cancelled: 'Cancelled',
-      scheduled: 'Scheduled',
-      confirmed: 'Confirmed',
-      'in-progress': 'In Progress',
+      active: 'Activ',
+      inactive: 'Inactiv',
+      pending: 'In asteptare',
+      completed: 'Finalizat',
+      cancelled: 'Anulat',
+      scheduled: 'Programat',
+      confirmed: 'Confirmat',
+      'in-progress': 'In desfasurare',
     };
 
     return (
@@ -139,9 +139,9 @@ export const PriorityBadge = forwardRef<HTMLSpanElement, PriorityBadgeProps>(
   ({ priority, className, ...props }, ref) => {
     const labels = {
       urgent: 'Urgent',
-      high: 'High',
-      medium: 'Medium',
-      low: 'Low',
+      high: 'Ridicata',
+      medium: 'Medie',
+      low: 'Scazuta',
     };
 
     return (

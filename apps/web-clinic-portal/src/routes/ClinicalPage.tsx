@@ -52,6 +52,14 @@ export function ClinicalPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('odontogram');
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate(`/patients/${patientId}`);
+    }
+  };
+
   // Fetch patient data
   const { data: patientResponse, isLoading: patientLoading } = usePatient(patientId);
   const patient = patientResponse?.data;
@@ -128,9 +136,9 @@ export function ClinicalPage() {
       <Button
         variant="outline-secondary"
         icon="ti ti-arrow-left"
-        onClick={() => navigate(`/patients/${patientId}`)}
+        onClick={handleBack}
       >
-        Inapoi la Pacient
+        Inapoi
       </Button>
       <Button variant="outline-primary" icon="ti ti-printer">
         Printeaza Fisa
@@ -311,13 +319,13 @@ export function ClinicalPage() {
                           <div className="col-md-3 col-sm-6">
                             <div className="d-flex align-items-center gap-2">
                               <div className="badge-dot badge-dot-lg bg-warning"></div>
-                              <span>Tratament Canal</span>
+                              <span>Tratament de Canal</span>
                             </div>
                           </div>
                           <div className="col-md-3 col-sm-6">
                             <div className="d-flex align-items-center gap-2">
                               <div className="badge-dot badge-dot-lg bg-info"></div>
-                              <span>Punte</span>
+                              <span>Punte Dentara</span>
                             </div>
                           </div>
                         </div>

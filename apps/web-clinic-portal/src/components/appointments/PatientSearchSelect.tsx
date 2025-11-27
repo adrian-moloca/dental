@@ -120,7 +120,7 @@ export function PatientSearchSelect({
                 onChange={handleInputChange}
                 onFocus={handleInputFocus}
                 disabled={disabled}
-                placeholder="Search by name, phone, or email..."
+                placeholder="Cauta dupa nume, telefon sau email..."
                 className={`form-control ${error ? 'is-invalid' : ''}`}
                 style={{ paddingRight: '40px' }}
                 aria-invalid={error ? 'true' : 'false'}
@@ -140,18 +140,18 @@ export function PatientSearchSelect({
                 {isLoading ? (
                   <div className="p-4 text-center text-muted">
                     <div className="spinner-border spinner-border-sm mb-2" role="status">
-                      <span className="visually-hidden">Loading...</span>
+                      <span className="visually-hidden">Se incarca...</span>
                     </div>
-                    <div className="small">Searching...</div>
+                    <div className="small">Se cauta...</div>
                   </div>
                 ) : patients.length === 0 ? (
                   <div className="p-4 text-center text-muted">
                     {searchQuery.length < 2 ? (
-                      <span className="small">Type at least 2 characters to search</span>
+                      <span className="small">Introdu cel putin 2 caractere pentru cautare</span>
                     ) : (
                       <>
-                        <div className="small">No patients found</div>
-                        <div className="small mt-1">Try a different search term</div>
+                        <div className="small">Niciun pacient gasit</div>
+                        <div className="small mt-1">Incearca un alt termen de cautare</div>
                       </>
                     )}
                   </div>
@@ -203,7 +203,7 @@ export function PatientSearchSelect({
                 type="button"
                 onClick={handleClear}
                 className="btn btn-sm btn-ghost-secondary ms-2"
-                aria-label="Clear selection"
+                aria-label="Sterge selectia"
               >
                 <i className="ti ti-x"></i>
               </button>

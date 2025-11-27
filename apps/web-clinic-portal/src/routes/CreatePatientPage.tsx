@@ -16,6 +16,14 @@ export default function CreatePatientPage() {
   const createPatient = useCreatePatient();
   const [errorMessage, setErrorMessage] = useState<string>('');
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/patients');
+    }
+  };
+
   const handleSubmit = async (data: CreatePatientDto) => {
     try {
       setErrorMessage('');
@@ -30,20 +38,20 @@ export default function CreatePatientPage() {
   };
 
   const handleCancel = () => {
-    navigate('/patients');
+    handleBack();
   };
 
   return (
     <AppShell
-      title="New Patient"
-      subtitle="Add a new patient to your clinic roster"
+      title="Pacient Nou"
+      subtitle="Adauga un pacient nou in evidenta clinicii"
       actions={
         <Button
           as={Link}
           to="/patients"
           variant="ghost"
         >
-          Back to patients
+          Inapoi la Pacienti
         </Button>
       }
     >

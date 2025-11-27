@@ -32,6 +32,14 @@ export function InvoiceDetailsPage() {
 
   const [showPaymentModal, setShowPaymentModal] = useState(openPaymentModal);
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/billing');
+    }
+  };
+
   const { data: invoice, isLoading, error, refetch } = useInvoice(id!);
   const { data: payments, isLoading: paymentsLoading } = usePayments(id!);
   const recordPaymentMutation = useRecordPaymentBatch();
@@ -134,9 +142,9 @@ export function InvoiceDetailsPage() {
         title="Detalii Factura"
         subtitle="Se incarca..."
         actions={
-          <Button variant="outline-secondary" onClick={() => navigate('/billing')}>
+          <Button variant="outline-secondary" onClick={handleBack}>
             <i className="ti ti-arrow-left me-1"></i>
-            Inapoi la Facturare
+            Inapoi
           </Button>
         }
       >
@@ -186,9 +194,9 @@ export function InvoiceDetailsPage() {
         title="Detalii Factura"
         subtitle="Eroare"
         actions={
-          <Button variant="outline-secondary" onClick={() => navigate('/billing')}>
+          <Button variant="outline-secondary" onClick={handleBack}>
             <i className="ti ti-arrow-left me-1"></i>
-            Inapoi la Facturare
+            Inapoi
           </Button>
         }
       >
@@ -201,9 +209,9 @@ export function InvoiceDetailsPage() {
             <p className="text-muted mb-4">
               {error ? (error as Error).message : 'Factura solicitata nu exista sau a fost stearsa.'}
             </p>
-            <Button variant="primary" onClick={() => navigate('/billing')}>
+            <Button variant="primary" onClick={handleBack}>
               <i className="ti ti-arrow-left me-1"></i>
-              Inapoi la lista de facturi
+              Inapoi
             </Button>
           </CardBody>
         </Card>
@@ -220,7 +228,7 @@ export function InvoiceDetailsPage() {
       subtitle={`Factura pentru ${inv.patientName || 'N/A'}`}
       actions={
         <div className="d-flex gap-2">
-          <Button variant="outline-secondary" onClick={() => navigate('/billing')}>
+          <Button variant="outline-secondary" onClick={handleBack}>
             <i className="ti ti-arrow-left me-1"></i>
             Inapoi
           </Button>

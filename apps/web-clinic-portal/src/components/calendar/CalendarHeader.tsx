@@ -36,7 +36,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         <button
           className="calendar-header-btn calendar-header-btn-icon"
           onClick={onPrevious}
-          aria-label="Previous period"
+          aria-label="Perioada anterioară"
           type="button"
         >
           <i className="ti ti-chevron-left"></i>
@@ -44,7 +44,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         <button
           className="calendar-header-btn calendar-header-btn-icon"
           onClick={onNext}
-          aria-label="Next period"
+          aria-label="Perioada următoare"
           type="button"
         >
           <i className="ti ti-chevron-right"></i>
@@ -54,7 +54,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           onClick={onToday}
           type="button"
         >
-          Astazi
+          Astăzi
         </button>
       </div>
 
@@ -70,7 +70,8 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             className={`calendar-header-btn ${view === 'day' ? 'active' : ''}`}
             onClick={() => onViewChange('day')}
             type="button"
-            aria-label="Day view"
+            aria-label="Vizualizare pe zi"
+            aria-pressed={view === 'day'}
           >
             <i className="ti ti-calendar-time me-1"></i>
             Zi
@@ -79,19 +80,21 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             className={`calendar-header-btn ${view === 'week' ? 'active' : ''}`}
             onClick={() => onViewChange('week')}
             type="button"
-            aria-label="Week view"
+            aria-label="Vizualizare pe săptămână"
+            aria-pressed={view === 'week'}
           >
             <i className="ti ti-calendar-week me-1"></i>
-            Saptamana
+            Săptămână
           </button>
           <button
             className={`calendar-header-btn ${view === 'month' ? 'active' : ''}`}
             onClick={() => onViewChange('month')}
             type="button"
-            aria-label="Month view"
+            aria-label="Vizualizare pe lună"
+            aria-pressed={view === 'month'}
           >
             <i className="ti ti-calendar me-1"></i>
-            Luna
+            Lună
           </button>
         </div>
       </div>

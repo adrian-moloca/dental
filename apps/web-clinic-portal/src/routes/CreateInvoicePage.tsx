@@ -21,6 +21,14 @@ export function CreateInvoicePage() {
   const navigate = useNavigate();
   const createInvoiceMutation = useCreateInvoice();
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/billing');
+    }
+  };
+
   const handleSubmit = async (data: Record<string, unknown>) => {
     try {
       const result = await createInvoiceMutation.mutateAsync(data);
@@ -34,7 +42,7 @@ export function CreateInvoicePage() {
   };
 
   const handleCancel = () => {
-    navigate('/billing');
+    handleBack();
   };
 
   return (
@@ -42,9 +50,9 @@ export function CreateInvoicePage() {
       title="Factura Noua"
       subtitle="Creeaza o factura pentru pacient"
       actions={
-        <Button variant="outline-secondary" onClick={handleCancel}>
+        <Button variant="outline-secondary" onClick={handleBack}>
           <i className="ti ti-arrow-left me-1"></i>
-          Inapoi la Facturare
+          Inapoi
         </Button>
       }
     >

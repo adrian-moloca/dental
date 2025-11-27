@@ -62,8 +62,9 @@ export default function AppointmentsListPage() {
   // Build resources from appointments
   const resources = useMemo<Resource[]>(() => {
     const providers = new Map<string, string>();
-    (data?.data ?? []).forEach((a) => {
-      if (a.providerId) {
+    const appointments = data?.data ?? [];
+    appointments.forEach((a) => {
+      if (a?.providerId) {
         providers.set(a.providerId, `Dr. ${a.providerId.slice(0, 8)}`);
       }
     });
@@ -81,16 +82,33 @@ export default function AppointmentsListPage() {
 
   // Build calendar events
   const calendarEvents = useMemo<CalendarEvent[]>(() => {
-    return (data?.data ?? []).map((a) => ({
-      id: a.id,
-      title: `Pacient ${a.patientId?.slice(0, 8) || 'N/A'}`,
-      start: new Date(a.start),
-      end: new Date(a.end),
-      resourceId: a.providerId ?? 'default',
-      status: a.status as CalendarEvent['status'],
-      patientName: `Pacient ${a.patientId?.slice(0, 8) || 'N/A'}`,
-      providerName: a.providerId ? `Dr. ${a.providerId.slice(0, 8)}` : undefined,
-    }));
+    const appointments = data?.data ?? [];
+    return appointments.map((a) => {
+      // Ensure start and end are valid dates
+      const startDate = a?.start ? new Date(a.start) : new Date();
+      const endDate = a?.end ? new Date(a.end) : new Date();
+
+      // Map 'pending' to 'scheduled' for calendar compatibility
+      let eventStatus: CalendarEvent['status'] = 'scheduled';
+      if (a?.status) {
+        if (a.status === 'pending') {
+          eventStatus = 'scheduled';
+        } else if (['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show'].includes(a.status)) {
+          eventStatus = a.status as CalendarEvent['status'];
+        }
+      }
+
+      return {
+        id: a?.id || '',
+        title: `Pacient ${a?.patientId?.slice(0, 8) || 'N/A'}`,
+        start: isNaN(startDate.getTime()) ? new Date() : startDate,
+        end: isNaN(endDate.getTime()) ? new Date() : endDate,
+        resourceId: a?.providerId ?? 'default',
+        status: eventStatus,
+        patientName: `Pacient ${a?.patientId?.slice(0, 8) || 'N/A'}`,
+        providerName: a?.providerId ? `Dr. ${a.providerId.slice(0, 8)}` : undefined,
+      };
+    });
   }, [data?.data]);
 
   const handleQuickCreate = async (e: React.FormEvent) => {
@@ -508,9 +526,12 @@ export default function AppointmentsListPage() {
                 type="datetime-local"
                 className="form-control"
                 value={quickDraft.start ? format(quickDraft.start, "yyyy-MM-dd'T'HH:mm") : ''}
-                onChange={(e) =>
-                  setQuickDraft({ ...quickDraft, start: new Date(e.target.value) })
-                }
+                onChange={(e) => {
+                  const newDate = new Date(e.target.value);
+                  if (!isNaN(newDate.getTime())) {
+                    setQuickDraft({ ...quickDraft, start: newDate });
+                  }
+                }}
                 required
               />
             </div>
@@ -520,9 +541,12 @@ export default function AppointmentsListPage() {
                 type="datetime-local"
                 className="form-control"
                 value={quickDraft.end ? format(quickDraft.end, "yyyy-MM-dd'T'HH:mm") : ''}
-                onChange={(e) =>
-                  setQuickDraft({ ...quickDraft, end: new Date(e.target.value) })
-                }
+                onChange={(e) => {
+                  const newDate = new Date(e.target.value);
+                  if (!isNaN(newDate.getTime())) {
+                    setQuickDraft({ ...quickDraft, end: newDate });
+                  }
+                }}
                 required
               />
             </div>

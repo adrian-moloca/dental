@@ -31,67 +31,67 @@ interface MenuSection {
 // Menu configuration
 const menuSections: MenuSection[] = [
   {
-    title: 'Main',
+    title: 'Principal',
     items: [
-      { title: 'Dashboard', path: '/dashboard', icon: 'ti ti-layout-dashboard' },
+      { title: 'Tablou de Bord', path: '/dashboard', icon: 'ti ti-layout-dashboard' },
     ],
   },
   {
-    title: 'Patients',
+    title: 'Pacienti',
     items: [
       {
-        title: 'Patients',
+        title: 'Pacienti',
         icon: 'ti ti-users',
         children: [
-          { title: 'Patient List', path: '/patients', icon: 'ti ti-list' },
-          { title: 'Add Patient', path: '/patients/new', icon: 'ti ti-user-plus' },
+          { title: 'Lista Pacienti', path: '/patients', icon: 'ti ti-list' },
+          { title: 'Adauga Pacient', path: '/patients/new', icon: 'ti ti-user-plus' },
         ],
       },
     ],
   },
   {
-    title: 'Scheduling',
+    title: 'Programari',
     items: [
       {
-        title: 'Appointments',
+        title: 'Programari',
         icon: 'ti ti-calendar-event',
         children: [
-          { title: 'All Appointments', path: '/appointments', icon: 'ti ti-list' },
-          { title: 'New Appointment', path: '/appointments/create', icon: 'ti ti-calendar-plus' },
-          { title: 'Reception Queue', path: '/reception', icon: 'ti ti-clock-hour-3' },
+          { title: 'Toate Programarile', path: '/appointments', icon: 'ti ti-list' },
+          { title: 'Programare Noua', path: '/appointments/create', icon: 'ti ti-calendar-plus' },
+          { title: 'Coada Receptie', path: '/reception', icon: 'ti ti-clock-hour-3' },
         ],
       },
     ],
   },
   {
-    title: 'Finance',
+    title: 'Financiar',
     items: [
       {
-        title: 'Billing',
+        title: 'Facturare',
         icon: 'ti ti-receipt',
         children: [
-          { title: 'Invoices', path: '/billing', icon: 'ti ti-file-invoice' },
-          { title: 'New Invoice', path: '/billing/invoices/new', icon: 'ti ti-file-plus' },
+          { title: 'Facturi', path: '/billing', icon: 'ti ti-file-invoice' },
+          { title: 'Factura Noua', path: '/billing/invoices/new', icon: 'ti ti-file-plus' },
         ],
       },
     ],
   },
   {
-    title: 'Operations',
+    title: 'Operatiuni',
     items: [
-      { title: 'Inventory', path: '/inventory', icon: 'ti ti-packages' },
-      { title: 'Imaging', path: '/imaging', icon: 'ti ti-photo-scan' },
+      { title: 'Inventar', path: '/inventory', icon: 'ti ti-packages' },
+      { title: 'Imagistica', path: '/imaging', icon: 'ti ti-photo-scan' },
     ],
   },
   {
-    title: 'Settings',
+    title: 'Setari',
     items: [
       {
-        title: 'Settings',
+        title: 'Setari',
         icon: 'ti ti-settings',
         children: [
-          { title: 'Security', path: '/settings/security', icon: 'ti ti-shield-lock' },
-          { title: 'Sessions', path: '/settings/sessions', icon: 'ti ti-device-laptop' },
+          { title: 'Securitate', path: '/settings/security', icon: 'ti ti-shield-lock' },
+          { title: 'Sesiuni', path: '/settings/sessions', icon: 'ti ti-device-laptop' },
         ],
       },
     ],
@@ -254,8 +254,8 @@ export function Sidebar() {
                 <i className="ti ti-building-hospital text-primary"></i>
               </div>
               <div className="flex-1 min-w-0">
-                <h6 className="text-truncate mb-0">Demo Clinic</h6>
-                <p className="text-truncate mb-0">Main Branch</p>
+                <h6 className="text-truncate mb-0">Clinica Demo</h6>
+                <p className="text-truncate mb-0">Sediu Principal</p>
               </div>
               <i className="ti ti-selector"></i>
             </div>
@@ -294,10 +294,10 @@ export function Sidebar() {
             <div className="trial-item-icon d-flex align-items-center justify-content-center mx-auto mb-3">
               <i className="ti ti-sparkles text-primary fs-3xl"></i>
             </div>
-            <h6>Upgrade Plan</h6>
-            <p>Get access to all premium features</p>
+            <h6>Actualizeaza Planul</h6>
+            <p>Obtine acces la toate functiile premium</p>
             <button className="btn btn-primary btn-sm mt-3 w-100">
-              Upgrade Now
+              Actualizeaza Acum
             </button>
           </div>
         </div>
