@@ -291,7 +291,7 @@ export function AmendNoteModal({
                 Istoricul Amendamentelor
               </h3>
               <div className="space-y-3">
-                {amendments.map((amendment: NoteAmendment, index: number) => (
+                {amendments.map((amendment: NoteAmendment) => (
                   <div
                     key={amendment.id}
                     className="p-3 bg-surface border-2 border-border-subtle rounded-lg"

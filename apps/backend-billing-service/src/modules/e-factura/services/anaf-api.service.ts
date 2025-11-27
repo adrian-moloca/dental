@@ -146,7 +146,9 @@ export class AnafApiService implements OnModuleInit {
     // Request interceptor for logging
     this.httpClient.interceptors.request.use(
       (requestConfig) => {
-        this.logger.debug(`ANAF API Request: ${requestConfig.method?.toUpperCase()} ${requestConfig.url}`);
+        this.logger.debug(
+          `ANAF API Request: ${requestConfig.method?.toUpperCase()} ${requestConfig.url}`,
+        );
         return requestConfig;
       },
       (error) => {

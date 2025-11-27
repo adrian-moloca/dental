@@ -6,7 +6,6 @@
  */
 
 import { useState } from 'react';
-import { Button } from '../ui-new/Button';
 
 interface QuickAction {
   id: string;

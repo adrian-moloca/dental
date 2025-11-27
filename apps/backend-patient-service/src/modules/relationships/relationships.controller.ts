@@ -20,7 +20,12 @@ import {
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { RelationshipsService } from './relationships.service';
 import { CreateRelationshipDto } from './dto/create-relationship.dto';
-import { JwtAuthGuard, TenantIsolationGuard, PermissionsGuard, RequirePermissions } from '../../guards';
+import {
+  JwtAuthGuard,
+  TenantIsolationGuard,
+  PermissionsGuard,
+  RequirePermissions,
+} from '../../guards';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUser as ICurrentUser } from '@dentalos/shared-auth';
 

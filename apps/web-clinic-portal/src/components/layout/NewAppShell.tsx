@@ -64,7 +64,7 @@ const mockNotifications: Notification[] = [
 export function NewAppShell({ children, title, subtitle, actions, rightSidebar, rightSidebarTitle }: Props) {
   const logout = useAuthStore((state) => state.logout);
   const user = useAuthStore((state) => state.user);
-  const location = useLocation();
+  const _location = useLocation();
   const { rightSidebarOpen, toggleRightSidebar } = useSidebar();
   const { toggleTheme } = useTheme();
 

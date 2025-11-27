@@ -338,7 +338,10 @@ export class UserRepository {
     if (newFailedAttempts >= LOCKOUT_THRESHOLD) {
       // Calculate lockout duration with exponential backoff
       // Every additional 5 failures doubles the lockout time
-      const lockoutMultiplier = Math.pow(2, Math.floor((newFailedAttempts - LOCKOUT_THRESHOLD) / 5));
+      const lockoutMultiplier = Math.pow(
+        2,
+        Math.floor((newFailedAttempts - LOCKOUT_THRESHOLD) / 5)
+      );
       const lockoutMinutes = BASE_LOCKOUT_MINUTES * lockoutMultiplier;
 
       // Cap at 24 hours maximum lockout
@@ -426,10 +429,7 @@ export class UserRepository {
     // Check if lockout has expired
     if (user.lockoutUntil && user.lockoutUntil <= now) {
       // Lockout expired, clear it (but preserve failed attempts for audit)
-      await this.repository.update(
-        { id, organizationId },
-        { lockoutUntil: null }
-      );
+      await this.repository.update({ id, organizationId }, { lockoutUntil: null });
       return { isLocked: false, remainingSeconds: 0, failedAttempts: user.failedLoginAttempts };
     }
 

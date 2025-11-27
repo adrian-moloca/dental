@@ -7,13 +7,12 @@
  */
 
 import { format } from 'date-fns';
-import { ro } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody } from '../ui-new/Card';
 import { Badge } from '../ui-new/Badge';
 import { Button } from '../ui-new/Button';
 
-interface MedicalAlert {
+interface _MedicalAlert {
   type: 'allergy' | 'condition' | 'medication';
   allergen?: string;
   condition?: string;

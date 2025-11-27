@@ -220,10 +220,10 @@ export class User {
    */
   toJSON(): Partial<User> {
     const {
-      passwordHash,
-      failedLoginAttempts,
-      lockoutUntil,
-      lastFailedLoginAt,
+      passwordHash: _passwordHash,
+      failedLoginAttempts: _failedLoginAttempts,
+      lockoutUntil: _lockoutUntil,
+      lastFailedLoginAt: _lastFailedLoginAt,
       ...rest
     } = this;
     return rest as Partial<User>;

@@ -6,8 +6,7 @@
  */
 
 import React, { useMemo, useEffect, useRef } from 'react';
-import { format, setHours, setMinutes, startOfDay, addMinutes, differenceInMinutes, isSameDay, isWithinInterval } from 'date-fns';
-import { ro } from 'date-fns/locale';
+import { format, setHours, setMinutes, startOfDay, addMinutes, isWithinInterval } from 'date-fns';
 import { CalendarEventCard } from './CalendarEvent';
 import type { CalendarEvent } from './CalendarEvent';
 

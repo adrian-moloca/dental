@@ -464,9 +464,7 @@ export class AuthenticationService {
 
       // If account is now locked, throw lockout error
       if (result.isLocked && result.lockoutUntil) {
-        const remainingSeconds = Math.ceil(
-          (result.lockoutUntil.getTime() - Date.now()) / 1000
-        );
+        const remainingSeconds = Math.ceil((result.lockoutUntil.getTime() - Date.now()) / 1000);
 
         this.logger.warn(
           `Account locked for email ${this.maskEmail(email)} after ${result.failedAttempts} failed attempts, ` +

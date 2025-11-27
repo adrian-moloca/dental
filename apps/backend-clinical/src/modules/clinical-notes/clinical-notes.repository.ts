@@ -256,10 +256,7 @@ export class ClinicalNotesRepository {
   /**
    * Get version history for a note (follows amendment chain)
    */
-  async getVersionHistory(
-    noteId: string,
-    context: TenantContext,
-  ): Promise<ClinicalNoteDocument[]> {
+  async getVersionHistory(noteId: string, context: TenantContext): Promise<ClinicalNoteDocument[]> {
     const versions: ClinicalNoteDocument[] = [];
     let currentId: string | undefined = noteId;
 
@@ -278,10 +275,7 @@ export class ClinicalNotesRepository {
   /**
    * Find all amendments to a note (forward chain)
    */
-  async findAmendments(
-    noteId: string,
-    context: TenantContext,
-  ): Promise<ClinicalNoteDocument[]> {
+  async findAmendments(noteId: string, context: TenantContext): Promise<ClinicalNoteDocument[]> {
     return this.clinicalNoteModel
       .find({
         previousVersionId: noteId,
@@ -294,9 +288,7 @@ export class ClinicalNotesRepository {
   /**
    * Count notes by status for a clinic (dashboard metrics)
    */
-  async countByStatus(
-    context: TenantContext,
-  ): Promise<Record<ClinicalNoteStatus, number>> {
+  async countByStatus(context: TenantContext): Promise<Record<ClinicalNoteStatus, number>> {
     const results = await this.clinicalNoteModel.aggregate([
       {
         $match: {
@@ -331,10 +323,7 @@ export class ClinicalNotesRepository {
   /**
    * Find draft notes older than specified hours (for compliance monitoring)
    */
-  async findStaleDrafts(
-    hours: number,
-    context: TenantContext,
-  ): Promise<ClinicalNoteDocument[]> {
+  async findStaleDrafts(hours: number, context: TenantContext): Promise<ClinicalNoteDocument[]> {
     const cutoffDate = new Date(Date.now() - hours * 60 * 60 * 1000);
 
     return this.clinicalNoteModel
@@ -386,9 +375,7 @@ export class ClinicalNotesRepository {
       auditContext,
     );
 
-    this.logger.log(
-      `Created clinical note ${saved._id} for patient ${saved.patientId}`,
-    );
+    this.logger.log(`Created clinical note ${saved._id} for patient ${saved.patientId}`);
 
     return saved;
   }
@@ -491,9 +478,7 @@ export class ClinicalNotesRepository {
       auditContext,
     );
 
-    this.logger.log(
-      `Clinical note ${id} signed by ${signature.signedBy}`,
-    );
+    this.logger.log(`Clinical note ${id} signed by ${signature.signedBy}`);
 
     return saved;
   }
@@ -588,9 +573,7 @@ export class ClinicalNotesRepository {
 
       await session.commitTransaction();
 
-      this.logger.log(
-        `Created amendment ${savedAmendment._id} for note ${originalId}`,
-      );
+      this.logger.log(`Created amendment ${savedAmendment._id} for note ${originalId}`);
 
       return { original, amendment: savedAmendment };
     } catch (error) {
@@ -710,9 +693,7 @@ export class ClinicalNotesRepository {
   ): Promise<ClinicalNoteDocument> {
     const note = await this.findByIdOrFail(noteId, auditContext);
 
-    const procedure = note.procedures.find(
-      (p) => p._id.toString() === procedureId,
-    );
+    const procedure = note.procedures.find((p) => p._id.toString() === procedureId);
     if (!procedure) {
       throw new NotFoundException(`Procedure ${procedureId} not found in note`);
     }
@@ -832,11 +813,7 @@ export class ClinicalNotesRepository {
   /**
    * Log access to a note (for HIPAA compliance)
    */
-  async logAccess(
-    noteId: string,
-    patientId: string,
-    auditContext: AuditContext,
-  ): Promise<void> {
+  async logAccess(noteId: string, patientId: string, auditContext: AuditContext): Promise<void> {
     await this.logHistory(
       {
         clinicalNoteId: noteId,
@@ -926,9 +903,7 @@ export class ClinicalNotesRepository {
   /**
    * Execute a function within a transaction
    */
-  async withTransaction<T>(
-    fn: (session: ClientSession) => Promise<T>,
-  ): Promise<T> {
+  async withTransaction<T>(fn: (session: ClientSession) => Promise<T>): Promise<T> {
     const session = await this.startSession();
     try {
       session.startTransaction();
@@ -964,10 +939,7 @@ export class ClinicalNotesRepository {
       version: note.version,
     };
 
-    return crypto
-      .createHash('sha256')
-      .update(JSON.stringify(contentToHash))
-      .digest('hex');
+    return crypto.createHash('sha256').update(JSON.stringify(contentToHash)).digest('hex');
   }
 
   /**

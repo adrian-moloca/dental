@@ -222,7 +222,7 @@ interface KPICardProps {
 function KPICard({ title, value, trend, icon, color, loading, onClick }: KPICardProps) {
   const trendPositive = trend !== undefined && trend >= 0;
   const trendIcon = trendPositive ? 'ti ti-trending-up' : 'ti ti-trending-down';
-  const trendColor = trendPositive ? 'text-success' : 'text-danger';
+  const _trendColor = trendPositive ? 'text-success' : 'text-danger';
 
   return (
     <div
@@ -328,31 +328,31 @@ export function DashboardPage() {
 
   // Fetch real data from APIs
   const {
-    data: patientsCount,
-    isLoading: patientsLoading,
-    isError: patientsError,
-    refetch: refetchPatients,
+    data: _patientsCount,
+    isLoading: _patientsLoading,
+    isError: _patientsError,
+    refetch: _refetchPatients,
   } = useTotalPatientsCount();
 
   const {
     data: appointmentsData,
     isLoading: appointmentsLoading,
-    isError: appointmentsError,
-    refetch: refetchAppointments,
+    isError: _appointmentsError,
+    refetch: _refetchAppointments,
   } = useTodaysAppointments();
 
   const {
-    data: balanceData,
-    isLoading: balanceLoading,
-    isError: balanceError,
-    refetch: refetchBalance,
+    data: _balanceData,
+    isLoading: _balanceLoading,
+    isError: _balanceError,
+    refetch: _refetchBalance,
   } = useOutstandingBalance();
 
   const {
-    data: inventoryData,
-    isLoading: inventoryLoading,
-    isError: inventoryError,
-    refetch: refetchInventory,
+    data: _inventoryData,
+    isLoading: _inventoryLoading,
+    isError: _inventoryError,
+    refetch: _refetchInventory,
   } = useLowStockItems();
 
   // Format currency

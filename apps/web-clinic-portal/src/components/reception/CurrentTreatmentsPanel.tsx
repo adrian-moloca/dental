@@ -4,7 +4,7 @@
  * Displays patients currently in treatment with completion capability.
  */
 
-import { format, differenceInMinutes } from 'date-fns';
+import { format } from 'date-fns';
 import { Card, CardHeader, CardBody, Button, Badge } from '../ui-new';
 import { useCompleteAppointment } from '../../hooks/useAppointments';
 import { useWaitTimer } from '../../hooks/useWaitTimer';

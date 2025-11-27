@@ -1,0 +1,283 @@
+/*
+  DentalOS Admin Portal - Main Stylesheet
+  Based on Preclinic Template Design System
+*/
+
+// Variables
+@forward "./style/scss/variables";
+
+// Utils
+@forward "./style/scss/utils/mixins";
+
+// Structure
+@forward "./style/scss/structure/header";
+@forward "./style/scss/structure/sidebar";
+@forward "./style/scss/structure/layout";
+@forward "./style/scss/structure/theme";
+
+// Components
+@forward "./style/scss/components/accordions";
+@forward "./style/scss/components/avatar";
+@forward "./style/scss/components/alert";
+@forward "./style/scss/components/badge";
+@forward "./style/scss/components/breadcrumb";
+@forward "./style/scss/components/buttons";
+@forward "./style/scss/components/bootstrap";
+@forward "./style/scss/components/background";
+@forward "./style/scss/components/card";
+@forward "./style/scss/components/dropdown";
+@forward "./style/scss/components/forms";
+@forward "./style/scss/components/modal";
+@forward "./style/scss/components/nav";
+@forward "./style/scss/components/pagination";
+@forward "./style/scss/components/reboot";
+@forward "./style/scss/components/popover";
+@forward "./style/scss/components/tables";
+@forward "./style/scss/components/tooltip";
+@forward "./style/scss/components/utilities";
+@forward "./style/scss/components/progress";
+
+// Pages
+@forward "./style/scss/pages/settings";
+@forward "./style/scss/pages/login";
+
+// Plugins
+@forward "./style/scss/plugins/datatable";
+@forward "./style/scss/plugins/apexcharts";
+
+// Admin Portal specific styles
+.admin-portal {
+  min-height: 100vh;
+  background-color: var(--light);
+}
+
+// Page wrapper
+.page-wrapper {
+  margin-left: var(--sidenav-width);
+  padding-top: var(--topbar-height);
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+
+  &.collapsed {
+    margin-left: var(--sidenav-width-sm);
+  }
+}
+
+// Page header
+.page-header {
+  margin-bottom: 1.5rem;
+
+  h3 {
+    color: var(--heading-color);
+    margin-bottom: 0.25rem;
+  }
+
+  .breadcrumb {
+    margin-bottom: 0;
+  }
+}
+
+// Content area
+.content {
+  padding: 1.5rem;
+}
+
+// Stats cards
+.stats-card {
+  border-radius: var(--border-radius-lg);
+  border: none;
+  box-shadow: var(--box-shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow);
+  }
+
+  .stats-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+
+    &.primary {
+      background-color: var(--primary-transparent);
+      color: var(--primary);
+    }
+
+    &.success {
+      background-color: var(--success-transparent);
+      color: var(--success);
+    }
+
+    &.warning {
+      background-color: var(--warning-transparent);
+      color: var(--warning);
+    }
+
+    &.danger {
+      background-color: var(--danger-transparent);
+      color: var(--danger);
+    }
+
+    &.info {
+      background-color: var(--info-transparent);
+      color: var(--info);
+    }
+
+    &.secondary {
+      background-color: var(--secondary-transparent);
+      color: var(--secondary);
+    }
+  }
+}
+
+// Data tables
+.data-table-wrapper {
+  background: var(--white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--box-shadow-sm);
+  overflow: hidden;
+
+  .table-header {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h5 {
+      margin-bottom: 0;
+      color: var(--heading-color);
+    }
+  }
+
+  .table-body {
+    padding: 0;
+  }
+}
+
+// Status badges
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  &.active {
+    background-color: var(--success-transparent);
+    color: var(--success);
+  }
+
+  &.inactive {
+    background-color: var(--gray-transparent);
+    color: var(--gray-600);
+  }
+
+  &.pending {
+    background-color: var(--warning-transparent);
+    color: var(--warning);
+  }
+
+  &.suspended {
+    background-color: var(--danger-transparent);
+    color: var(--danger);
+  }
+
+  &.trial {
+    background-color: var(--info-transparent);
+    color: var(--info);
+  }
+}
+
+// Action buttons
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  background: var(--white);
+  color: var(--gray-600);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--light);
+    color: var(--primary);
+    border-color: var(--primary);
+  }
+
+  &.danger:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+}
+
+// Empty state
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+
+  .empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--light);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+    color: var(--gray-400);
+  }
+
+  h5 {
+    color: var(--heading-color);
+    margin-bottom: 0.5rem;
+  }
+
+  p {
+    color: var(--body-color);
+    margin-bottom: 1.5rem;
+  }
+}
+
+// Search input
+.search-input {
+  position: relative;
+
+  .search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gray-400);
+  }
+
+  input {
+    padding-left: 2.75rem;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    background: var(--white);
+
+    &:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.1);
+    }
+  }
+}
+
+// Mobile responsive
+@media (max-width: 991.98px) {
+  .page-wrapper {
+    margin-left: 0;
+    padding-top: var(--topbar-height);
+  }
+}

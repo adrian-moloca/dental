@@ -50,9 +50,9 @@ export function StockConsumptionModal({
     isLoading,
     isSubmitting,
     totalCost,
-    hasStockWarnings,
+    hasStockWarnings: _hasStockWarnings,
     warnings,
-    summary,
+    summary: _summary,
     updateQuantity,
     removeItem,
     addItem,
@@ -91,7 +91,7 @@ export function StockConsumptionModal({
         onConfirm(result.totalCost);
         onClose();
       }
-    } catch (error) {
+    } catch (_error) {
       // Error handled by hook
     }
   }, [submitConsumption, onConfirm, onClose]);

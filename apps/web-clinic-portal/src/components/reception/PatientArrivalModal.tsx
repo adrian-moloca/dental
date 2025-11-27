@@ -19,7 +19,7 @@ type CheckInStep = 'search' | 'verify' | 'contacts' | 'consent' | 'complete';
 export function PatientArrivalModal({ open, onClose }: PatientArrivalModalProps) {
   const [step, setStep] = useState<CheckInStep>('search');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAppointment, setSelectedAppointment] = useState<string | null>(null);
+  const [_selectedAppointment, setSelectedAppointment] = useState<string | null>(null);
   const [contactInfo, setContactInfo] = useState({
     phone: '',
     email: '',

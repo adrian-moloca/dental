@@ -22,11 +22,7 @@ export {
 } from './anaf-api.service';
 
 // ANAF OAuth Service
-export {
-  AnafOAuthService,
-  StoredOAuthTokens,
-  TokenValidationResult,
-} from './anaf-oauth.service';
+export { AnafOAuthService, StoredOAuthTokens, TokenValidationResult } from './anaf-oauth.service';
 
 // Clinic Fiscal Service
 export { ClinicFiscalService } from './clinic-fiscal.service';

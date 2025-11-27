@@ -14,10 +14,8 @@ import {
   endOfWeek,
   addDays,
   isSameMonth,
-  isSameDay,
   isToday,
 } from 'date-fns';
-import { ro } from 'date-fns/locale';
 import { CalendarMonthEvent } from './CalendarEvent';
 import type { CalendarEvent } from './CalendarEvent';
 

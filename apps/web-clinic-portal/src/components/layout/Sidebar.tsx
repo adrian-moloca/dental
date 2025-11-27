@@ -114,7 +114,7 @@ interface SidebarMenuItemProps {
   level?: number;
 }
 
-function SidebarMenuItem({ item, isExpanded, onToggle, level = 0 }: SidebarMenuItemProps) {
+function SidebarMenuItem({ item, isExpanded, onToggle, level: _level = 0 }: SidebarMenuItemProps) {
   const location = useLocation();
   const { closeMobileSidebar } = useSidebar();
 
@@ -207,7 +207,7 @@ function SidebarMenuItem({ item, isExpanded, onToggle, level = 0 }: SidebarMenuI
 }
 
 export function Sidebar() {
-  const { isSidebarOpen, isMiniSidebar, closeMobileSidebar } = useSidebar();
+  const { isSidebarOpen, isMiniSidebar: _isMiniSidebar, closeMobileSidebar } = useSidebar();
   const location = useLocation();
 
   // Track which menu items are expanded

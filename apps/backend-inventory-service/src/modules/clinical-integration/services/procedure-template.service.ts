@@ -1,10 +1,7 @@
 import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import {
-  ProcedureTemplate,
-  ProcedureTemplateDocument,
-} from '../schemas/procedure-template.schema';
+import { ProcedureTemplate, ProcedureTemplateDocument } from '../schemas/procedure-template.schema';
 import { Product } from '../../products/schemas/product.schema';
 import {
   CreateProcedureTemplateDto,
@@ -238,7 +235,9 @@ export class ProcedureTemplateService {
     clinicId?: string,
     quantity: number = 1,
   ): Promise<ProcedureMaterialsResponseDto | null> {
-    this.logger.debug(`Getting materials for procedure ${procedureCode}, clinic: ${clinicId || 'N/A'}`);
+    this.logger.debug(
+      `Getting materials for procedure ${procedureCode}, clinic: ${clinicId || 'N/A'}`,
+    );
 
     // Try clinic-specific template first
     let template: ProcedureTemplateDocument | null = null;

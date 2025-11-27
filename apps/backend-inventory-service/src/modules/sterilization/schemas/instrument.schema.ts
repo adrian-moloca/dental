@@ -1,9 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import {
-  InstrumentStatus,
-  InstrumentType,
-} from '@dentalos/shared-domain';
+import { InstrumentStatus, InstrumentType } from '@dentalos/shared-domain';
 
 @Schema({ collection: 'instruments', timestamps: true })
 export class Instrument extends Document {

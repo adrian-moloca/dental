@@ -7,7 +7,4 @@
  */
 
 export { VerifyEmailDto, VerifyEmailResponseDto } from './verify-email.dto';
-export {
-  ResendVerificationDto,
-  ResendVerificationResponseDto,
-} from './resend-verification.dto';
+export { ResendVerificationDto, ResendVerificationResponseDto } from './resend-verification.dto';

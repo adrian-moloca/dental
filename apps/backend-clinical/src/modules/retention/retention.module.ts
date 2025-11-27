@@ -19,9 +19,7 @@ import { RetentionMetadata, RetentionMetadataSchema } from './retention.schema';
  */
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: RetentionMetadata.name, schema: RetentionMetadataSchema },
-    ]),
+    MongooseModule.forFeature([{ name: RetentionMetadata.name, schema: RetentionMetadataSchema }]),
     ScheduleModule.forRoot(),
   ],
   providers: [RetentionService],

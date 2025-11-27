@@ -23,7 +23,6 @@ import {
   Input,
   Textarea,
   Modal,
-  ConfirmModal,
   Breadcrumb,
   type BreadcrumbItem,
 } from '../components/ui-new';
@@ -208,7 +207,7 @@ interface MiniOdontogramProps {
   teethInPlan: Set<number>;
 }
 
-function MiniOdontogram({
+function _MiniOdontogram({
   teethData,
   selectedTooth,
   onToothClick,
@@ -1328,7 +1327,7 @@ export default function TreatmentPlanCreatePage() {
   const createPlanMutation = useCreateTreatmentPlan();
 
   // Calculate teeth in plan
-  const teethInPlan = useMemo(() => {
+  const _teethInPlan = useMemo(() => {
     const set = new Set<number>();
     phases.forEach((phase) => {
       phase.procedures.forEach((proc) => {
@@ -1466,7 +1465,7 @@ export default function TreatmentPlanCreatePage() {
     []
   );
 
-  const handleToothClick = useCallback((toothNumber: number) => {
+  const _handleToothClick = useCallback((toothNumber: number) => {
     setSelectedTooth((prev) => (prev === toothNumber ? null : toothNumber));
   }, []);
 

@@ -49,12 +49,12 @@ SEED_CLINICAL=true
 TEST_ORG_ID="00000000-0000-0000-0000-000000000001"
 TEST_CLINIC_ID="00000000-0000-0000-0000-000000000011"
 
-# Service URLs from .env.docker
+# Service URLs from .env.docker (HOST_*_PORT mappings)
 AUTH_URL="${AUTH_SERVICE_URL:-http://localhost:3301}"
-SUBSCRIPTION_URL="${SUBSCRIPTION_SERVICE_URL:-http://localhost:3311}"
-PATIENT_URL="${PATIENT_SERVICE_URL:-http://localhost:3304}"
+SUBSCRIPTION_URL="${SUBSCRIPTION_SERVICE_URL:-http://localhost:3309}"
+PATIENT_URL="${PATIENT_SERVICE_URL:-http://localhost:3303}"
 SCHEDULING_URL="${SCHEDULING_SERVICE_URL:-http://localhost:3302}"
-CLINICAL_URL="${CLINICAL_SERVICE_URL:-http://localhost:3305}"
+CLINICAL_URL="${CLINICAL_SERVICE_URL:-http://localhost:3304}"
 
 ################################################################################
 # Helper Functions

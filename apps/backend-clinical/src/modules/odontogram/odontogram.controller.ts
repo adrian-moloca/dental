@@ -68,7 +68,8 @@ export class OdontogramController {
   @RequirePermissions('clinical:read')
   @ApiOperation({
     summary: 'Get patient odontogram',
-    description: 'Retrieves the complete tooth chart for a patient. Creates a new odontogram with all permanent teeth if one does not exist.',
+    description:
+      'Retrieves the complete tooth chart for a patient. Creates a new odontogram with all permanent teeth if one does not exist.',
   })
   @ApiParam({
     name: 'patientId',
@@ -83,10 +84,7 @@ export class OdontogramController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
-  async getOdontogram(
-    @Param('patientId') patientId: string,
-    @GetCurrentUser() user: CurrentUser,
-  ) {
+  async getOdontogram(@Param('patientId') patientId: string, @GetCurrentUser() user: CurrentUser) {
     return this.odontogramService.getPatientOdontogram(
       patientId,
       {
@@ -108,7 +106,8 @@ export class OdontogramController {
   @RequirePermissions('clinical:write')
   @ApiOperation({
     summary: 'Update tooth status',
-    description: 'Updates tooth-level properties (mobility, furcation, presence, notes). Use the conditions endpoints to add/remove conditions.',
+    description:
+      'Updates tooth-level properties (mobility, furcation, presence, notes). Use the conditions endpoints to add/remove conditions.',
   })
   @ApiParam({
     name: 'patientId',
@@ -165,7 +164,8 @@ export class OdontogramController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Add condition to tooth',
-    description: 'Adds a new condition to a tooth. Supports surface-specific conditions (e.g., caries on MO surfaces). Emits ToothStatusUpdated event for downstream systems.',
+    description:
+      'Adds a new condition to a tooth. Supports surface-specific conditions (e.g., caries on MO surfaces). Emits ToothStatusUpdated event for downstream systems.',
   })
   @ApiParam({
     name: 'patientId',
@@ -239,7 +239,8 @@ export class OdontogramController {
   @RequirePermissions('clinical:write')
   @ApiOperation({
     summary: 'Remove condition from tooth',
-    description: 'Soft-deletes a condition from a tooth. Requires a reason for audit compliance. The condition is marked as deleted but retained for HIPAA compliance.',
+    description:
+      'Soft-deletes a condition from a tooth. Requires a reason for audit compliance. The condition is marked as deleted but retained for HIPAA compliance.',
   })
   @ApiParam({
     name: 'patientId',
@@ -302,7 +303,8 @@ export class OdontogramController {
   @RequirePermissions('clinical:read')
   @ApiOperation({
     summary: 'Get tooth change history',
-    description: 'Returns paginated audit trail of all changes to a specific tooth. Supports date range filtering for compliance queries.',
+    description:
+      'Returns paginated audit trail of all changes to a specific tooth. Supports date range filtering for compliance queries.',
   })
   @ApiParam({
     name: 'patientId',
@@ -354,7 +356,8 @@ export class OdontogramController {
   @RequirePermissions('clinical:write')
   @ApiOperation({
     summary: 'Bulk update teeth',
-    description: 'Updates multiple teeth in a single request. Each tooth update is validated and recorded separately. Useful for initial charting or comprehensive updates.',
+    description:
+      'Updates multiple teeth in a single request. Each tooth update is validated and recorded separately. Useful for initial charting or comprehensive updates.',
   })
   @ApiParam({
     name: 'patientId',
@@ -426,7 +429,8 @@ export class OdontogramController {
   @RequirePermissions('clinical:read')
   @ApiOperation({
     summary: 'Get single tooth details',
-    description: 'Returns detailed information about a specific tooth including all conditions (active and deleted).',
+    description:
+      'Returns detailed information about a specific tooth including all conditions (active and deleted).',
   })
   @ApiParam({
     name: 'patientId',

@@ -97,9 +97,7 @@ import { HealthcareVatService } from './services/healthcare-vat.service';
     // The OAuth service requires Redis for token storage
     // Import RedisModule from @nestjs-modules/ioredis in the root module
   ],
-  controllers: [
-    EFacturaController,
-  ],
+  controllers: [EFacturaController],
   providers: [
     // Core service
     EFacturaService,

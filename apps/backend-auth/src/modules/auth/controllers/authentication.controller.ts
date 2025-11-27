@@ -646,7 +646,11 @@ export class AuthenticationController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response
   ): Promise<AuthResponseDto> {
-    const authResponse = await this.authService.refresh(dto.refreshToken, dto.organizationId, request);
+    const authResponse = await this.authService.refresh(
+      dto.refreshToken,
+      dto.organizationId,
+      request
+    );
     // Set new CSRF token cookie on token refresh (prevents token fixation)
     this.setCsrfCookie(response, authResponse.csrfToken);
     return authResponse;

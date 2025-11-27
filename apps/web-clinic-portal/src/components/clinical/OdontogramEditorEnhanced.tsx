@@ -78,7 +78,7 @@ const conditions = [
 const surfaces = ['M', 'O', 'D', 'B', 'L']; // Mesial, Occlusal, Distal, Buccal, Lingual
 
 export function OdontogramEditorEnhanced({
-  patientId,
+  patientId: _patientId,
   data = [],
   treatmentHistory,
   onSave,
@@ -537,7 +537,7 @@ interface ToothProps {
 }
 
 function Tooth({
-  number,
+  number: _number,
   displayNumber,
   condition,
   selected,

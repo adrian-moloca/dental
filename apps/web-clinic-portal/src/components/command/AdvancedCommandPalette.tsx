@@ -214,7 +214,7 @@ export function AdvancedCommandPalette({ open, onClose }: AdvancedCommandPalette
                   <div className="px-4 py-2 text-xs font-semibold text-muted uppercase tracking-wider bg-surface-hover">
                     {category}
                   </div>
-                  {cmds.map((cmd, index) => {
+                  {cmds.map((cmd) => {
                     const globalIndex = filteredCommands.indexOf(cmd);
                     const isSelected = globalIndex === selectedIndex;
                     return (

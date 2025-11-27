@@ -8,16 +8,15 @@
  * - Step 4: Confirmation & Reminders
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { format, addMinutes, startOfDay, parseISO } from 'date-fns';
+import { format, addMinutes, parseISO } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { PatientSearchSelect } from './PatientSearchSelect';
 import { ProviderSelect } from './ProviderSelect';
 import { AppointmentTypeSelect } from './AppointmentTypeSelect';
 import { Button } from '../ui-new/Button';
 import { Icon } from '../ui/Icon';
-import { Badge } from '../ui-new/Badge';
 import type { PatientDto } from '../../types/patient.types';
 import type { CreateAppointmentDto } from '../../types/appointment.types';
 import { patientsClient } from '../../api/patientsClient';
@@ -81,7 +80,6 @@ export function AppointmentBookingWizard({
 
   const today = new Date();
   const defaultDate = format(today, 'yyyy-MM-dd');
-  const defaultTime = format(today, 'HH:mm');
 
   const [formData, setFormData] = useState<WizardFormData>({
     patientId: initialPatientId || '',

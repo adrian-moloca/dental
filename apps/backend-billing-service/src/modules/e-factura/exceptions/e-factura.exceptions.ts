@@ -268,13 +268,26 @@ export function mapAnafErrorToException(
   uploadIndex?: string,
 ): EFacturaException {
   const errorMappings: Record<string, () => EFacturaException> = {
-    XML_INVALID: () => new XmlValidationException(errorMessage, [{ code: errorCode, message: errorMessage }]),
-    CAMP_LIPSA: () => new XmlValidationException(errorMessage, [{ code: errorCode, message: errorMessage }]),
-    CUI_INVALID: () => new XmlValidationException('Invalid CUI format', [{ code: errorCode, message: errorMessage }]),
+    XML_INVALID: () =>
+      new XmlValidationException(errorMessage, [{ code: errorCode, message: errorMessage }]),
+    CAMP_LIPSA: () =>
+      new XmlValidationException(errorMessage, [{ code: errorCode, message: errorMessage }]),
+    CUI_INVALID: () =>
+      new XmlValidationException('Invalid CUI format', [
+        { code: errorCode, message: errorMessage },
+      ]),
     AUTH_EROARE: () => new OAuthException(errorMessage),
-    LIMITA_DEPASITA: () => new AnafApiException('Rate limit exceeded. Please wait before retrying.', errorCode, null, HttpStatus.TOO_MANY_REQUESTS),
-    EROARE_SERVER: () => new AnafApiException('ANAF server error', errorCode, null, HttpStatus.BAD_GATEWAY),
-    FACTURA_DUPLICAT: () => new DuplicateSubmissionException('unknown', uploadIndex || 'unknown', 'DUPLICATE'),
+    LIMITA_DEPASITA: () =>
+      new AnafApiException(
+        'Rate limit exceeded. Please wait before retrying.',
+        errorCode,
+        null,
+        HttpStatus.TOO_MANY_REQUESTS,
+      ),
+    EROARE_SERVER: () =>
+      new AnafApiException('ANAF server error', errorCode, null, HttpStatus.BAD_GATEWAY),
+    FACTURA_DUPLICAT: () =>
+      new DuplicateSubmissionException('unknown', uploadIndex || 'unknown', 'DUPLICATE'),
   };
 
   const exceptionFactory = errorMappings[errorCode];

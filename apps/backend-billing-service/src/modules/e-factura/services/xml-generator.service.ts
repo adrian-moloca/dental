@@ -14,10 +14,7 @@ import {
   getPaymentMeansCode,
 } from '../builders/ubl-invoice.builder';
 import { EFacturaConfigType } from '../config/e-factura.config';
-import {
-  EFacturaSellerInfo,
-  EFacturaBuyerInfo,
-} from '../interfaces/anaf-config.interface';
+import { EFacturaSellerInfo, EFacturaBuyerInfo } from '../interfaces/anaf-config.interface';
 import { Invoice, TaxBreakdownEntry } from '../../invoices/entities/invoice.entity';
 
 /**
@@ -123,7 +120,10 @@ export class XmlGeneratorService {
       .setInvoiceNumber(invoice.invoiceNumber)
       .setIssueDate(invoice.issueDate)
       .setInvoiceTypeCode(DOCUMENT_TYPE_CODES.COMMERCIAL_INVOICE)
-      .setCurrency((invoice.currency as typeof CURRENCY_CODES[keyof typeof CURRENCY_CODES]) || CURRENCY_CODES.RON);
+      .setCurrency(
+        (invoice.currency as (typeof CURRENCY_CODES)[keyof typeof CURRENCY_CODES]) ||
+          CURRENCY_CODES.RON,
+      );
 
     // Set due date if available
     if (invoice.dueDate) {
@@ -207,7 +207,7 @@ export class XmlGeneratorService {
   generateCreditNoteXml(creditNote: CreditNoteData): string {
     this.logger.debug(
       `Generating Credit Note XML for ${creditNote.creditNoteNumber} ` +
-      `referencing invoice ${creditNote.originalInvoiceNumber}`,
+        `referencing invoice ${creditNote.originalInvoiceNumber}`,
     );
 
     const config = this.getConfig();
@@ -219,8 +219,8 @@ export class XmlGeneratorService {
       .setIssueDate(creditNote.issueDate)
       .setInvoiceTypeCode(DOCUMENT_TYPE_CODES.CREDIT_NOTE)
       .setCurrency(
-        (creditNote.currency as typeof CURRENCY_CODES[keyof typeof CURRENCY_CODES]) ||
-        CURRENCY_CODES.RON,
+        (creditNote.currency as (typeof CURRENCY_CODES)[keyof typeof CURRENCY_CODES]) ||
+          CURRENCY_CODES.RON,
       )
       .setBillingReference(creditNote.originalInvoiceNumber);
 
@@ -390,7 +390,6 @@ export class XmlGeneratorService {
           message: 'Contact email is recommended for communication',
         });
       }
-
     } catch (error) {
       errors.push({
         code: 'VALIDATION_ERROR',
@@ -544,16 +543,14 @@ export class XmlGeneratorService {
    * Map internal line item to UBL invoice line
    */
   private mapLineToUblLine(item: InvoiceLineItem, _currency: string): UblInvoiceLine {
-    const unitCode = (item.unitCode as keyof typeof UNIT_OF_MEASURE_CODES) ||
-      UNIT_OF_MEASURE_CODES.PIECE;
+    const unitCode =
+      (item.unitCode as keyof typeof UNIT_OF_MEASURE_CODES) || UNIT_OF_MEASURE_CODES.PIECE;
     const taxPercent = this.round(item.taxRate * 100);
     const taxCategoryCode = item.taxCategory
       ? (item.taxCategory as ReturnType<typeof getTaxCategoryForRate>)
       : getTaxCategoryForRate(item.taxRate);
 
-    const lineAmount = this.round(
-      item.quantity * item.unitPrice - (item.discountAmount || 0),
-    );
+    const lineAmount = this.round(item.quantity * item.unitPrice - (item.discountAmount || 0));
 
     const line: UblInvoiceLine = {
       id: item.id,
@@ -571,9 +568,7 @@ export class XmlGeneratorService {
 
     // Add tooth number as item property if present
     if (item.toothNumber) {
-      line.itemProperties = [
-        { name: 'ToothNumber', value: item.toothNumber },
-      ];
+      line.itemProperties = [{ name: 'ToothNumber', value: item.toothNumber }];
     }
 
     // Add line-level discount if present

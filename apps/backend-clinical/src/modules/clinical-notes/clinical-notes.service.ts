@@ -83,10 +83,7 @@ export class ClinicalNotesService {
    *
    * Logs access for HIPAA compliance
    */
-  async getById(
-    noteId: string,
-    context: AuditContext,
-  ): Promise<ClinicalNoteDocument> {
+  async getById(noteId: string, context: AuditContext): Promise<ClinicalNoteDocument> {
     const note = await this.repository.findByIdOrFail(noteId, context);
 
     // Log access for HIPAA compliance
@@ -119,10 +116,7 @@ export class ClinicalNotesService {
   /**
    * Get version history for a note (amendment chain)
    */
-  async getVersionHistory(
-    noteId: string,
-    context: TenantContext,
-  ): Promise<ClinicalNoteDocument[]> {
+  async getVersionHistory(noteId: string, context: TenantContext): Promise<ClinicalNoteDocument[]> {
     return this.repository.getVersionHistory(noteId, context);
   }
 
@@ -159,10 +153,7 @@ export class ClinicalNotesService {
   /**
    * Find stale draft notes (compliance monitoring)
    */
-  async findStaleDrafts(
-    hours: number,
-    context: TenantContext,
-  ): Promise<ClinicalNoteDocument[]> {
+  async findStaleDrafts(hours: number, context: TenantContext): Promise<ClinicalNoteDocument[]> {
     return this.repository.findStaleDrafts(hours, context);
   }
 
@@ -240,9 +231,7 @@ export class ClinicalNotesService {
 
     this.eventEmitter.emit(CLINICAL_NOTE_EVENTS.CREATED, event);
 
-    this.logger.log(
-      `Created clinical note ${note._id} for patient ${patientId} by ${authorName}`,
-    );
+    this.logger.log(`Created clinical note ${note._id} for patient ${patientId} by ${authorName}`);
 
     return note;
   }
@@ -274,9 +263,7 @@ export class ClinicalNotesService {
 
     // Validate author can edit (only author can edit their notes)
     if (note.authorId !== auditContext.userId) {
-      throw new ForbiddenException(
-        'You can only edit your own clinical notes.',
-      );
+      throw new ForbiddenException('You can only edit your own clinical notes.');
     }
 
     // Validate diagnoses codes if being updated
@@ -385,9 +372,7 @@ export class ClinicalNotesService {
 
     this.eventEmitter.emit(CLINICAL_NOTE_EVENTS.SIGNED, event);
 
-    this.logger.log(
-      `Clinical note ${noteId} signed by ${dto.signerName}`,
-    );
+    this.logger.log(`Clinical note ${noteId} signed by ${dto.signerName}`);
 
     return signedNote;
   }
@@ -423,9 +408,7 @@ export class ClinicalNotesService {
 
     // Validate amendment reason is provided
     if (!dto.amendmentReason || dto.amendmentReason.trim().length === 0) {
-      throw new BadRequestException(
-        'Amendment reason is required for clinical note amendments.',
-      );
+      throw new BadRequestException('Amendment reason is required for clinical note amendments.');
     }
 
     // Validate any new diagnoses
@@ -510,8 +493,7 @@ export class ClinicalNotesService {
     // Can only add attachments to draft notes
     if (note.status !== 'draft') {
       throw new ForbiddenException(
-        `Cannot add attachments to a ${note.status} note. ` +
-          `Only draft notes can be modified.`,
+        `Cannot add attachments to a ${note.status} note. ` + `Only draft notes can be modified.`,
       );
     }
 
@@ -549,9 +531,7 @@ export class ClinicalNotesService {
 
     // Can only add diagnoses to draft notes
     if (note.status !== 'draft') {
-      throw new ForbiddenException(
-        `Cannot add diagnoses to a ${note.status} note.`,
-      );
+      throw new ForbiddenException(`Cannot add diagnoses to a ${note.status} note.`);
     }
 
     this.validateEditWindow(note);
@@ -603,9 +583,7 @@ export class ClinicalNotesService {
 
     // Can only add procedures to draft notes
     if (note.status !== 'draft') {
-      throw new ForbiddenException(
-        `Cannot add procedures to a ${note.status} note.`,
-      );
+      throw new ForbiddenException(`Cannot add procedures to a ${note.status} note.`);
     }
 
     this.validateEditWindow(note);
@@ -630,9 +608,7 @@ export class ClinicalNotesService {
     const note = await this.repository.findByIdOrFail(noteId, auditContext);
 
     // Find the procedure
-    const procedure = note.procedures.find(
-      (p) => p._id.toString() === procedureId,
-    );
+    const procedure = note.procedures.find((p) => p._id.toString() === procedureId);
     if (!procedure) {
       throw new BadRequestException(`Procedure ${procedureId} not found in note`);
     }
@@ -654,9 +630,7 @@ export class ClinicalNotesService {
     );
 
     // Find the updated procedure
-    const completedProcedure = updatedNote.procedures.find(
-      (p) => p._id.toString() === procedureId,
-    );
+    const completedProcedure = updatedNote.procedures.find((p) => p._id.toString() === procedureId);
 
     // Emit procedure completed event
     const event = createClinicalNoteProcedureCompletedEvent(
@@ -685,9 +659,7 @@ export class ClinicalNotesService {
 
     this.eventEmitter.emit(CLINICAL_NOTE_EVENTS.PROCEDURE_COMPLETED, event);
 
-    this.logger.log(
-      `Procedure ${procedure.cdtCode} completed in note ${noteId}`,
-    );
+    this.logger.log(`Procedure ${procedure.cdtCode} completed in note ${noteId}`);
 
     return updatedNote;
   }
@@ -733,9 +705,7 @@ export class ClinicalNotesService {
     auditContext: AuditContext,
   ): Promise<ClinicalNoteDocument> {
     if (!reason || reason.trim().length === 0) {
-      throw new BadRequestException(
-        'Deletion reason is required for clinical note deletion.',
-      );
+      throw new BadRequestException('Deletion reason is required for clinical note deletion.');
     }
 
     const note = await this.repository.findByIdOrFail(noteId, auditContext);

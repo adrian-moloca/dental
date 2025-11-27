@@ -139,7 +139,9 @@ export class CreatePersonInfoDto {
   /**
    * @deprecated Use cnp instead for Romanian patients
    */
-  @ApiPropertyOptional({ description: 'US Social Security Number (deprecated for Romanian patients)' })
+  @ApiPropertyOptional({
+    description: 'US Social Security Number (deprecated for Romanian patients)',
+  })
   @IsString()
   @IsOptional()
   @Matches(/^\d{3}-\d{2}-\d{4}$/, { message: 'SSN must be in format XXX-XX-XXXX' })

@@ -93,9 +93,7 @@ export class AuthService {
     // Generate email verification token and emit event
     try {
       await this.emailVerificationService.generateVerificationToken(user);
-      this.logger.log(
-        `Email verification token generated for new user ${user.id} (${user.email})`
-      );
+      this.logger.log(`Email verification token generated for new user ${user.id} (${user.email})`);
     } catch (error) {
       // Non-critical: Log error but don't fail registration
       // User can request resend later

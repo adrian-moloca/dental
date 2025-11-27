@@ -8,7 +8,7 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar } from './index';
 import type { CalendarEvent, Resource } from './index';
-import { addDays, addHours, setHours, setMinutes } from 'date-fns';
+import { addDays, setHours, setMinutes } from 'date-fns';
 
 export const CalendarDemo: React.FC = () => {
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);

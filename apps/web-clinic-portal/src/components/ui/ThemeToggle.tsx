@@ -6,7 +6,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import clsx from 'clsx';
 
 export function ThemeToggle() {
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, resolvedTheme: _resolvedTheme, setTheme } = useTheme();
 
   const themes = [
     { value: 'light' as const, icon: '☀️', label: 'Light' },

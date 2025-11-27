@@ -1,24 +1,12 @@
-import {
-  Injectable,
-  Logger,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import {
-  SterilizationCycleStatus,
-  InstrumentStatus,
-} from '@dentalos/shared-domain';
+import { SterilizationCycleStatus, InstrumentStatus } from '@dentalos/shared-domain';
 
 import { SterilizationCycle } from '../schemas/sterilization-cycle.schema';
 import { Instrument } from '../schemas/instrument.schema';
-import {
-  CreateSterilizationCycleDto,
-  CompleteCycleDto,
-  CreateInstrumentDto,
-} from '../dto';
+import { CreateSterilizationCycleDto, CompleteCycleDto, CreateInstrumentDto } from '../dto';
 
 export interface TenantContext {
   tenantId: string;
@@ -97,16 +85,11 @@ export class SterilizationService {
     return saved;
   }
 
-  async startCycle(
-    cycleId: string,
-    context: TenantContext,
-  ): Promise<SterilizationCycle> {
+  async startCycle(cycleId: string, context: TenantContext): Promise<SterilizationCycle> {
     const cycle = await this.getCycleById(cycleId, context);
 
     if (cycle.status !== SterilizationCycleStatus.PENDING) {
-      throw new BadRequestException(
-        `Cannot start cycle with status ${cycle.status}`,
-      );
+      throw new BadRequestException(`Cannot start cycle with status ${cycle.status}`);
     }
 
     cycle.status = SterilizationCycleStatus.RUNNING;
@@ -135,28 +118,18 @@ export class SterilizationService {
     const cycle = await this.getCycleById(cycleId, context);
 
     if (cycle.status !== SterilizationCycleStatus.RUNNING) {
-      throw new BadRequestException(
-        `Cannot complete cycle with status ${cycle.status}`,
-      );
+      throw new BadRequestException(`Cannot complete cycle with status ${cycle.status}`);
     }
 
     if (!dto.passed && !dto.failureReason) {
-      throw new BadRequestException(
-        'Failure reason is required when cycle does not pass',
-      );
+      throw new BadRequestException('Failure reason is required when cycle does not pass');
     }
 
-    cycle.status = dto.passed
-      ? SterilizationCycleStatus.PASSED
-      : SterilizationCycleStatus.FAILED;
+    cycle.status = dto.passed ? SterilizationCycleStatus.PASSED : SterilizationCycleStatus.FAILED;
     cycle.completedAt = new Date();
     cycle.biologicalIndicatorResult = dto.biologicalIndicatorResult;
-    cycle.biologicalIndicatorTestedAt = dto.biologicalIndicatorResult
-      ? new Date()
-      : undefined;
-    cycle.biologicalIndicatorTestedBy = dto.biologicalIndicatorResult
-      ? context.userId
-      : undefined;
+    cycle.biologicalIndicatorTestedAt = dto.biologicalIndicatorResult ? new Date() : undefined;
+    cycle.biologicalIndicatorTestedBy = dto.biologicalIndicatorResult ? context.userId : undefined;
     cycle.failureReason = dto.failureReason;
     cycle.notes = dto.notes || cycle.notes;
     cycle.updatedBy = context.userId;
@@ -195,16 +168,13 @@ export class SterilizationService {
     return saved;
   }
 
-  async cancelCycle(
-    cycleId: string,
-    context: TenantContext,
-  ): Promise<SterilizationCycle> {
+  async cancelCycle(cycleId: string, context: TenantContext): Promise<SterilizationCycle> {
     const cycle = await this.getCycleById(cycleId, context);
 
-    if (![SterilizationCycleStatus.PENDING, SterilizationCycleStatus.RUNNING].includes(cycle.status)) {
-      throw new BadRequestException(
-        `Cannot cancel cycle with status ${cycle.status}`,
-      );
+    if (
+      ![SterilizationCycleStatus.PENDING, SterilizationCycleStatus.RUNNING].includes(cycle.status)
+    ) {
+      throw new BadRequestException(`Cannot cancel cycle with status ${cycle.status}`);
     }
 
     cycle.status = SterilizationCycleStatus.CANCELLED;
@@ -229,10 +199,7 @@ export class SterilizationService {
     return saved;
   }
 
-  async getCycleById(
-    cycleId: string,
-    context: TenantContext,
-  ): Promise<SterilizationCycle> {
+  async getCycleById(cycleId: string, context: TenantContext): Promise<SterilizationCycle> {
     const cycle = await this.cycleModel.findOne({
       _id: new Types.ObjectId(cycleId),
       tenantId: context.tenantId,
@@ -277,10 +244,7 @@ export class SterilizationService {
 
   // ==================== Instrument Methods ====================
 
-  async createInstrument(
-    dto: CreateInstrumentDto,
-    context: TenantContext,
-  ): Promise<Instrument> {
+  async createInstrument(dto: CreateInstrumentDto, context: TenantContext): Promise<Instrument> {
     const instrument = new this.instrumentModel({
       ...dto,
       status: InstrumentStatus.ACTIVE,
@@ -300,10 +264,7 @@ export class SterilizationService {
     return saved;
   }
 
-  async getInstrumentById(
-    instrumentId: string,
-    context: TenantContext,
-  ): Promise<Instrument> {
+  async getInstrumentById(instrumentId: string, context: TenantContext): Promise<Instrument> {
     const instrument = await this.instrumentModel.findOne({
       _id: new Types.ObjectId(instrumentId),
       tenantId: context.tenantId,
@@ -342,10 +303,7 @@ export class SterilizationService {
     // Find instruments that need sterilization (not sterilized in last 24 hours)
     if (options.needsSterilization) {
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      query.$or = [
-        { lastSterilizedAt: { $lt: oneDayAgo } },
-        { lastSterilizedAt: null },
-      ];
+      query.$or = [{ lastSterilizedAt: { $lt: oneDayAgo } }, { lastSterilizedAt: null }];
       query.status = InstrumentStatus.ACTIVE;
     }
 
@@ -542,11 +500,7 @@ export class SterilizationService {
 
     // Auto-retire instruments that have reached max cycles
     for (const instrumentId of instrumentsToRetire) {
-      await this.retireInstrument(
-        instrumentId,
-        'Maximum sterilization cycles reached',
-        context,
-      );
+      await this.retireInstrument(instrumentId, 'Maximum sterilization cycles reached', context);
     }
   }
 }

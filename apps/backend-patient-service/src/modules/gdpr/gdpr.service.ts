@@ -623,10 +623,7 @@ export class GdprService {
     // Execute based on request type
     if (request.requestType === 'access' || request.requestType === 'portability') {
       // Generate data package
-      const dataPackage = await this.generateDataPackage(
-        request.patientId as UUID,
-        tenantId,
-      );
+      const dataPackage = await this.generateDataPackage(request.patientId as UUID, tenantId);
 
       // TODO: In production, upload to S3 and get URL
       request.dataPackageUrl = 'https://example.com/gdpr-exports/placeholder.json';
@@ -640,12 +637,7 @@ export class GdprService {
       await request.save();
     } else if (request.requestType === 'erasure') {
       // Process anonymization
-      await this.processErasure(
-        request.patientId as UUID,
-        tenantId,
-        tenantId,
-        processedBy,
-      );
+      await this.processErasure(request.patientId as UUID, tenantId, tenantId, processedBy);
 
       // Fields retained for legal compliance
       const retainedDataFields = [
@@ -664,12 +656,7 @@ export class GdprService {
       request.status = 'completed';
       request.completedAt = new Date();
       request.erasureDetails = {
-        anonymizedFields: [
-          'person.firstName',
-          'person.lastName',
-          'contacts',
-          'demographics',
-        ],
+        anonymizedFields: ['person.firstName', 'person.lastName', 'contacts', 'demographics'],
         retentionReason: 'Romanian law requires 10 year clinical data retention',
       };
       request.retainedData = retainedDataFields; // Array of field names retained for legal compliance
@@ -713,14 +700,8 @@ export class GdprService {
    * @param tenantId - Tenant ID for isolation
    * @returns List of GDPR requests
    */
-  async getPatientRequests(
-    patientId: UUID,
-    tenantId: string,
-  ): Promise<GdprRequestDocument[]> {
-    return this.gdprRequestModel
-      .find({ patientId, tenantId })
-      .sort({ requestedAt: -1 })
-      .exec();
+  async getPatientRequests(patientId: UUID, tenantId: string): Promise<GdprRequestDocument[]> {
+    return this.gdprRequestModel.find({ patientId, tenantId }).sort({ requestedAt: -1 }).exec();
   }
 
   /**

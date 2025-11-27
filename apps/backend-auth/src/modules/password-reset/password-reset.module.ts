@@ -49,11 +49,7 @@ import { SessionsModule } from '../sessions/sessions.module';
 
   controllers: [PasswordResetController],
 
-  providers: [
-    PasswordResetService,
-    PasswordHistoryService,
-    PasswordHistoryRepository,
-  ],
+  providers: [PasswordResetService, PasswordHistoryService, PasswordHistoryRepository],
 
   // Export services for potential use in other modules (e.g., admin panel, auth module)
   exports: [PasswordResetService, PasswordHistoryService],

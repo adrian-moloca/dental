@@ -59,9 +59,7 @@ export class ReminderService {
   // In-memory configuration cache (should be fetched from enterprise-service in production)
   private clinicConfigs: Map<string, ReminderConfigDto> = new Map();
 
-  constructor(
-    private readonly eventEmitter: EventEmitter2,
-  ) {
+  constructor(private readonly eventEmitter: EventEmitter2) {
     this.logger.log('ReminderService initialized (stub implementation)');
   }
 
@@ -142,9 +140,7 @@ export class ReminderService {
       reminderTimes.push(secondaryTime);
     }
 
-    this.logger.log(
-      `Scheduled ${reminderTimes.length} reminders for appointment ${appointmentId}`,
-    );
+    this.logger.log(`Scheduled ${reminderTimes.length} reminders for appointment ${appointmentId}`);
 
     // In production, persist to a scheduled jobs table or use Bull queue
     this.eventEmitter.emit('reminder.scheduled', {
@@ -213,10 +209,7 @@ export class ReminderService {
    * @param hours - Number of hours to look ahead
    * @param clinicId - Optional clinic filter
    */
-  async getPendingReminders(
-    hours: number = 24,
-    _clinicId?: string,
-  ): Promise<PendingReminder[]> {
+  async getPendingReminders(hours: number = 24, _clinicId?: string): Promise<PendingReminder[]> {
     this.logger.debug(`Getting pending reminders for next ${hours} hours`);
 
     // Stub: In production, query the scheduled jobs table
@@ -291,9 +284,7 @@ export class ReminderService {
   ): Promise<ReminderResult> {
     // Stub implementation - would integrate with actual notification services
 
-    this.logger.log(
-      `[STUB] Sending ${channel} reminder for appointment ${appointmentId}`,
-    );
+    this.logger.log(`[STUB] Sending ${channel} reminder for appointment ${appointmentId}`);
 
     switch (channel) {
       case ReminderChannel.SMS:
@@ -319,10 +310,7 @@ export class ReminderService {
 
   // ==================== Stub Methods (Replace with actual integrations) ====================
 
-  private async stubSendSms(
-    appointmentId: string,
-    _message?: string,
-  ): Promise<ReminderResult> {
+  private async stubSendSms(appointmentId: string, _message?: string): Promise<ReminderResult> {
     // TODO: Integrate with SMS provider
     // For Romanian market: Netopia SMS, Twilio, MessageBird
     this.logger.debug(`[STUB] SMS would be sent for ${appointmentId}`);
@@ -335,10 +323,7 @@ export class ReminderService {
     };
   }
 
-  private async stubSendEmail(
-    appointmentId: string,
-    _message?: string,
-  ): Promise<ReminderResult> {
+  private async stubSendEmail(appointmentId: string, _message?: string): Promise<ReminderResult> {
     // TODO: Integrate with email provider
     // Options: SendGrid, AWS SES, SMTP
     this.logger.debug(`[STUB] Email would be sent for ${appointmentId}`);
@@ -366,10 +351,7 @@ export class ReminderService {
     };
   }
 
-  private async stubSendPush(
-    appointmentId: string,
-    _message?: string,
-  ): Promise<ReminderResult> {
+  private async stubSendPush(appointmentId: string, _message?: string): Promise<ReminderResult> {
     // TODO: Integrate with FCM for mobile push notifications
     this.logger.debug(`[STUB] Push notification would be sent for ${appointmentId}`);
 
@@ -387,15 +369,19 @@ export class ReminderService {
    * Get default Romanian message template
    */
   getDefaultRomanianTemplate(): string {
-    return `Bună ziua! Vă reamintim că aveți programare la {{clinicName}} pe data de {{date}} la ora {{time}}. ` +
-      `Pentru confirmare sau reprogramare, vă rugăm să ne contactați la {{phone}} sau accesați {{link}}.`;
+    return (
+      `Bună ziua! Vă reamintim că aveți programare la {{clinicName}} pe data de {{date}} la ora {{time}}. ` +
+      `Pentru confirmare sau reprogramare, vă rugăm să ne contactați la {{phone}} sau accesați {{link}}.`
+    );
   }
 
   /**
    * Get default English message template
    */
   getDefaultEnglishTemplate(): string {
-    return `Hello! This is a reminder for your appointment at {{clinicName}} on {{date}} at {{time}}. ` +
-      `To confirm or reschedule, please contact us at {{phone}} or visit {{link}}.`;
+    return (
+      `Hello! This is a reminder for your appointment at {{clinicName}} on {{date}} at {{time}}. ` +
+      `To confirm or reschedule, please contact us at {{phone}} or visit {{link}}.`
+    );
   }
 }

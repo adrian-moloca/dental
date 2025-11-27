@@ -86,7 +86,10 @@ export class EmailVerificationController {
           summary: 'Invalid token format',
           value: {
             statusCode: 400,
-            message: ['Token must be exactly 64 characters', 'Token must be 64 hexadecimal characters'],
+            message: [
+              'Token must be exactly 64 characters',
+              'Token must be 64 hexadecimal characters',
+            ],
             error: 'Bad Request',
           },
         },

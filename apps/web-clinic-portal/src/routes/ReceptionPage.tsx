@@ -26,17 +26,17 @@ import toast from 'react-hot-toast';
 export default function ReceptionPage() {
   const navigate = useNavigate();
   const [showArrivalModal, setShowArrivalModal] = useState(false);
-  const [modalType, setModalType] = useState<'normal' | 'walkin' | 'emergency'>('normal');
+  const [_modalType, _setModalType] = useState<'normal' | 'walkin' | 'emergency'>('normal');
 
   const { waiting, upcoming, inProgress, stats, isLoading, error, refetch } = useReceptionQueue();
 
   const handleWalkIn = () => {
-    setModalType('walkin');
+    _setModalType('walkin');
     setShowArrivalModal(true);
   };
 
   const handleEmergency = () => {
-    setModalType('emergency');
+    _setModalType('emergency');
     toast('Programare de urgenta va fi prioritizata!', {
       icon: '🚨',
       duration: 3000,

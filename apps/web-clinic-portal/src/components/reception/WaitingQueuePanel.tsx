@@ -160,7 +160,7 @@ function WaitingPatientCard({ appointment }: { appointment: AppointmentDto }) {
 }
 
 export function WaitingQueuePanel({ waiting }: WaitingQueuePanelProps) {
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [_draggedIndex, _setDraggedIndex] = useState<number | null>(null);
 
   // Note: Full drag-and-drop would require state management for queue order
   // This is a simplified version showing the UI structure
@@ -191,7 +191,7 @@ export function WaitingQueuePanel({ waiting }: WaitingQueuePanelProps) {
           </div>
         ) : (
           <div className="queue-list">
-            {waiting.map((apt, index) => (
+            {waiting.map((apt, _index) => (
               <WaitingPatientCard key={apt.id} appointment={apt} />
             ))}
           </div>

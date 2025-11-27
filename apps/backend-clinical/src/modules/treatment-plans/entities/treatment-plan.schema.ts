@@ -845,10 +845,7 @@ TreatmentPlanSchema.index(
 );
 
 // Soft delete filter
-TreatmentPlanSchema.index(
-  { tenantId: 1, deletedAt: 1 },
-  { name: 'soft_delete_idx', sparse: true },
-);
+TreatmentPlanSchema.index({ tenantId: 1, deletedAt: 1 }, { name: 'soft_delete_idx', sparse: true });
 
 // ============================================================================
 // HISTORY SCHEMA (AUDIT TRAIL)

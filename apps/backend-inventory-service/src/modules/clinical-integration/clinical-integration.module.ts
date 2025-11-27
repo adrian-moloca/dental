@@ -17,9 +17,7 @@ import { ProductsModule } from '../products/products.module';
  */
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: ProcedureTemplate.name, schema: ProcedureTemplateSchema },
-    ]),
+    MongooseModule.forFeature([{ name: ProcedureTemplate.name, schema: ProcedureTemplateSchema }]),
     StockModule,
     ProductsModule,
   ],

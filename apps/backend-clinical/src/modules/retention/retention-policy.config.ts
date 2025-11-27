@@ -60,10 +60,10 @@ export type RecordType =
   | 'lab_result';
 
 export type RetentionExpiryAction =
-  | 'archive'        // Move to cold storage
-  | 'anonymize'      // Remove PII, keep for statistics
+  | 'archive' // Move to cold storage
+  | 'anonymize' // Remove PII, keep for statistics
   | 'flag_for_review' // Manual review before deletion
-  | 'auto_delete';   // Automatic deletion (not recommended for medical)
+  | 'auto_delete'; // Automatic deletion (not recommended for medical)
 
 /**
  * Romanian medical records retention policy
@@ -118,8 +118,10 @@ export const RETENTION_POLICIES_BY_COUNTRY: Record<string, RetentionPolicyConfig
  * Get retention policy for a country
  */
 export function getRetentionPolicy(countryCode: string): RetentionPolicyConfig {
-  return RETENTION_POLICIES_BY_COUNTRY[countryCode.toUpperCase()]
-    || RETENTION_POLICIES_BY_COUNTRY.DEFAULT;
+  return (
+    RETENTION_POLICIES_BY_COUNTRY[countryCode.toUpperCase()] ||
+    RETENTION_POLICIES_BY_COUNTRY.DEFAULT
+  );
 }
 
 /**

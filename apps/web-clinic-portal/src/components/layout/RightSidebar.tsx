@@ -59,7 +59,7 @@ export function RightSidebar({ title = 'Details', children }: RightSidebarProps)
 export function RightSidebarSection({
   title,
   children,
-  collapsible = false,
+  collapsible: _collapsible = false,
 }: {
   title: string;
   children: ReactNode;

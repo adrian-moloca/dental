@@ -337,10 +337,10 @@ export class AppointmentsService {
     const appointment = await this.repository.findByIdOrFail(id, tenantId);
 
     if (appointment.status !== AppointmentStatus.SCHEDULED) {
-      throw new ValidationError(
-        `Cannot confirm appointment with status: ${appointment.status}`,
-        { field: 'status', value: appointment.status },
-      );
+      throw new ValidationError(`Cannot confirm appointment with status: ${appointment.status}`, {
+        field: 'status',
+        value: appointment.status,
+      });
     }
 
     const updatedAppointment = await this.repository.update(id, tenantId, {
@@ -383,10 +383,10 @@ export class AppointmentsService {
       appointment.status !== AppointmentStatus.SCHEDULED &&
       appointment.status !== AppointmentStatus.CONFIRMED
     ) {
-      throw new ValidationError(
-        `Cannot check in appointment with status: ${appointment.status}`,
-        { field: 'status', value: appointment.status },
-      );
+      throw new ValidationError(`Cannot check in appointment with status: ${appointment.status}`, {
+        field: 'status',
+        value: appointment.status,
+      });
     }
 
     const updatedAppointment = await this.repository.update(id, tenantId, {

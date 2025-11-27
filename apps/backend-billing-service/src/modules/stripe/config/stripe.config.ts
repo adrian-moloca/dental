@@ -18,9 +18,10 @@ export const StripeConfigSchema = z.object({
       return value.startsWith('sk_live_') && value.length > 10;
     },
     {
-      message: process.env.NODE_ENV !== 'production'
-        ? 'STRIPE_SECRET_KEY must be set (test keys starting with sk_test_ are allowed)'
-        : 'STRIPE_SECRET_KEY must be a valid production Stripe key (sk_live_*)',
+      message:
+        process.env.NODE_ENV !== 'production'
+          ? 'STRIPE_SECRET_KEY must be set (test keys starting with sk_test_ are allowed)'
+          : 'STRIPE_SECRET_KEY must be a valid production Stripe key (sk_live_*)',
     },
   ),
   webhookSecret: z.string().refine(
@@ -34,9 +35,10 @@ export const StripeConfigSchema = z.object({
       return value.startsWith('whsec_') && value.length > 10;
     },
     {
-      message: process.env.NODE_ENV !== 'production'
-        ? 'STRIPE_WEBHOOK_SECRET may be empty in development'
-        : 'STRIPE_WEBHOOK_SECRET must be a valid webhook secret (whsec_*)',
+      message:
+        process.env.NODE_ENV !== 'production'
+          ? 'STRIPE_WEBHOOK_SECRET may be empty in development'
+          : 'STRIPE_WEBHOOK_SECRET must be a valid webhook secret (whsec_*)',
     },
   ),
   apiVersion: z.string().default('2024-11-20.acacia'),
@@ -51,7 +53,7 @@ export type StripeConfigType = z.infer<typeof StripeConfigSchema>;
 
 export default registerAs('stripe', (): StripeConfigType => {
   const isDev = process.env.NODE_ENV !== 'production';
-  
+
   // Provide sensible defaults for development
   const devDefaults = {
     secretKey: 'sk_test_dev_placeholder',

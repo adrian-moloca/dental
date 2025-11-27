@@ -318,7 +318,9 @@ Expires: ${expiresAt.toISOString()}
       this.logger.warn(
         `Password reset rejected due to password reuse for user ${user.id} in org ${user.organizationId}`
       );
-      throw new UnauthorizedException(historyValidation.message || 'Password has been used recently');
+      throw new UnauthorizedException(
+        historyValidation.message || 'Password has been used recently'
+      );
     }
 
     // Store old password hash in history before changing password

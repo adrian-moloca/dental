@@ -213,9 +213,7 @@ export class InternalController {
 
     const result = await this.schedulesService.getAvailableSlots(dto);
 
-    this.logger.log(
-      `Found ${result.slots.length} available slots for provider ${dto.providerId}`,
-    );
+    this.logger.log(`Found ${result.slots.length} available slots for provider ${dto.providerId}`);
 
     return result;
   }

@@ -19,11 +19,9 @@ import type {
   StockAvailabilityResponse,
   StockWarning,
   StockStatus,
-  UnitOfMeasure,
   ProcedureConsumptionSummary,
   StockMovement,
 } from '../types/inventory.types';
-import { calculateStockStatus } from '../types/inventory.types';
 
 // ============================================================================
 // Mock Data for Demo
@@ -491,7 +489,7 @@ export function useStockConsumption({
   patientId,
   providerId,
 }: UseStockConsumptionOptions): UseStockConsumptionReturn {
-  const queryClient = useQueryClient();
+  const _queryClient = useQueryClient();
 
   // State for consumption items
   const [consumptionItems, setConsumptionItems] = useState<ProductConsumption[]>([]);

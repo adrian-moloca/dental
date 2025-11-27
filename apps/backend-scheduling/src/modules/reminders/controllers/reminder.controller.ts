@@ -11,13 +11,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 
 import { ReminderService, ReminderResult, PendingReminder, ReminderStats } from '../services';
 import { ReminderConfigDto, SendReminderDto } from '../dto';
@@ -49,9 +43,7 @@ export class ReminderController {
   @ApiParam({ name: 'clinicId', description: 'Clinic ID' })
   @ApiResponse({ status: 200, description: 'Reminder configuration' })
   @ApiResponse({ status: 404, description: 'Configuration not found' })
-  async getConfig(
-    @Param('clinicId') clinicId: string,
-  ): Promise<ReminderConfigDto | null> {
+  async getConfig(@Param('clinicId') clinicId: string): Promise<ReminderConfigDto | null> {
     this.logger.debug(`Getting reminder config for clinic ${clinicId}`);
     return this.reminderService.getConfig(clinicId);
   }
@@ -99,9 +91,7 @@ export class ReminderController {
   @ApiOperation({ summary: 'Cancel scheduled reminders for an appointment' })
   @ApiParam({ name: 'appointmentId', description: 'Appointment ID' })
   @ApiResponse({ status: 204, description: 'Reminders cancelled' })
-  async cancelReminders(
-    @Param('appointmentId') appointmentId: string,
-  ): Promise<void> {
+  async cancelReminders(@Param('appointmentId') appointmentId: string): Promise<void> {
     this.logger.log(`Cancelling reminders for appointment ${appointmentId}`);
     await this.reminderService.cancelReminders(appointmentId);
   }
@@ -134,9 +124,7 @@ export class ReminderController {
   @ApiOperation({ summary: 'Get reminder statistics for a clinic' })
   @ApiParam({ name: 'clinicId', description: 'Clinic ID' })
   @ApiResponse({ status: 200, description: 'Reminder statistics' })
-  async getStatistics(
-    @Param('clinicId') clinicId: string,
-  ): Promise<ReminderStats> {
+  async getStatistics(@Param('clinicId') clinicId: string): Promise<ReminderStats> {
     this.logger.debug(`Getting reminder stats for clinic ${clinicId}`);
     return this.reminderService.getStatistics(clinicId);
   }

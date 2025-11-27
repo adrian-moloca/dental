@@ -192,9 +192,7 @@ export class PasswordHistoryService {
       );
 
       if (deletedCount > 0) {
-        this.logger.log(
-          `Trimmed ${deletedCount} old password history entries for user ${userId}`
-        );
+        this.logger.log(`Trimmed ${deletedCount} old password history entries for user ${userId}`);
       }
     } catch (error) {
       // Log error but don't throw - password history is a secondary feature

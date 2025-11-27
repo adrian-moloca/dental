@@ -159,7 +159,8 @@ export class ClinicsService {
     } else {
       if (!fiscalSettings.fiscalAddress.streetName) missingFields.push('fiscalAddress.streetName');
       if (!fiscalSettings.fiscalAddress.city) missingFields.push('fiscalAddress.city');
-      if (!fiscalSettings.fiscalAddress.countryCode) missingFields.push('fiscalAddress.countryCode');
+      if (!fiscalSettings.fiscalAddress.countryCode)
+        missingFields.push('fiscalAddress.countryCode');
     }
 
     const isConfiguredForEFactura = missingFields.length === 0;
@@ -243,13 +244,15 @@ export class ClinicsService {
     // Normalize CUI - remove RO prefix for comparison
     const normalizedCui = cui.replace(/^RO/i, '');
 
-    return this.clinicModel.findOne({
-      $or: [
-        { 'fiscalSettings.cui': cui },
-        { 'fiscalSettings.cui': `RO${normalizedCui}` },
-        { 'fiscalSettings.cui': normalizedCui },
-      ],
-    }).exec();
+    return this.clinicModel
+      .findOne({
+        $or: [
+          { 'fiscalSettings.cui': cui },
+          { 'fiscalSettings.cui': `RO${normalizedCui}` },
+          { 'fiscalSettings.cui': normalizedCui },
+        ],
+      })
+      .exec();
   }
 
   /**

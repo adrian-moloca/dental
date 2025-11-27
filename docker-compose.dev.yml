@@ -516,6 +516,35 @@ services:
       - patient
       - scheduling
 
+  # Web Admin Portal - React/Vite development server
+  # INTERNAL PORT: 5174 | HOST PORT: 5174
+  web-admin:
+    <<: *service-base
+    working_dir: /workspace/apps/web-admin-portal
+    command: >
+      sh -c 'echo "=== ADMIN PORTAL DEV SERVER STARTING ===" &&
+      echo "Time: $$(date)" &&
+      echo "================================" &&
+      npm run dev -- --host --port 5174 --force'
+    environment:
+      PORT: ${ADMIN_WEB_PORT:-5174}
+      VITE_FORCE: "true"
+      VITE_AUTH_API_URL: ${VITE_AUTH_API_URL}
+      VITE_ENTERPRISE_API_URL: ${VITE_ENTERPRISE_API_URL}
+      VITE_SUBSCRIPTION_API_URL: ${VITE_SUBSCRIPTION_API_URL:-http://localhost:3309/api/v1}
+      VITE_HEALTH_AGGREGATOR_URL: ${VITE_HEALTH_AGGREGATOR_URL}
+    ports:
+      - "${HOST_ADMIN_WEB_PORT:-5174}:5174"
+    volumes:
+      - .:/workspace:delegated
+      - pnpm-store:/pnpm/store
+      - /workspace/apps/web-admin-portal/dist
+      - /workspace/apps/web-admin-portal/node_modules/.vite
+    depends_on:
+      - auth
+      - enterprise
+      - subscription
+
 volumes:
   pgdata:
     driver: local

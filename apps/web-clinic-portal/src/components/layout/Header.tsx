@@ -72,7 +72,7 @@ function NotificationIcon({ type }: { type: Notification['type'] }) {
 }
 
 export function Header() {
-  const { toggleSidebar, toggleMiniSidebar, openMobileSidebar } = useSidebar();
+  const { toggleSidebar: _toggleSidebar, toggleMiniSidebar, openMobileSidebar } = useSidebar();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const logout = useAuthStore((state) => state.logout);

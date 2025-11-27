@@ -4,10 +4,7 @@ import { InjectRedis } from '@nestjs-modules/ioredis';
 import Redis from 'ioredis';
 
 import { EFacturaConfigType } from '../config/e-factura.config';
-import {
-  AnafOAuthToken,
-  AnafOAuthCredentials,
-} from '../interfaces/anaf-config.interface';
+import { AnafOAuthToken, AnafOAuthCredentials } from '../interfaces/anaf-config.interface';
 
 /**
  * Stored OAuth tokens structure
@@ -123,7 +120,7 @@ export class AnafOAuthService implements OnModuleInit {
 
       throw new Error(
         `OAuth token for CUI ${cui} has expired and no refresh token is available. ` +
-        `Please re-authorize through ANAF SPV portal.`,
+          `Please re-authorize through ANAF SPV portal.`,
       );
     }
 
@@ -221,7 +218,7 @@ export class AnafOAuthService implements OnModuleInit {
 
       throw new Error(
         `Failed to refresh OAuth token for CUI ${cui}. ` +
-        `Please re-authorize through ANAF SPV portal. Error: ${error}`,
+          `Please re-authorize through ANAF SPV portal. Error: ${error}`,
       );
     }
   }
@@ -261,7 +258,9 @@ export class AnafOAuthService implements OnModuleInit {
 
     await this.redis.set(key, JSON.stringify(storedTokens), 'EX', ttlSeconds);
 
-    this.logger.log(`Tokens stored for CUI ${cui}, expires at ${new Date(storedTokens.expiresAt).toISOString()}`);
+    this.logger.log(
+      `Tokens stored for CUI ${cui}, expires at ${new Date(storedTokens.expiresAt).toISOString()}`,
+    );
   }
 
   /**
@@ -339,11 +338,7 @@ export class AnafOAuthService implements OnModuleInit {
    * @param state - State parameter for CSRF protection
    * @returns Authorization URL
    */
-  generateAuthorizationUrl(
-    cui: string,
-    credentials: AnafOAuthCredentials,
-    state: string,
-  ): string {
+  generateAuthorizationUrl(cui: string, credentials: AnafOAuthCredentials, state: string): string {
     const config = this.getConfig();
     const baseUrl = config.anaf.oauthBaseUrl;
 
@@ -399,8 +394,8 @@ export class AnafOAuthService implements OnModuleInit {
 
     throw new Error(
       'Authorization code exchange not fully implemented. ' +
-      'This requires the OAuth flow to be completed manually through ANAF SPV portal. ' +
-      `Token URL: ${tokenUrl}`,
+        'This requires the OAuth flow to be completed manually through ANAF SPV portal. ' +
+        `Token URL: ${tokenUrl}`,
     );
   }
 
@@ -411,10 +406,7 @@ export class AnafOAuthService implements OnModuleInit {
   /**
    * Exchange refresh token for new access token
    */
-  private async exchangeRefreshToken(
-    _refreshToken: string,
-    cui: string,
-  ): Promise<AnafOAuthToken> {
+  private async exchangeRefreshToken(_refreshToken: string, cui: string): Promise<AnafOAuthToken> {
     const config = this.getConfig();
     const tokenUrl = `${config.anaf.oauthBaseUrl}/token`;
 
@@ -437,8 +429,8 @@ export class AnafOAuthService implements OnModuleInit {
 
     throw new Error(
       `Token refresh requires ANAF OAuth credentials configuration. ` +
-      `Please set up the OAuth client credentials for CUI ${cui}. ` +
-      `Token URL: ${tokenUrl}`,
+        `Please set up the OAuth client credentials for CUI ${cui}. ` +
+        `Token URL: ${tokenUrl}`,
     );
   }
 

@@ -27,10 +27,13 @@ async function bootstrap() {
   app.use(helmet());
 
   // CORS - Parse comma-separated origins into array
-  const corsOriginConfig = configService.get('cors.origin', { infer: true }) || 'http://localhost:3000,http://localhost:5173';
-  const corsOrigins = typeof corsOriginConfig === 'string'
-    ? corsOriginConfig.split(',').map(o => o.trim())
-    : corsOriginConfig;
+  const corsOriginConfig =
+    configService.get('cors.origin', { infer: true }) ||
+    'http://localhost:3000,http://localhost:5173';
+  const corsOrigins =
+    typeof corsOriginConfig === 'string'
+      ? corsOriginConfig.split(',').map((o) => o.trim())
+      : corsOriginConfig;
 
   app.enableCors({
     origin: corsOrigins,

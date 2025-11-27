@@ -20,7 +20,6 @@ import {
   ConfirmModal,
   Breadcrumb,
   type BreadcrumbItem,
-  Tooltip,
 } from '../components/ui-new';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';

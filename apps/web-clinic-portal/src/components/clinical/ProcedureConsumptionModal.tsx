@@ -163,7 +163,7 @@ export function ProcedureConsumptionModal({
 
       toast.success('Consumul a fost inregistrat cu succes');
       onClose();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Eroare la inregistrarea consumului');
     } finally {
       setLoading(false);

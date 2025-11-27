@@ -156,9 +156,11 @@ export class OdontogramService {
     // Apply updates
     if (validatedInput.isPresent !== undefined) tooth.isPresent = validatedInput.isPresent;
     if (validatedInput.isPrimary !== undefined) tooth.isPrimary = validatedInput.isPrimary;
-    if (validatedInput.isSupernumerary !== undefined) tooth.isSupernumerary = validatedInput.isSupernumerary;
+    if (validatedInput.isSupernumerary !== undefined)
+      tooth.isSupernumerary = validatedInput.isSupernumerary;
     if (validatedInput.isImplant !== undefined) tooth.isImplant = validatedInput.isImplant;
-    if (validatedInput.mobility !== undefined) tooth.mobility = validatedInput.mobility as 0 | 1 | 2 | 3;
+    if (validatedInput.mobility !== undefined)
+      tooth.mobility = validatedInput.mobility as 0 | 1 | 2 | 3;
     if (validatedInput.furcation !== undefined) tooth.furcation = validatedInput.furcation as any;
     if (validatedInput.notes !== undefined) tooth.notes = validatedInput.notes;
 
@@ -463,9 +465,7 @@ export class OdontogramService {
       }
     }
 
-    this.logger.log(
-      `Bulk updated ${validatedInput.teeth.length} teeth for patient ${patientId}`,
-    );
+    this.logger.log(`Bulk updated ${validatedInput.teeth.length} teeth for patient ${patientId}`);
 
     return odontogram;
   }
@@ -567,8 +567,19 @@ export class OdontogramService {
 
     // Priority: missing > implant > extraction > crown > root_canal > bridge > filling > caries > healthy
     const priorityOrder = [
-      'missing', 'implant', 'extraction', 'crown', 'root_canal', 'bridge',
-      'veneer', 'filling', 'caries', 'fractured', 'abscess', 'watch', 'healthy',
+      'missing',
+      'implant',
+      'extraction',
+      'crown',
+      'root_canal',
+      'bridge',
+      'veneer',
+      'filling',
+      'caries',
+      'fractured',
+      'abscess',
+      'watch',
+      'healthy',
     ];
 
     for (const condition of priorityOrder) {
@@ -600,7 +611,9 @@ export class OdontogramService {
   /**
    * Serializes condition for audit logging
    */
-  private serializeConditionForAudit(condition: Partial<ToothConditionRecord>): Record<string, unknown> {
+  private serializeConditionForAudit(
+    condition: Partial<ToothConditionRecord>,
+  ): Record<string, unknown> {
     return {
       _id: condition._id?.toString(),
       condition: condition.condition,
@@ -623,7 +636,9 @@ export class OdontogramService {
    * - Inventory service (for material deduction)
    * - Analytics platform (for clinical reporting)
    */
-  private async emitToothStatusUpdatedEvent(payload: ToothStatusUpdatedEventPayload): Promise<void> {
+  private async emitToothStatusUpdatedEvent(
+    payload: ToothStatusUpdatedEventPayload,
+  ): Promise<void> {
     try {
       this.eventEmitter.emit(TOOTH_STATUS_UPDATED_EVENT, {
         patientId: payload.patientId,
@@ -641,9 +656,7 @@ export class OdontogramService {
         requiresImmediateAction: this.requiresImmediateAction(payload.newCondition),
       });
 
-      this.logger.debug(
-        `Emitted ${TOOTH_STATUS_UPDATED_EVENT} for tooth ${payload.toothNumber}`,
-      );
+      this.logger.debug(`Emitted ${TOOTH_STATUS_UPDATED_EVENT} for tooth ${payload.toothNumber}`);
     } catch (error) {
       // Log but don't throw - event emission failure shouldn't fail the operation
       this.logger.error(

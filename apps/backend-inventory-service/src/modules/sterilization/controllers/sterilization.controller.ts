@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, HttpStatus } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
@@ -18,11 +10,7 @@ import {
 import { SterilizationCycleStatus, InstrumentStatus } from '@dentalos/shared-domain';
 
 import { SterilizationService, TenantContext } from '../services';
-import {
-  CreateSterilizationCycleDto,
-  CompleteCycleDto,
-  CreateInstrumentDto,
-} from '../dto';
+import { CreateSterilizationCycleDto, CompleteCycleDto, CreateInstrumentDto } from '../dto';
 
 @ApiTags('Sterilization')
 @ApiBearerAuth()
@@ -63,10 +51,7 @@ export class SterilizationController {
     status: HttpStatus.OK,
     description: 'Sterilization cycle completed',
   })
-  async completeCycle(
-    @Param('cycleId') cycleId: string,
-    @Body() dto: CompleteCycleDto,
-  ) {
+  async completeCycle(@Param('cycleId') cycleId: string, @Body() dto: CompleteCycleDto) {
     const context: TenantContext = this.getMockContext();
     return this.sterilizationService.completeCycle(cycleId, dto, context);
   }
@@ -190,11 +175,7 @@ export class SterilizationController {
     @Body('reason') reason: string,
   ) {
     const context: TenantContext = this.getMockContext();
-    return this.sterilizationService.retireInstrument(
-      instrumentId,
-      reason,
-      context,
-    );
+    return this.sterilizationService.retireInstrument(instrumentId, reason, context);
   }
 
   @Get('instruments/:instrumentId/history')

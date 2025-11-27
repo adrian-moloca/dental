@@ -10,7 +10,7 @@
  * - WCAG 2.5.3: Label in Name
  */
 
-import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import clsx from 'clsx';
 
 export interface AccessibleIconProps extends ButtonHTMLAttributes<HTMLButtonElement> {

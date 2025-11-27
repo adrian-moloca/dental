@@ -32,7 +32,10 @@ import {
   EFacturaStatisticsDto,
 } from './dto';
 import { TenantContext } from './interfaces/anaf-config.interface';
-import { EFacturaSubmission, EFacturaSubmissionStatus } from './entities/e-factura-submission.schema';
+import {
+  EFacturaSubmission,
+  EFacturaSubmissionStatus,
+} from './entities/e-factura-submission.schema';
 
 // Placeholder decorators - replace with actual auth decorators from shared-auth package
 // import { RequiresPermission } from '@dentalos/shared-auth';
@@ -286,7 +289,10 @@ export class EFacturaController {
     const buffer = await this.eFacturaService.downloadSignedInvoice(submissionId);
 
     // Get submission for filename
-    const submission = await this.eFacturaService.findOne(submissionId, getTenantContext((res as any).req));
+    const submission = await this.eFacturaService.findOne(
+      submissionId,
+      getTenantContext((res as any).req),
+    );
 
     const filename = `e-factura-${submission.invoiceNumber}-signed.zip`;
 
@@ -362,9 +368,7 @@ export class EFacturaController {
     description: 'Submission statistics',
     type: EFacturaStatisticsDto,
   })
-  async getStatistics(
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<EFacturaStatisticsDto> {
+  async getStatistics(@Res({ passthrough: true }) res: Response): Promise<EFacturaStatisticsDto> {
     const context = getTenantContext((res as any).req);
 
     return this.eFacturaService.getStatistics(context);
@@ -426,9 +430,7 @@ export class EFacturaController {
     status: 200,
     description: 'Token status information',
   })
-  async getTokenStatus(
-    @Param('cui') cui: string,
-  ): Promise<{
+  async getTokenStatus(@Param('cui') cui: string): Promise<{
     exists: boolean;
     valid: boolean;
     expiresAt?: Date;

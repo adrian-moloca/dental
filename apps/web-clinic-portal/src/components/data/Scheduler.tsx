@@ -91,7 +91,7 @@ export function Scheduler({
   resources,
   events,
   onMove,
-  onResize,
+  onResize: _onResize,
   onSelectSlot,
   onDatesChange,
   view = 'resourceTimeGridWeek',

@@ -24,7 +24,12 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PatientsService } from './patients.service';
 import { CreatePatientDto, UpdatePatientDto, SearchPatientDto, MergePatientsDto } from './dto';
-import { JwtAuthGuard, TenantIsolationGuard, PermissionsGuard, RequirePermissions } from '../../guards';
+import {
+  JwtAuthGuard,
+  TenantIsolationGuard,
+  PermissionsGuard,
+  RequirePermissions,
+} from '../../guards';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUser as ICurrentUser } from '@dentalos/shared-auth';
 

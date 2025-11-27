@@ -116,8 +116,7 @@ export default registerAs('efactura', () => {
        * CIUS-RO Customization ID
        * Required identifier for Romanian e-invoices
        */
-      customizationId:
-        'urn:cen.eu:en16931:2017#compliant#urn:efactura.mfinante.ro:CIUS-RO:1.0.1',
+      customizationId: 'urn:cen.eu:en16931:2017#compliant#urn:efactura.mfinante.ro:CIUS-RO:1.0.1',
 
       /**
        * UBL Profile ID for B2B invoices

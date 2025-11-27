@@ -197,8 +197,8 @@ export default function SettingsPage() {
     },
   ]);
 
-  const [showUserModal, setShowUserModal] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [_showUserModal, _setShowUserModal] = useState(false);
+  const [_selectedUser, _setSelectedUser] = useState<UserData | null>(null);
 
   // ============================================================================
   // STATE: SERVICES & PRICES
@@ -233,8 +233,8 @@ export default function SettingsPage() {
     },
   ]);
 
-  const [showServiceModal, setShowServiceModal] = useState(false);
-  const [selectedService, setSelectedService] = useState<ServiceData | null>(null);
+  const [_showServiceModal, _setShowServiceModal] = useState(false);
+  const [_selectedService, _setSelectedService] = useState<ServiceData | null>(null);
 
   // ============================================================================
   // STATE: WORKING HOURS
@@ -249,7 +249,7 @@ export default function SettingsPage() {
     sunday: { enabled: false, start: '09:00', end: '13:00' },
   });
 
-  const [holidays, setHolidays] = useState<string[]>([]);
+  const [_holidays, _setHolidays] = useState<string[]>([]);
 
   // ============================================================================
   // STATE: NOTIFICATIONS
@@ -350,7 +350,7 @@ export default function SettingsPage() {
     setBillingSettings((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleToggleIntegration = (id: string) => {
+  const _handleToggleIntegration = (id: string) => {
     setIntegrations((prev) =>
       prev.map((integration) =>
         integration.id === id

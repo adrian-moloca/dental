@@ -97,7 +97,11 @@ export const EFACTURA_STANDARDS = {
 /**
  * Build the upload URL
  */
-export function buildUploadUrl(baseUrl: string, sellerCui: string, standard: string = 'UBL'): string {
+export function buildUploadUrl(
+  baseUrl: string,
+  sellerCui: string,
+  standard: string = 'UBL',
+): string {
   return `${baseUrl}${EFACTURA_ENDPOINTS.UPLOAD}?standard=${standard}&cif=${sellerCui}`;
 }
 

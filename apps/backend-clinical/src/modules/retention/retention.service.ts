@@ -70,7 +70,9 @@ export class RetentionService {
     });
 
     const saved = await metadata.save();
-    this.logger.log(`Registered retention for ${recordType} ${recordId}, expires ${expiryDate.toISOString()}`);
+    this.logger.log(
+      `Registered retention for ${recordType} ${recordId}, expires ${expiryDate.toISOString()}`,
+    );
 
     return saved;
   }
@@ -79,10 +81,7 @@ export class RetentionService {
    * Update last activity date (extends retention period)
    * Called when a record is updated
    */
-  async updateLastActivity(
-    recordId: string,
-    tenantId: string,
-  ): Promise<void> {
+  async updateLastActivity(recordId: string, tenantId: string): Promise<void> {
     const metadata = await this.retentionModel.findOne({ recordId, tenantId });
 
     if (!metadata) {
@@ -98,7 +97,10 @@ export class RetentionService {
     metadata.retentionExpiryDate = newExpiry;
 
     // Reset to active if was expiring
-    if (metadata.status === RetentionStatus.EXPIRING_SOON || metadata.status === RetentionStatus.EXPIRED) {
+    if (
+      metadata.status === RetentionStatus.EXPIRING_SOON ||
+      metadata.status === RetentionStatus.EXPIRED
+    ) {
       metadata.statusHistory.push({
         previousStatus: metadata.status,
         newStatus: RetentionStatus.ACTIVE,

@@ -28,7 +28,7 @@ const paymentMethods = [
   { value: 'split', label: 'Split Payment', icon: 'cash' },
 ] as const;
 
-export function PaymentRecorder({ invoiceId, balance, onSave, onCancel }: PaymentRecorderProps) {
+export function PaymentRecorder({ invoiceId: _invoiceId, balance, onSave, onCancel }: PaymentRecorderProps) {
   const [amount, setAmount] = useState<string>(balance.toString());
   const [paymentMethod, setPaymentMethod] = useState<PaymentData['paymentMethod']>('cash');
   const [reference, setReference] = useState('');

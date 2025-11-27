@@ -170,7 +170,7 @@ export default function AppointmentsListPage() {
     }
   };
 
-  const handleEventClick = (event: CalendarEvent) => {
+  const handleEventClick = (_event: CalendarEvent) => {
     navigate('/reception');
   };
 

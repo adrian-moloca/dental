@@ -62,10 +62,7 @@ import { AuthModule } from '../auth/auth.module';
     AuthModule,
   ],
   controllers: [TreatmentPlansController],
-  providers: [
-    TreatmentPlansService,
-    TreatmentPlansRepository,
-  ],
+  providers: [TreatmentPlansService, TreatmentPlansRepository],
   exports: [
     // Export service for use by other modules
     TreatmentPlansService,

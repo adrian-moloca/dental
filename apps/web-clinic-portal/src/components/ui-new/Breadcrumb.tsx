@@ -4,7 +4,7 @@
  * Navigation breadcrumb component for showing current location in the app hierarchy.
  */
 
-import { Fragment, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 
@@ -28,7 +28,7 @@ export interface BreadcrumbProps {
 
 export function Breadcrumb({
   items,
-  separator = <i className="ti ti-chevron-right text-muted"></i>,
+  separator: _separator = <i className="ti ti-chevron-right text-muted"></i>,
   className,
 }: BreadcrumbProps) {
   if (!items || items.length === 0) return null;

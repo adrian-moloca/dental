@@ -11,7 +11,7 @@ import type { AppointmentDto, ConfirmationMethod } from '../../types/appointment
 export function ConfirmationQueue() {
   const [selectedAppointmentIds, setSelectedAppointmentIds] = useState<Set<string>>(new Set());
   const [modalAppointment, setModalAppointment] = useState<AppointmentDto | null>(null);
-  const [bulkMethod, setBulkMethod] = useState<ConfirmationMethod>('phone');
+  const [_bulkMethod, _setBulkMethod] = useState<ConfirmationMethod>('phone');
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -55,7 +55,7 @@ export function ConfirmationQueue() {
     try {
       await bulkConfirmMutation.mutateAsync({
         ids: Array.from(selectedAppointmentIds),
-        method: bulkMethod,
+        method: _bulkMethod,
       });
       clearSelection();
     } catch (error) {

@@ -716,10 +716,7 @@ ClinicalNoteSchema.index(
 );
 
 // Amendment chain (finding versions)
-ClinicalNoteSchema.index(
-  { previousVersionId: 1 },
-  { name: 'amendment_chain_idx', sparse: true },
-);
+ClinicalNoteSchema.index({ previousVersionId: 1 }, { name: 'amendment_chain_idx', sparse: true });
 
 // Clinic-level queries
 ClinicalNoteSchema.index(
@@ -737,10 +734,7 @@ ClinicalNoteSchema.index(
 );
 
 // Soft delete filter
-ClinicalNoteSchema.index(
-  { tenantId: 1, deletedAt: 1 },
-  { name: 'soft_delete_idx', sparse: true },
-);
+ClinicalNoteSchema.index({ tenantId: 1, deletedAt: 1 }, { name: 'soft_delete_idx', sparse: true });
 
 // ============================================================================
 // HISTORY SCHEMA (AUDIT TRAIL)
@@ -908,10 +902,7 @@ export type ClinicalNoteHistoryDocument = ClinicalNoteHistory & Document;
 export const ClinicalNoteHistorySchema = SchemaFactory.createForClass(ClinicalNoteHistory);
 
 // History indexes
-ClinicalNoteHistorySchema.index(
-  { clinicalNoteId: 1, createdAt: -1 },
-  { name: 'note_history_idx' },
-);
+ClinicalNoteHistorySchema.index({ clinicalNoteId: 1, createdAt: -1 }, { name: 'note_history_idx' });
 
 ClinicalNoteHistorySchema.index(
   { patientId: 1, tenantId: 1, createdAt: -1 },

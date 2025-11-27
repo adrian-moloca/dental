@@ -9,7 +9,12 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { TimelineService } from './timeline.service';
-import { JwtAuthGuard, TenantIsolationGuard, PermissionsGuard, RequirePermissions } from '../../guards';
+import {
+  JwtAuthGuard,
+  TenantIsolationGuard,
+  PermissionsGuard,
+  RequirePermissions,
+} from '../../guards';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUser as ICurrentUser } from '@dentalos/shared-auth';
 

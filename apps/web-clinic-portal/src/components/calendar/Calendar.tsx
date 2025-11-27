@@ -43,12 +43,12 @@ export interface CalendarProps {
 
 export const Calendar: React.FC<CalendarProps> = ({
   events,
-  resources,
+  resources: _resources,
   initialView = 'week',
   initialDate = new Date(),
   onEventClick,
   onSlotClick,
-  onEventMove,
+  onEventMove: _onEventMove,
   onDateChange,
   onViewChange,
   className = '',

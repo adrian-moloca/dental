@@ -1,4 +1,13 @@
-import { IsString, IsBoolean, IsOptional, IsArray, IsNumber, Min, Max, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsBoolean,
+  IsOptional,
+  IsArray,
+  IsNumber,
+  Min,
+  Max,
+  IsEnum,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export enum ReminderChannel {

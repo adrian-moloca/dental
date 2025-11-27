@@ -11,7 +11,7 @@ type Props = InputHTMLAttributes<HTMLInputElement> & {
   icon?: string;
 };
 
-export function Input({ label, hint, error, success, fullWidth, className, icon, id: providedId, ...rest }: Props) {
+export function Input({ label, hint, error, success, fullWidth, className, icon: _icon, id: providedId, ...rest }: Props) {
   const generatedId = useId();
   const id = providedId || generatedId;
   const hintId = `${id}-hint`;

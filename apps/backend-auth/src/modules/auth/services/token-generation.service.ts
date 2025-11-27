@@ -141,10 +141,7 @@ export class TokenGenerationService {
     // Generate CSRF token (bound to user session)
     // SECURITY: 256-bit cryptographically secure random token
     // SECURITY: Stored in Redis with session binding for validation
-    const csrfToken = await this.csrfService.generateToken(
-      user.id as UUID,
-      session.id as UUID
-    );
+    const csrfToken = await this.csrfService.generateToken(user.id as UUID, session.id as UUID);
 
     this.logger.debug({
       message: 'Generated authentication response with CSRF token',
@@ -222,10 +219,7 @@ export class TokenGenerationService {
 
     // Generate new CSRF token for the new session
     // SECURITY: Prevents CSRF token fixation by issuing new token on rotation
-    const csrfToken = await this.csrfService.generateToken(
-      user.id as UUID,
-      session.id as UUID
-    );
+    const csrfToken = await this.csrfService.generateToken(user.id as UUID, session.id as UUID);
 
     this.logger.debug({
       message: 'Generated refresh response with new CSRF token',
@@ -348,10 +342,7 @@ export class TokenGenerationService {
 
     // Generate new CSRF token for the new session
     // SECURITY: Prevents CSRF token fixation by issuing new token on rotation
-    const csrfToken = await this.csrfService.generateToken(
-      user.id as UUID,
-      session.id as UUID
-    );
+    const csrfToken = await this.csrfService.generateToken(user.id as UUID, session.id as UUID);
 
     this.logger.debug({
       message: 'Generated refresh response with pre-generated token and new CSRF token',
@@ -437,10 +428,7 @@ export class TokenGenerationService {
     // Generate CSRF token (bound to user session)
     // SECURITY: 256-bit cryptographically secure random token
     // SECURITY: Stored in Redis with session binding for validation
-    const csrfToken = await this.csrfService.generateToken(
-      user.id as UUID,
-      session.id as UUID
-    );
+    const csrfToken = await this.csrfService.generateToken(user.id as UUID, session.id as UUID);
 
     this.logger.debug({
       message: 'Generated authentication response with pre-generated token',

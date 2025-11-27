@@ -56,7 +56,7 @@ export const Modal = forwardRef<HTMLDivElement, ModalProps>(
       closeOnOverlay = true,
       closeOnEscape = true,
       footer,
-      centered = true,
+      centered: _centered = true,
       drawer = false,
       drawerPosition = 'right',
       className,

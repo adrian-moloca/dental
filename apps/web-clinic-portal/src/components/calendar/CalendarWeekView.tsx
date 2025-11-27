@@ -42,7 +42,7 @@ const BUSINESS_END = 19;
 export const CalendarWeekView: React.FC<CalendarWeekViewProps> = ({
   date,
   events,
-  resources = [{ id: 'default', title: 'Cabinet 1' }],
+  resources: _resources = [{ id: 'default', title: 'Cabinet 1' }],
   onEventClick,
   onSlotClick,
   scrollToNow,

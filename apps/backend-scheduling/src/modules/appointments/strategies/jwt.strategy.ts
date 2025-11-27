@@ -37,7 +37,7 @@ function decodeKeyIfBase64(key: string | undefined): string | undefined {
  * Allowed JWT algorithms
  * SECURITY: Only RS256 is permitted to prevent algorithm confusion attacks
  */
-const ALLOWED_JWT_ALGORITHMS: ('RS256')[] = ['RS256'];
+const ALLOWED_JWT_ALGORITHMS: 'RS256'[] = ['RS256'];
 
 interface JwtPayload {
   sub: string;
@@ -67,7 +67,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!jwtPublicKey) {
       throw new Error(
         'JWT_ACCESS_PUBLIC_KEY environment variable is required for RS256 token verification. ' +
-          'This is the public key from the auth service used to verify JWT signatures.'
+          'This is the public key from the auth service used to verify JWT signatures.',
       );
     }
 
@@ -91,7 +91,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!payload.organizationId && !payload.tenantId) {
       throw new UnauthorizedException(
-        'Invalid token: missing organizationId/tenantId claim (required for tenant isolation)'
+        'Invalid token: missing organizationId/tenantId claim (required for tenant isolation)',
       );
     }
 

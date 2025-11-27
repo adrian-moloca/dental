@@ -74,7 +74,7 @@ export function CompleteAppointmentModal({
       await onComplete(selectedProcedures);
       setSelectedProcedures([]);
       onClose();
-    } catch (error) {
+    } catch (_error) {
       // Error handled by parent
     }
   };

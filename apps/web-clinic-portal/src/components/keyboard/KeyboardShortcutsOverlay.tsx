@@ -5,7 +5,7 @@
  * Improves productivity by allowing power users to navigate the app with keyboard.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Icon } from '../ui/Icon';
 import clsx from 'clsx';
 

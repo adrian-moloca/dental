@@ -52,10 +52,7 @@ export class ClinicFiscalService {
       'services.enterprise.url',
       'http://localhost:3307',
     );
-    this.requestTimeoutMs = this.configService.get<number>(
-      'services.enterprise.timeoutMs',
-      5000,
-    );
+    this.requestTimeoutMs = this.configService.get<number>('services.enterprise.timeoutMs', 5000);
   }
 
   /**
@@ -78,9 +75,12 @@ export class ClinicFiscalService {
             timeout(this.requestTimeoutMs),
             catchError((error: AxiosError) => {
               if (error.response?.status === 404) {
-                return throwError(() => new NotFoundException(
-                  `Clinic ${clinicId} not found or fiscal settings not configured`,
-                ));
+                return throwError(
+                  () =>
+                    new NotFoundException(
+                      `Clinic ${clinicId} not found or fiscal settings not configured`,
+                    ),
+                );
               }
               return throwError(() => error);
             }),
@@ -114,7 +114,9 @@ export class ClinicFiscalService {
           : undefined,
       };
 
-      this.logger.debug(`Successfully fetched seller info for clinic ${clinicId}: CUI=${sellerInfo.cui}`);
+      this.logger.debug(
+        `Successfully fetched seller info for clinic ${clinicId}: CUI=${sellerInfo.cui}`,
+      );
 
       return sellerInfo;
     } catch (error) {

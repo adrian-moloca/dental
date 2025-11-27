@@ -207,9 +207,7 @@ export class PermissionsGuard implements CanActivate {
    * @returns true if user has all permissions
    */
   private checkAllPermissions(user: CurrentUser, requiredPermissions: string[]): boolean {
-    return requiredPermissions.every((required) =>
-      this.userHasPermission(user, required),
-    );
+    return requiredPermissions.every((required) => this.userHasPermission(user, required));
   }
 
   /**
@@ -221,9 +219,7 @@ export class PermissionsGuard implements CanActivate {
    * @returns true if user has at least one permission
    */
   private checkAnyPermissions(user: CurrentUser, requiredPermissions: string[]): boolean {
-    return requiredPermissions.some((required) =>
-      this.userHasPermission(user, required),
-    );
+    return requiredPermissions.some((required) => this.userHasPermission(user, required));
   }
 
   /**

@@ -122,7 +122,8 @@ export class FiscalContactDto {
  */
 export class UpdateClinicFiscalSettingsDto {
   @ApiProperty({
-    description: 'CUI (Cod Unic de Identificare) - Romanian tax ID. Can be with or without RO prefix.',
+    description:
+      'CUI (Cod Unic de Identificare) - Romanian tax ID. Can be with or without RO prefix.',
     example: 'RO12345678',
     pattern: '^(RO)?\\d{2,10}$',
   })

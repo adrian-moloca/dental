@@ -183,10 +183,7 @@ export class TreatmentPlansService {
   /**
    * Get a treatment plan by ID
    */
-  async getById(
-    planId: string,
-    context: TenantContext,
-  ): Promise<TreatmentPlanDocument> {
+  async getById(planId: string, context: TenantContext): Promise<TreatmentPlanDocument> {
     return this.repository.findByIdOrFail(planId, context);
   }
 
@@ -360,16 +357,10 @@ export class TreatmentPlansService {
     // If phases are being updated, recalculate everything
     if (dto.phases) {
       updates.phases = this.buildPhases(dto.phases) as TreatmentPhase[];
-      updates.financial = this.calculateFinancials(
-        updates.phases,
-        dto.financialOverrides,
-      );
+      updates.financial = this.calculateFinancials(updates.phases, dto.financialOverrides);
     } else if (dto.financialOverrides) {
       // Just updating financial overrides
-      updates.financial = this.calculateFinancials(
-        plan.phases,
-        dto.financialOverrides,
-      );
+      updates.financial = this.calculateFinancials(plan.phases, dto.financialOverrides);
     }
 
     // If alternatives are being updated
@@ -417,28 +408,21 @@ export class TreatmentPlansService {
     // Validate plan has at least one item
     const totalItems = this.countProcedures(plan.phases);
     if (totalItems === 0) {
-      throw new BadRequestException(
-        'Cannot present a treatment plan with no procedures',
-      );
+      throw new BadRequestException('Cannot present a treatment plan with no procedures');
     }
 
-    const updated = await this.repository.updateStatus(
-      planId,
-      'presented',
-      auditContext,
-      {
-        reason: 'Plan presented to patient',
-        additionalUpdates: {
-          presentedAt: new Date(),
-          presentedBy: auditContext.userId,
-          providerNotes: dto.presentationNotes
-            ? `${plan.providerNotes || ''}\n\n--- Presentation Notes ---\n${dto.presentationNotes}`
-            : plan.providerNotes,
-          patientQuestions: dto.patientQuestions,
-          expiresAt: dto.expiresAt || plan.expiresAt,
-        },
+    const updated = await this.repository.updateStatus(planId, 'presented', auditContext, {
+      reason: 'Plan presented to patient',
+      additionalUpdates: {
+        presentedAt: new Date(),
+        presentedBy: auditContext.userId,
+        providerNotes: dto.presentationNotes
+          ? `${plan.providerNotes || ''}\n\n--- Presentation Notes ---\n${dto.presentationNotes}`
+          : plan.providerNotes,
+        patientQuestions: dto.patientQuestions,
+        expiresAt: dto.expiresAt || plan.expiresAt,
       },
-    );
+    });
 
     // Emit event
     const event: TreatmentPlanPresentedEvent = {
@@ -512,19 +496,14 @@ export class TreatmentPlansService {
       notes: dto.notes,
     };
 
-    const updated = await this.repository.updateStatus(
-      planId,
-      'accepted',
-      auditContext,
-      {
-        reason: `Plan accepted by ${dto.approvedBy}`,
-        additionalUpdates: {
-          acceptedAt: new Date(),
-          selectedAlternativeId: dto.selectedAlternativeId,
-          approvals: [...plan.approvals, approval] as TreatmentApproval[],
-        },
+    const updated = await this.repository.updateStatus(planId, 'accepted', auditContext, {
+      reason: `Plan accepted by ${dto.approvedBy}`,
+      additionalUpdates: {
+        acceptedAt: new Date(),
+        selectedAlternativeId: dto.selectedAlternativeId,
+        approvals: [...plan.approvals, approval] as TreatmentApproval[],
       },
-    );
+    });
 
     // Emit event
     const event: TreatmentPlanAcceptedEvent = {
@@ -545,9 +524,7 @@ export class TreatmentPlansService {
 
     this.eventEmitter.emit('treatment.plan.accepted', event);
 
-    this.logger.log(
-      `Treatment plan ${planId} accepted by ${dto.approvedBy} (${dto.approverId})`,
-    );
+    this.logger.log(`Treatment plan ${planId} accepted by ${dto.approvedBy} (${dto.approverId})`);
 
     return updated;
   }
@@ -557,26 +534,18 @@ export class TreatmentPlansService {
    *
    * Transitions: accepted -> in_progress
    */
-  async startTreatment(
-    planId: string,
-    auditContext: AuditContext,
-  ): Promise<TreatmentPlanDocument> {
+  async startTreatment(planId: string, auditContext: AuditContext): Promise<TreatmentPlanDocument> {
     const plan = await this.repository.findByIdOrFail(planId, auditContext);
 
     // Validate transition
     this.validateStatusTransition(plan.status, 'in_progress');
 
-    return this.repository.updateStatus(
-      planId,
-      'in_progress',
-      auditContext,
-      {
-        reason: 'Treatment started',
-        additionalUpdates: {
-          startedAt: new Date(),
-        },
+    return this.repository.updateStatus(planId, 'in_progress', auditContext, {
+      reason: 'Treatment started',
+      additionalUpdates: {
+        startedAt: new Date(),
       },
-    );
+    });
   }
 
   /**
@@ -599,9 +568,7 @@ export class TreatmentPlansService {
 
     // Validate plan is in progress
     if (plan.status !== 'in_progress' && plan.status !== 'accepted') {
-      throw new BadRequestException(
-        `Cannot complete items in a plan with status '${plan.status}'`,
-      );
+      throw new BadRequestException(`Cannot complete items in a plan with status '${plan.status}'`);
     }
 
     // Find the item
@@ -673,13 +640,14 @@ export class TreatmentPlansService {
       teeth: item.teeth,
       surfaces: item.surfaces,
       totalCents: item.totalCents,
-      materials: dto.materialsUsed.length > 0
-        ? dto.materialsUsed
-        : item.materials.map((m) => ({
-            catalogItemId: m.catalogItemId,
-            itemName: m.itemName,
-            quantity: m.quantity,
-          })),
+      materials:
+        dto.materialsUsed.length > 0
+          ? dto.materialsUsed
+          : item.materials.map((m) => ({
+              catalogItemId: m.catalogItemId,
+              itemName: m.itemName,
+              quantity: m.quantity,
+            })),
       completedProcedureId: dto.completedProcedureId,
       completedBy: dto.performedBy || auditContext.userId,
       timestamp: new Date(),
@@ -700,8 +668,7 @@ export class TreatmentPlansService {
         startedAt: plan.startedAt!,
         completedAt: updated.completedAt!,
         durationDays: Math.ceil(
-          (updated.completedAt!.getTime() - plan.startedAt!.getTime()) /
-            (1000 * 60 * 60 * 24),
+          (updated.completedAt!.getTime() - plan.startedAt!.getTime()) / (1000 * 60 * 60 * 24),
         ),
         timestamp: new Date(),
       };
@@ -709,9 +676,7 @@ export class TreatmentPlansService {
       this.eventEmitter.emit('treatment.plan.completed', completedEvent);
     }
 
-    this.logger.log(
-      `Completed procedure ${item.procedureCode} in treatment plan ${planId}`,
-    );
+    this.logger.log(`Completed procedure ${item.procedureCode} in treatment plan ${planId}`);
 
     return updated;
   }
@@ -746,19 +711,14 @@ export class TreatmentPlansService {
 
     const previousStatus = plan.status;
 
-    const updated = await this.repository.updateStatus(
-      planId,
-      'cancelled',
-      auditContext,
-      {
-        reason: dto.reason,
-        additionalUpdates: {
-          cancelledAt: new Date(),
-          cancelledBy: auditContext.userId,
-          cancellationReason: dto.reason,
-        },
+    const updated = await this.repository.updateStatus(planId, 'cancelled', auditContext, {
+      reason: dto.reason,
+      additionalUpdates: {
+        cancelledAt: new Date(),
+        cancelledBy: auditContext.userId,
+        cancellationReason: dto.reason,
       },
-    );
+    });
 
     // Emit event
     const event: TreatmentPlanCancelledEvent = {
@@ -776,9 +736,7 @@ export class TreatmentPlansService {
 
     this.eventEmitter.emit('treatment.plan.cancelled', event);
 
-    this.logger.warn(
-      `Cancelled treatment plan ${planId}. Reason: ${dto.reason}`,
-    );
+    this.logger.warn(`Cancelled treatment plan ${planId}. Reason: ${dto.reason}`);
 
     return updated;
   }
@@ -886,17 +844,12 @@ export class TreatmentPlansService {
     const plan = await this.repository.findByIdOrFail(planId, auditContext);
 
     if (plan.status !== 'draft') {
-      throw new ForbiddenException(
-        'Can only recalculate financials for draft plans',
-      );
+      throw new ForbiddenException('Can only recalculate financials for draft plans');
     }
 
     // Recalculate phase subtotals
     for (const phase of plan.phases) {
-      phase.subtotalCents = phase.items.reduce(
-        (sum, item) => sum + item.totalCents,
-        0,
-      );
+      phase.subtotalCents = phase.items.reduce((sum, item) => sum + item.totalCents, 0);
       phase.estimatedDurationMinutes = phase.items.reduce(
         (sum, item) => sum + (item.estimatedDurationMinutes || 0),
         0,
@@ -1060,9 +1013,6 @@ export class TreatmentPlansService {
    * Count total procedures across all phases
    */
   private countProcedures(phases: TreatmentPhase[] | Partial<TreatmentPhase>[]): number {
-    return phases.reduce(
-      (count, phase) => count + (phase.items?.length ?? 0),
-      0,
-    );
+    return phases.reduce((count, phase) => count + (phase.items?.length ?? 0), 0);
   }
 }

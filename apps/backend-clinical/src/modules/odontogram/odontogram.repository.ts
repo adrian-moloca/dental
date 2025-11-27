@@ -244,9 +244,7 @@ export class OdontogramRepository {
         if (!tooth) {
           throw new NotFoundException(`Tooth ${toothNumber} not found`);
         }
-        const conditionExists = tooth.conditions.find(
-          (c) => c._id?.toString() === conditionId,
-        );
+        const conditionExists = tooth.conditions.find((c) => c._id?.toString() === conditionId);
         if (!conditionExists) {
           throw new NotFoundException(`Condition ${conditionId} not found on tooth ${toothNumber}`);
         }

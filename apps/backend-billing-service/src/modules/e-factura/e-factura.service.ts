@@ -1060,7 +1060,10 @@ export class EFacturaService {
    * Check if an invoice requires E-Factura submission
    * Public method for use by other services to determine requirement
    */
-  async isEFacturaRequired(invoiceId: string, context: TenantContext): Promise<{
+  async isEFacturaRequired(
+    invoiceId: string,
+    context: TenantContext,
+  ): Promise<{
     required: boolean;
     reason: string;
     isB2B: boolean;
@@ -1173,10 +1176,9 @@ export class EFacturaService {
   private async getSellerInfo(context: TenantContext): Promise<EFacturaSellerInfo> {
     // Fetch seller info from enterprise service via ClinicFiscalService
     if (!this.clinicFiscalService) {
-      throw new SellerConfigurationException(
-        context.clinicId,
-        ['clinicFiscalService not available'],
-      );
+      throw new SellerConfigurationException(context.clinicId, [
+        'clinicFiscalService not available',
+      ]);
     }
 
     try {
@@ -1192,7 +1194,10 @@ export class EFacturaService {
       }
 
       if (!sellerInfo.address?.streetName || !sellerInfo.address?.city) {
-        throw new SellerConfigurationException(context.clinicId, ['address.streetName', 'address.city']);
+        throw new SellerConfigurationException(context.clinicId, [
+          'address.streetName',
+          'address.city',
+        ]);
       }
 
       return sellerInfo;
@@ -1203,20 +1208,18 @@ export class EFacturaService {
 
       // Convert NotFoundException from clinic service to SellerConfigurationException
       if (error instanceof NotFoundException) {
-        throw new SellerConfigurationException(
-          context.clinicId,
-          ['Clinic fiscal settings not configured'],
-        );
+        throw new SellerConfigurationException(context.clinicId, [
+          'Clinic fiscal settings not configured',
+        ]);
       }
 
       this.logger.error(
         `Failed to fetch seller info for clinic ${context.clinicId}: ${error instanceof Error ? error.message : String(error)}`,
       );
 
-      throw new SellerConfigurationException(
-        context.clinicId,
-        ['Unable to fetch fiscal settings from enterprise service'],
-      );
+      throw new SellerConfigurationException(context.clinicId, [
+        'Unable to fetch fiscal settings from enterprise service',
+      ]);
     }
   }
 
@@ -1273,16 +1276,16 @@ export class EFacturaService {
   private async getInvoiceLineItems(invoice: Invoice): Promise<InvoiceLineItem[]> {
     // If invoice has no items, return a single aggregate line
     if (!invoice.items || invoice.items.length === 0) {
-      this.logger.warn(
-        `Invoice ${invoice.invoiceNumber} has no line items, using aggregate line`,
-      );
+      this.logger.warn(`Invoice ${invoice.invoiceNumber} has no line items, using aggregate line`);
       return this.createAggregateLine(invoice);
     }
 
     // Fetch actual line items from database
-    const items = await this.invoiceItemModel.find({
-      _id: { $in: invoice.items },
-    }).exec();
+    const items = await this.invoiceItemModel
+      .find({
+        _id: { $in: invoice.items },
+      })
+      .exec();
 
     // If no items found (orphaned references), fall back to aggregate
     if (items.length === 0) {
@@ -1396,22 +1399,30 @@ export class EFacturaService {
    */
   private getVatTreatmentForItem(item: InvoiceItem): VatTreatment {
     if (this.healthcareVatService) {
-      return this.healthcareVatService.getVatTreatment(
-        item.procedureCode,
-        item.itemType,
-      );
+      return this.healthcareVatService.getVatTreatment(item.procedureCode, item.itemType);
     }
 
     // Fallback: use existing tax rate from item or default to healthcare exempt
     if (item.taxRate !== undefined && item.taxRate !== null) {
       return {
         taxRate: item.taxRate,
-        taxCategoryCode: this.getTaxCategoryCode(item.taxRate) as 'S' | 'E' | 'Z' | 'AE' | 'K' | 'G' | 'O' | 'L' | 'M' | 'B',
+        taxCategoryCode: this.getTaxCategoryCode(item.taxRate) as
+          | 'S'
+          | 'E'
+          | 'Z'
+          | 'AE'
+          | 'K'
+          | 'G'
+          | 'O'
+          | 'L'
+          | 'M'
+          | 'B',
         isHealthcareExempt: item.taxRate === 0,
         exemptionReasonCode: item.taxRate === 0 ? 'VATEX-EU-J' : undefined,
-        exemptionReasonText: item.taxRate === 0
-          ? 'Servicii medicale stomatologice scutite conform Art. 292 Cod Fiscal / Dental medical services exempt under Art. 292 Tax Code'
-          : undefined,
+        exemptionReasonText:
+          item.taxRate === 0
+            ? 'Servicii medicale stomatologice scutite conform Art. 292 Cod Fiscal / Dental medical services exempt under Art. 292 Tax Code'
+            : undefined,
       };
     }
 

@@ -207,16 +207,11 @@ Expires: ${expiresAt.toISOString()}
     }
 
     // Token expired
-    if (
-      user.emailVerificationTokenExpiresAt &&
-      new Date() > user.emailVerificationTokenExpiresAt
-    ) {
+    if (user.emailVerificationTokenExpiresAt && new Date() > user.emailVerificationTokenExpiresAt) {
       this.logger.warn(
         `Email verification attempted with expired token for user ${user.id} (${user.email})`
       );
-      throw new UnauthorizedException(
-        'Verification token has expired. Please request a new one.'
-      );
+      throw new UnauthorizedException('Verification token has expired. Please request a new one.');
     }
 
     // Mark email as verified and clear token

@@ -116,7 +116,7 @@ export function CompleteAppointmentWithConsumptionModal({
       setMaterialCost(0);
       setConsumptionConfirmed(false);
       onClose();
-    } catch (error) {
+    } catch (_error) {
       // Error handled by parent
     }
   }, [selectedProcedures, materialCost, onComplete, onClose]);

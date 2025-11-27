@@ -22,7 +22,12 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { GdprService } from './gdpr.service';
-import { JwtAuthGuard, TenantIsolationGuard, PermissionsGuard, RequirePermissions } from '../../guards';
+import {
+  JwtAuthGuard,
+  TenantIsolationGuard,
+  PermissionsGuard,
+  RequirePermissions,
+} from '../../guards';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { CurrentUser as ICurrentUser } from '@dentalos/shared-auth';
 import {
@@ -216,10 +221,7 @@ export class GdprController {
   async listRequests(@Query() query: QueryGdprRequestsDto, @CurrentUser() user: ICurrentUser) {
     this.logger.log(`Listing GDPR requests for tenant ${user.tenantContext.organizationId}`);
 
-    const result = await this.gdprService.listRequests(
-      user.tenantContext.organizationId,
-      query,
-    );
+    const result = await this.gdprService.listRequests(user.tenantContext.organizationId, query);
 
     return {
       success: true,

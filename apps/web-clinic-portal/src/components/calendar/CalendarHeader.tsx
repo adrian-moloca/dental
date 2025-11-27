@@ -5,8 +5,6 @@
  */
 
 import React from 'react';
-import { format } from 'date-fns';
-import { ro } from 'date-fns/locale';
 
 type CalendarView = 'day' | 'week' | 'month';
 
@@ -21,7 +19,7 @@ interface CalendarHeaderProps {
 }
 
 export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
-  currentDate,
+  currentDate: _currentDate,
   view,
   title,
   onPrevious,

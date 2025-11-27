@@ -54,11 +54,7 @@ import {
   CancelTreatmentPlanDto,
   TreatmentPlanQueryDto,
 } from './dto';
-import {
-  JwtAuthGuard,
-  PermissionsGuard,
-  TenantIsolationGuard,
-} from '../auth/guards';
+import { JwtAuthGuard, PermissionsGuard, TenantIsolationGuard } from '../auth/guards';
 import { GetCurrentUser, RequirePermissions } from '../auth/decorators';
 import { CurrentUser } from '@dentalos/shared-auth';
 
@@ -122,7 +118,11 @@ export class TreatmentPlansController {
   @ApiParam({ name: 'patientId', description: 'Patient UUID' })
   @ApiQuery({ name: 'status', required: false, description: 'Filter by status' })
   @ApiQuery({ name: 'page', required: false, description: 'Page number (default: 1)' })
-  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default: 20, max: 100)' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Items per page (default: 20, max: 100)',
+  })
   @ApiResponse({ status: 200, description: 'Treatment plans retrieved successfully' })
   async findAll(
     @Param('patientId', ParseUUIDPipe) patientId: string,

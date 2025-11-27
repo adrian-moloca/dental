@@ -55,7 +55,8 @@ export class ResetPasswordDto {
    * @example "MyNewSecurePassword123!"
    */
   @ApiProperty({
-    description: 'New password (min 12 chars, must include uppercase, lowercase, digit, special char)',
+    description:
+      'New password (min 12 chars, must include uppercase, lowercase, digit, special char)',
     example: 'MyNewSecurePassword123!',
     minLength: 12,
     maxLength: 128,

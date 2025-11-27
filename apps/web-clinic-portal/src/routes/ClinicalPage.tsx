@@ -37,7 +37,6 @@ import {
 import { usePatient } from '../hooks/usePatients';
 import { useAppointments } from '../hooks/useAppointments';
 import { OdontogramEditor } from '../components/clinical/OdontogramEditor';
-import { PatientContextBar } from '../components/clinical/PatientContextBar';
 import { QuickActionsToolbar } from '../components/clinical/QuickActionsToolbar';
 import { QuickActionsPanel } from '../components/clinical/QuickActionsPanel';
 import { PatientContactActions } from '../components/clinical/PatientContactActions';
