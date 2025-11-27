@@ -10,6 +10,7 @@ import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { PatientForm } from '../components/patients/PatientForm';
 import type { CreatePatientDto } from '../types/patient.types';
+import toast from 'react-hot-toast';
 
 export default function CreatePatientPage() {
   const navigate = useNavigate();
@@ -30,10 +31,13 @@ export default function CreatePatientPage() {
       const result = await createPatient.mutateAsync(data);
 
       if (result.success && result.data?.id) {
+        toast.success('Pacient creat cu succes!');
         navigate(`/patients/${result.data.id}`);
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to create patient');
+      const message = error instanceof Error ? error.message : 'Eroare la crearea pacientului';
+      setErrorMessage(message);
+      toast.error(message);
     }
   };
 

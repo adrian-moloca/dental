@@ -54,3 +54,9 @@ export type {
 
 export { StatsCard, CompactStats } from './StatsCard';
 export type { StatsCardProps, CompactStatsProps } from './StatsCard';
+
+export { Tooltip } from './Tooltip';
+export type { TooltipProps } from './Tooltip';
+
+export { Breadcrumb } from './Breadcrumb';
+export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb';

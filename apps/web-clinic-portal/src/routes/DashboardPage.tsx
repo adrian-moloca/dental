@@ -447,11 +447,32 @@ export function DashboardPage() {
               </div>
 
               {upcomingAppointments.length === 0 && (
-                <div className="text-center py-4">
-                  <i className="ti ti-calendar-off fs-48 text-muted"></i>
-                  <p className="text-muted mt-2 mb-0">
-                    Nu sunt programari pentru azi
+                <div className="text-center py-5">
+                  <div className="avatar avatar-xl bg-light rounded-circle mx-auto mb-3">
+                    <i className="ti ti-calendar-off fs-48 text-muted"></i>
+                  </div>
+                  <h6 className="fw-semibold mb-2">Nicio programare pentru azi</h6>
+                  <p className="text-muted mb-4 small">
+                    Incepe ziua adaugand prima programare sau verifica programarile viitoare
                   </p>
+                  <div className="d-flex gap-2 justify-content-center">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => navigate('/appointments/create')}
+                    >
+                      <i className="ti ti-plus me-1"></i>
+                      Adauga Programare
+                    </Button>
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={() => navigate('/appointments')}
+                    >
+                      <i className="ti ti-calendar me-1"></i>
+                      Vezi Calendarul
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardBody>

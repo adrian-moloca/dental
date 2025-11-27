@@ -1,0 +1,788 @@
+/**
+ * Odontogram Editor Styles
+ *
+ * Professional dental charting component with:
+ * - Realistic tooth SVG styling
+ * - Smooth hover effects and animations
+ * - Accessible focus indicators
+ * - Responsive design
+ */
+
+/* ==========================================================================
+   CSS Custom Properties (Design Tokens)
+   ========================================================================== */
+
+.odontogram-editor {
+  --odontogram-bg: #ffffff;
+  --odontogram-border: #e7e8eb;
+  --odontogram-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+
+  /* Tooth colors */
+  --tooth-bg: #f8f8f4;
+  --tooth-border: #c8c0b8;
+  --tooth-hover-shadow: 0 8px 25px rgba(46, 55, 164, 0.25);
+  --tooth-selected-border: #2e37a4;
+
+  /* Condition colors */
+  --condition-healthy: #27ae60;
+  --condition-caries: #ef1e1e;
+  --condition-filling: #2e37a4;
+  --condition-crown: #800080;
+  --condition-missing: #6c7688;
+  --condition-implant: #3538cd;
+  --condition-root-canal: #e2b93b;
+  --condition-bridge: #2f80ed;
+
+  /* Animation durations */
+  --transition-fast: 150ms;
+  --transition-normal: 250ms;
+  --transition-slow: 400ms;
+
+  /* Spacing */
+  --tooth-gap: 6px;
+  --arch-gap: 24px;
+}
+
+/* Dark mode support */
+[data-bs-theme='dark'] .odontogram-editor {
+  --odontogram-bg: #1a1a2e;
+  --odontogram-border: #2a2a4a;
+  --odontogram-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  --tooth-bg: #2a2a4a;
+  --tooth-border: #3a3a5a;
+}
+
+/* ==========================================================================
+   Main Container
+   ========================================================================== */
+
+.odontogram-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  background: var(--odontogram-bg);
+  border-radius: 12px;
+  border: 1px solid var(--odontogram-border);
+  box-shadow: var(--odontogram-shadow);
+}
+
+/* ==========================================================================
+   Odontogram Chart
+   ========================================================================== */
+
+.odontogram-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--arch-gap);
+  padding: 20px 0;
+}
+
+/* Dental Arch Containers */
+.odontogram-arch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.odontogram-arch-upper .teeth-row {
+  /* Upper teeth hang down - roots pointing up */
+  padding-bottom: 8px;
+}
+
+.odontogram-arch-lower .teeth-row {
+  /* Lower teeth point up - roots pointing down */
+  padding-top: 8px;
+}
+
+/* Arch Labels */
+.arch-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-500, #6c7688);
+  padding: 4px 12px;
+  background: var(--light, #f5f6f8);
+  border-radius: 4px;
+}
+
+/* Teeth Row - Centered flex container */
+.teeth-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: var(--tooth-gap);
+  flex-wrap: nowrap;
+  padding: 8px 16px;
+}
+
+/* Midline Separator */
+.arch-separator {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 800px;
+  padding: 8px 0;
+}
+
+.separator-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--odontogram-border) 50%, transparent 100%);
+}
+
+.separator-labels {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-400, #858d9c);
+}
+
+.separator-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: var(--light, #f5f6f8);
+  border-radius: 50%;
+  color: var(--gray-500, #6c7688);
+}
+
+.separator-icon i {
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   Tooth Container & Button
+   ========================================================================== */
+
+.tooth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Tooth Number Label */
+.tooth-number {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--gray-600, #545f74);
+  line-height: 1;
+  padding: 2px 4px;
+  background: var(--light, #f5f6f8);
+  border-radius: 3px;
+  transition: all var(--transition-fast) ease;
+}
+
+.tooth-number-upper {
+  order: -1;
+  margin-bottom: 4px;
+}
+
+.tooth-number-lower {
+  order: 1;
+  margin-top: 4px;
+}
+
+/* Tooth Button */
+.tooth-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 72px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition-normal) cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center center;
+}
+
+.tooth-button:not(:disabled):hover {
+  transform: scale(1.12) translateY(-4px);
+  z-index: 10;
+}
+
+.tooth-button:not(:disabled):hover .tooth-svg {
+  filter: drop-shadow(0 8px 16px rgba(46, 55, 164, 0.2));
+}
+
+.tooth-button:not(:disabled):hover .tooth-number {
+  color: var(--primary, #2e37a4);
+  background: var(--primary-transparent, #ecedf7);
+}
+
+/* Selected State */
+.tooth-button-selected {
+  transform: scale(1.15) translateY(-6px);
+  z-index: 20;
+}
+
+.tooth-button-selected .tooth-svg {
+  filter: drop-shadow(0 10px 20px rgba(46, 55, 164, 0.35));
+}
+
+.tooth-button-selected .tooth-number {
+  color: #ffffff;
+  background: var(--primary, #2e37a4);
+}
+
+/* Focus State - Accessibility */
+.tooth-button:focus {
+  outline: none;
+}
+
+.tooth-button:focus-visible {
+  outline: 3px solid var(--primary, #2e37a4);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Disabled State */
+.tooth-button:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.tooth-button:disabled:hover {
+  transform: none;
+}
+
+/* ==========================================================================
+   Tooth SVG Styles
+   ========================================================================== */
+
+.tooth-svg {
+  width: 100%;
+  height: 100%;
+  transition: all var(--transition-normal) ease;
+}
+
+.tooth-svg.tooth-selected path {
+  stroke-width: 2;
+}
+
+.tooth-svg.tooth-missing {
+  opacity: 0.6;
+}
+
+/* Condition overlay animation */
+.condition-overlay {
+  transition: opacity var(--transition-normal) ease;
+}
+
+.tooth-button:hover .condition-overlay {
+  opacity: 0.45;
+}
+
+/* Root structure - subtle fade effect */
+.tooth-root {
+  transition: opacity var(--transition-normal) ease;
+}
+
+.tooth-button:hover .tooth-root {
+  opacity: 0.7;
+}
+
+/* ==========================================================================
+   Tooth Tooltip
+   ========================================================================== */
+
+.tooth-tooltip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--gray-900, #0a1b39);
+  color: #ffffff;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--transition-fast) ease;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.tooth-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--gray-900, #0a1b39);
+}
+
+.tooth-button:hover .tooth-tooltip,
+.tooth-button:focus-visible .tooth-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooth-tooltip strong {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tooth-tooltip-type {
+  color: var(--gray-300, #9da4b0);
+  font-size: 0.7rem;
+}
+
+.tooth-tooltip-condition {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+}
+
+/* Condition colors for tooltips */
+.tooth-tooltip-condition.condition-healthy {
+  background: var(--condition-healthy);
+}
+.tooth-tooltip-condition.condition-caries {
+  background: var(--condition-caries);
+}
+.tooth-tooltip-condition.condition-filling {
+  background: var(--condition-filling);
+}
+.tooth-tooltip-condition.condition-crown {
+  background: var(--condition-crown);
+}
+.tooth-tooltip-condition.condition-missing {
+  background: var(--condition-missing);
+}
+.tooth-tooltip-condition.condition-implant {
+  background: var(--condition-implant);
+}
+.tooth-tooltip-condition.condition-root-canal {
+  background: var(--condition-root-canal);
+  color: #000000;
+}
+.tooth-tooltip-condition.condition-bridge {
+  background: var(--condition-bridge);
+}
+
+/* ==========================================================================
+   First Load Animation
+   ========================================================================== */
+
+@keyframes toothFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  60% {
+    transform: scale(1.05) translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes toothPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.tooth-animate-in {
+  animation: toothFadeIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, toothPulse 2s ease-in-out 0.6s 1;
+  opacity: 0;
+}
+
+/* ==========================================================================
+   Legend
+   ========================================================================== */
+
+.odontogram-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px 24px;
+  padding: 16px 20px;
+  background: var(--light, #f5f6f8);
+  border-radius: 8px;
+  border: 1px solid var(--odontogram-border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.legend-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--gray-700, #3b4961);
+}
+
+/* ==========================================================================
+   Condition Editor Panel
+   ========================================================================== */
+
+.condition-editor {
+  padding: 24px;
+  background: var(--light, #f5f6f8);
+  border-radius: 12px;
+  border: 1px solid var(--odontogram-border);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.editor-header {
+  margin-bottom: 20px;
+}
+
+.editor-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--heading-color, #0a1b39);
+}
+
+.editor-title i {
+  color: var(--primary, #2e37a4);
+}
+
+.editor-tooth-type {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--gray-500, #6c7688);
+  margin-left: 4px;
+}
+
+.editor-section {
+  margin-bottom: 20px;
+}
+
+.editor-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-700, #3b4961);
+  margin-bottom: 12px;
+}
+
+/* Condition Grid */
+.condition-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.condition-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 2px solid var(--odontogram-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gray-700, #3b4961);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+}
+
+.condition-option:hover {
+  border-color: var(--primary, #2e37a4);
+  background: var(--primary-transparent, #ecedf7);
+}
+
+.condition-option-selected {
+  border-color: var(--primary, #2e37a4);
+  background: var(--primary, #2e37a4);
+  color: #ffffff;
+}
+
+.condition-option:focus-visible {
+  outline: 3px solid var(--primary, #2e37a4);
+  outline-offset: 2px;
+}
+
+.condition-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Surface Grid */
+.surface-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.surface-button {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  background: #ffffff;
+  border: 2px solid var(--odontogram-border);
+  border-radius: 8px;
+  color: var(--gray-600, #545f74);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+}
+
+.surface-button:hover {
+  border-color: var(--primary, #2e37a4);
+  color: var(--primary, #2e37a4);
+}
+
+.surface-button-selected {
+  border-color: var(--primary, #2e37a4);
+  background: var(--primary, #2e37a4);
+  color: #ffffff;
+}
+
+.surface-button:focus-visible {
+  outline: 3px solid var(--primary, #2e37a4);
+  outline-offset: 2px;
+}
+
+.surface-legend {
+  margin-top: 10px;
+  font-size: 0.75rem;
+  color: var(--gray-500, #6c7688);
+}
+
+/* Editor Actions */
+.editor-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--odontogram-border);
+}
+
+/* ==========================================================================
+   Main Actions
+   ========================================================================== */
+
+.odontogram-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--odontogram-border);
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+  .teeth-row {
+    gap: 4px;
+  }
+
+  .tooth-button {
+    width: 38px;
+    height: 64px;
+  }
+
+  .tooth-number {
+    font-size: 0.6rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .odontogram-editor {
+    padding: 16px;
+  }
+
+  .teeth-row {
+    gap: 3px;
+    padding: 4px 8px;
+  }
+
+  .tooth-button {
+    width: 32px;
+    height: 56px;
+  }
+
+  .arch-separator {
+    gap: 8px;
+  }
+
+  .separator-labels {
+    font-size: 0.6rem;
+  }
+
+  .separator-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .condition-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .teeth-row {
+    flex-wrap: wrap;
+    max-width: 100%;
+    gap: 4px;
+  }
+
+  .tooth-button {
+    width: 36px;
+    height: 60px;
+  }
+
+  .odontogram-legend {
+    gap: 10px 16px;
+    padding: 12px 16px;
+  }
+
+  .legend-label {
+    font-size: 0.75rem;
+  }
+
+  .condition-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .surface-grid {
+    justify-content: center;
+  }
+
+  .editor-actions {
+    flex-direction: column;
+  }
+
+  .editor-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .odontogram-chart {
+    gap: 16px;
+  }
+
+  .tooth-button {
+    width: 30px;
+    height: 52px;
+  }
+
+  .tooth-number {
+    font-size: 0.55rem;
+    padding: 1px 3px;
+  }
+
+  .arch-label {
+    font-size: 0.65rem;
+  }
+
+  .tooth-tooltip {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+  .odontogram-editor {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  .tooth-button:hover {
+    transform: none;
+  }
+
+  .tooth-tooltip {
+    display: none;
+  }
+
+  .editor-actions,
+  .odontogram-actions {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Reduced Motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .tooth-button,
+  .tooth-svg,
+  .condition-overlay,
+  .tooth-root,
+  .tooth-tooltip,
+  .condition-editor {
+    transition: none;
+  }
+
+  .tooth-animate-in {
+    animation: none;
+    opacity: 1;
+  }
+}

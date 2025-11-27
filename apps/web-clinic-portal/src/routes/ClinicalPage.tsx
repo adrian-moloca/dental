@@ -272,67 +272,6 @@ export function ClinicalPage() {
                     </Card>
                   </div>
                 </div>
-
-                {/* Legend Card */}
-                <div className="row mt-4">
-                  <div className="col-12">
-                    <Card>
-                      <CardHeader title="Legenda Conditii Dentare" icon="ti ti-info-circle" />
-                      <CardBody>
-                        <div className="row g-3">
-                          <div className="col-md-3 col-sm-6">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="badge-dot badge-dot-lg bg-success"></div>
-                              <span>Sanatos</span>
-                            </div>
-                          </div>
-                          <div className="col-md-3 col-sm-6">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="badge-dot badge-dot-lg bg-danger"></div>
-                              <span>Carie</span>
-                            </div>
-                          </div>
-                          <div className="col-md-3 col-sm-6">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="badge-dot badge-dot-lg bg-primary"></div>
-                              <span>Plomba</span>
-                            </div>
-                          </div>
-                          <div className="col-md-3 col-sm-6">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="badge-dot badge-dot-lg bg-purple"></div>
-                              <span>Coroana</span>
-                            </div>
-                          </div>
-                          <div className="col-md-3 col-sm-6">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="badge-dot badge-dot-lg bg-secondary"></div>
-                              <span>Lipsa</span>
-                            </div>
-                          </div>
-                          <div className="col-md-3 col-sm-6">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="badge-dot badge-dot-lg bg-indigo"></div>
-                              <span>Implant</span>
-                            </div>
-                          </div>
-                          <div className="col-md-3 col-sm-6">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="badge-dot badge-dot-lg bg-warning"></div>
-                              <span>Tratament de Canal</span>
-                            </div>
-                          </div>
-                          <div className="col-md-3 col-sm-6">
-                            <div className="d-flex align-items-center gap-2">
-                              <div className="badge-dot badge-dot-lg bg-info"></div>
-                              <span>Punte Dentara</span>
-                            </div>
-                          </div>
-                        </div>
-                      </CardBody>
-                    </Card>
-                  </div>
-                </div>
               </div>
             )}
 

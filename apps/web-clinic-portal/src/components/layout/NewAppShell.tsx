@@ -1,11 +1,14 @@
 /**
  * Advanced AppShell - With collapsible sidebars, theme toggle, notifications
+ * ENHANCED: Now includes Command Palette, Keyboard Shortcuts, and global keyboard navigation
  */
 
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useSidebar } from '../../contexts/SidebarContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { CollapsibleSidebar } from './CollapsibleSidebar';
 import { RightSidebar } from './RightSidebar';
 import { MobileMenu } from './MobileMenu';
@@ -14,6 +17,8 @@ import { SkipNav } from '../a11y/SkipNav';
 import { Icon } from '../ui/Icon';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { NotificationCenter, type Notification } from '../notifications/NotificationCenter';
+import { EnhancedCommandPalette } from '../command/EnhancedCommandPalette';
+import { KeyboardShortcutsOverlay } from '../keyboard/KeyboardShortcutsOverlay';
 
 type Props = {
   children: React.ReactNode;
@@ -61,9 +66,20 @@ export function NewAppShell({ children, title, subtitle, actions, rightSidebar, 
   const user = useAuthStore((state) => state.user);
   const location = useLocation();
   const { rightSidebarOpen, toggleRightSidebar } = useSidebar();
+  const { toggleTheme } = useTheme();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificationCenterOpen, setNotificationCenterOpen] = useState(false);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [shortcutsOverlayOpen, setShortcutsOverlayOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
+
+  // Initialize global keyboard shortcuts
+  useKeyboardShortcuts({
+    onOpenCommandPalette: () => setCommandPaletteOpen(true),
+    onOpenShortcutsOverlay: () => setShortcutsOverlayOpen(true),
+    onToggleTheme: toggleTheme,
+  });
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -101,6 +117,18 @@ export function NewAppShell({ children, title, subtitle, actions, rightSidebar, 
         onDelete={handleDelete}
       />
 
+      {/* Enhanced Command Palette - GAME CHANGER FEATURE */}
+      <EnhancedCommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
+
+      {/* Keyboard Shortcuts Overlay */}
+      <KeyboardShortcutsOverlay
+        open={shortcutsOverlayOpen}
+        onClose={() => setShortcutsOverlayOpen(false)}
+      />
+
       <div className="flex min-h-screen">
         {/* Left Sidebar */}
         <CollapsibleSidebar />
@@ -130,6 +158,33 @@ export function NewAppShell({ children, title, subtitle, actions, rightSidebar, 
               </div>
 
               <div className="flex items-center gap-2 flex-shrink-0">
+                {/* Command Palette Trigger - GAME CHANGER */}
+                <Button
+                  variant="soft"
+                  size="md"
+                  onClick={() => setCommandPaletteOpen(true)}
+                  className="hidden md:flex items-center gap-2"
+                  aria-label="Open command palette"
+                >
+                  <Icon name="search" className="w-5 h-5" />
+                  <span className="text-xs text-muted">Search...</span>
+                  <kbd className="px-1.5 py-0.5 text-xs bg-surface-hover border border-border rounded font-mono">
+                    ⌘K
+                  </kbd>
+                </Button>
+
+                {/* Keyboard Shortcuts Button */}
+                <Button
+                  variant="soft"
+                  size="md"
+                  onClick={() => setShortcutsOverlayOpen(true)}
+                  className="hidden lg:flex"
+                  aria-label="Show keyboard shortcuts"
+                  title="Keyboard shortcuts (Press ?)"
+                >
+                  <Icon name="command" className="w-5 h-5" />
+                </Button>
+
                 {/* Theme Toggle */}
                 <div className="hidden sm:block">
                   <ThemeToggle />

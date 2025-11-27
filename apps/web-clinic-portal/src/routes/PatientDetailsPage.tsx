@@ -17,6 +17,10 @@ import {
   Badge,
   StatusBadge,
   StatsCard,
+  ConfirmModal,
+  Breadcrumb,
+  type BreadcrumbItem,
+  Tooltip,
 } from '../components/ui-new';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
@@ -75,6 +79,7 @@ export default function PatientDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -113,16 +118,18 @@ export default function PatientDetailsPage() {
   };
 
   // Handle delete
-  const handleDelete = async () => {
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     if (!id) return;
     if (deletePatient.isPending) return; // Prevent double-click
-    if (!window.confirm('Esti sigur ca vrei sa stergi acest pacient? Aceasta actiune nu poate fi anulata.')) {
-      return;
-    }
 
     try {
       await deletePatient.mutateAsync(id);
       toast.success('Pacient sters cu succes');
+      setShowDeleteConfirm(false);
       navigate('/patients');
     } catch {
       toast.error('Eroare la stergerea pacientului');
@@ -182,6 +189,13 @@ export default function PatientDetailsPage() {
   const medications = (patient.medicalHistory?.medications || []) as (Medication | string)[];
   const hasAlerts = allergies.length > 0 || medicalConditions.length > 0 || medications.length > 0;
 
+  // Breadcrumb navigation
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Dashboard', href: '/dashboard', icon: 'ti ti-home' },
+    { label: 'Pacienti', href: '/patients', icon: 'ti ti-users' },
+    { label: `${patient.firstName} ${patient.lastName}`, icon: 'ti ti-user' },
+  ];
+
   return (
     <AppShell
       title="Detalii Pacient"
@@ -195,6 +209,8 @@ export default function PatientDetailsPage() {
         </div>
       }
     >
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb items={breadcrumbItems} className="mb-3" />
       {/* Patient Header Section */}
       <Card className="shadow-sm mb-4">
         <CardBody>
@@ -789,8 +805,8 @@ export default function PatientDetailsPage() {
                 variant="outline-danger"
                 size="sm"
                 block
-                onClick={handleDelete}
-                loading={deletePatient.isPending}
+                onClick={handleDeleteClick}
+                disabled={deletePatient.isPending}
               >
                 <i className="ti ti-trash me-2"></i>
                 Sterge Pacient
@@ -799,6 +815,19 @@ export default function PatientDetailsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        open={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDeleteConfirm}
+        type="danger"
+        title="Sterge Pacient"
+        message={`Esti sigur ca vrei sa stergi pacientul ${patient?.firstName} ${patient?.lastName}? Toate datele asociate (istoric medical, programari, facturi) vor fi sterse permanent. Aceasta actiune nu poate fi anulata.`}
+        confirmText="Da, Sterge Definitiv"
+        cancelText="Anuleaza"
+        loading={deletePatient.isPending}
+      />
     </AppShell>
   );
 }
