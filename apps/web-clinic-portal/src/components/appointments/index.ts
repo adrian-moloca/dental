@@ -12,3 +12,6 @@ export { ConfirmationMethodSelect } from './ConfirmationMethodSelect';
 export { ConfirmAppointmentModal } from './ConfirmAppointmentModal';
 export { ConfirmationQueue } from './ConfirmationQueue';
 export { ConfirmationStatsWidget } from './ConfirmationStatsWidget';
+export { CompleteAppointmentModal } from './CompleteAppointmentModal';
+export { CompleteAppointmentWithConsumptionModal } from './CompleteAppointmentWithConsumptionModal';
+export type { SelectedProcedure } from './CompleteAppointmentWithConsumptionModal';

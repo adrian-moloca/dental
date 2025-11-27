@@ -5,9 +5,12 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useInvoices } from '../hooks/useBilling';
+import { usePatient } from '../hooks/usePatients';
 import { AppShell } from '../components/layout/AppShell';
+import { Breadcrumb, type BreadcrumbItem } from '../components/ui-new/Breadcrumb';
+import { PatientQuickInfoCard } from '../components/patients/PatientQuickInfoCard';
 import {
   Card,
   CardBody,
@@ -36,13 +39,21 @@ type InvoiceStatus = 'draft' | 'issued' | 'sent' | 'partially_paid' | 'paid' | '
 
 export function BillingPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const patientId = searchParams.get('patientId');
+
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
 
+  // Fetch patient data if patientId is provided
+  const { data: patientResponse } = usePatient(patientId || undefined);
+  const patient = patientResponse?.data;
+
   const { data, isLoading, error, refetch } = useInvoices({
     status: statusFilter || undefined,
+    patientId: patientId || undefined,
     page: currentPage,
     limit: pageSize,
   });
@@ -159,17 +170,74 @@ export function BillingPage() {
     );
   }
 
+  // Breadcrumb navigation
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Dashboard', href: '/dashboard', icon: 'ti ti-home' },
+    ...(patientId && patient
+      ? [
+          { label: 'Pacienti', href: '/patients', icon: 'ti ti-users' },
+          { label: `${patient.firstName} ${patient.lastName}`, href: `/patients/${patientId}`, icon: 'ti ti-user' },
+        ]
+      : []),
+    { label: 'Facturare', icon: 'ti ti-file-invoice' },
+  ];
+
+  const handleBack = () => {
+    if (patientId) {
+      navigate(`/patients/${patientId}`);
+    } else if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   return (
     <AppShell
       title="Facturare"
       subtitle="Gestioneaza facturi si plati"
       actions={
-        <Button variant="primary" onClick={() => navigate('/billing/invoices/new')}>
-          <i className="ti ti-plus me-1"></i>
-          Factura Noua
-        </Button>
+        <div className="d-flex gap-2">
+          {patientId && (
+            <Button variant="outline-secondary" icon="ti ti-arrow-left" onClick={handleBack}>
+              Inapoi
+            </Button>
+          )}
+          <Button variant="primary" onClick={() => navigate('/billing/invoices/new')}>
+            <i className="ti ti-plus me-1"></i>
+            Factura Noua
+          </Button>
+        </div>
       }
     >
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb items={breadcrumbItems} className="mb-3" />
+
+      {/* Patient Quick Info Card (when viewing patient-specific billing) */}
+      {patientId && patient && (
+        <div className="mb-4">
+          <PatientQuickInfoCard
+            patient={{
+              id: patient.id,
+              firstName: patient.firstName || '',
+              lastName: patient.lastName || '',
+              dateOfBirth: patient.dateOfBirth,
+              gender: patient.gender as 'male' | 'female' | 'other' | undefined,
+              balance: stats.outstanding,
+              medicalAlerts: patient.medicalHistory
+                ? {
+                    allergies: patient.medicalHistory.allergies as Array<{ allergen: string; severity?: string }>,
+                    conditions: patient.medicalHistory.conditions as Array<{ condition: string }>,
+                    medications: patient.medicalHistory.medications as Array<{ name: string }>,
+                  }
+                : undefined,
+            }}
+            compact={true}
+            showActions={false}
+          />
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="row g-3 mb-4">
         <div className="col-sm-6 col-xl-3">

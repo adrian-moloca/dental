@@ -25,6 +25,7 @@ import {
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { PatientContactActions } from '../components/clinical/PatientContactActions';
 
 type TabType = 'overview' | 'timeline' | 'documents';
 
@@ -278,12 +279,34 @@ export default function PatientDetailsPage() {
                 <Button
                   variant="soft-info"
                   size="sm"
-                  onClick={() => navigate(`/clinical/charting?patientId=${patient.id}`)}
+                  onClick={() => navigate(`/clinical/${patient.id}`)}
+                  title="Deschide fisa clinica (Date clinice complete)"
                 >
                   <i className="ti ti-dental me-1"></i>
                   Fisa Clinica
                 </Button>
+                <Button
+                  variant="soft-warning"
+                  size="sm"
+                  onClick={() => navigate(`/imaging/${patient.id}`)}
+                  title="Vezi radiografiile pacientului"
+                >
+                  <i className="ti ti-radiation me-1"></i>
+                  Radiografii
+                </Button>
               </div>
+            </div>
+          </div>
+
+          {/* Patient Contact Actions Bar */}
+          <div className="row mt-3 pt-3 border-top">
+            <div className="col-12">
+              <PatientContactActions
+                phone={patient.phones?.[0]?.number}
+                email={patient.emails?.[0]?.address}
+                nextAppointmentDate={nextAppointment?.startTime}
+                appointmentStatus={nextAppointment?.status || 'none'}
+              />
             </div>
           </div>
         </CardBody>
@@ -446,6 +469,99 @@ export default function PatientDetailsPage() {
               ) : undefined
             }
           />
+        </div>
+      </div>
+
+      {/* Quick Navigation Cards */}
+      <div className="row g-3 mb-4">
+        <div className="col-md-6 col-xl-3">
+          <Card
+            hoverable
+            className="h-100 cursor-pointer transition-all"
+            onClick={() => navigate(`/clinical/${patient.id}`)}
+          >
+            <CardBody className="text-center py-4">
+              <div className="avatar avatar-lg rounded-circle bg-info-transparent mb-3 mx-auto">
+                <i className="ti ti-dental fs-24 text-info"></i>
+              </div>
+              <h6 className="fw-bold mb-2">Odontograma</h6>
+              <p className="text-muted small mb-3">
+                Charting clinic, stare dentara
+              </p>
+              <Button variant="outline-info" size="sm" block>
+                <i className="ti ti-arrow-right me-1"></i>
+                Deschide Fisa Clinica
+              </Button>
+            </CardBody>
+          </Card>
+        </div>
+
+        <div className="col-md-6 col-xl-3">
+          <Card
+            hoverable
+            className="h-100 cursor-pointer transition-all"
+            onClick={() => navigate(`/appointments?patientId=${patient.id}`)}
+          >
+            <CardBody className="text-center py-4">
+              <div className="avatar avatar-lg rounded-circle bg-primary-transparent mb-3 mx-auto">
+                <i className="ti ti-calendar fs-24 text-primary"></i>
+              </div>
+              <h6 className="fw-bold mb-2">Programari</h6>
+              <p className="text-muted small mb-3">
+                {totalVisits} finalizate, {appointmentsData?.data?.filter((a: AppointmentItem) =>
+                  a.status === 'scheduled' || a.status === 'confirmed'
+                )?.length || 0} viitoare
+              </p>
+              <Button variant="outline-primary" size="sm" block>
+                <i className="ti ti-arrow-right me-1"></i>
+                Vezi Programari
+              </Button>
+            </CardBody>
+          </Card>
+        </div>
+
+        <div className="col-md-6 col-xl-3">
+          <Card
+            hoverable
+            className="h-100 cursor-pointer transition-all"
+            onClick={() => navigate(`/billing?patientId=${patient.id}`)}
+          >
+            <CardBody className="text-center py-4">
+              <div className="avatar avatar-lg rounded-circle bg-success-transparent mb-3 mx-auto">
+                <i className="ti ti-file-invoice fs-24 text-success"></i>
+              </div>
+              <h6 className="fw-bold mb-2">Facturi</h6>
+              <p className="text-muted small mb-3">
+                Sold: {formatCurrency(outstandingBalance)}
+              </p>
+              <Button variant="outline-success" size="sm" block>
+                <i className="ti ti-arrow-right me-1"></i>
+                Vezi Facturi
+              </Button>
+            </CardBody>
+          </Card>
+        </div>
+
+        <div className="col-md-6 col-xl-3">
+          <Card
+            hoverable
+            className="h-100 cursor-pointer transition-all"
+            onClick={() => navigate(`/clinical/${patient.id}?tab=plans`)}
+          >
+            <CardBody className="text-center py-4">
+              <div className="avatar avatar-lg rounded-circle bg-warning-transparent mb-3 mx-auto">
+                <i className="ti ti-file-description fs-24 text-warning"></i>
+              </div>
+              <h6 className="fw-bold mb-2">Planuri Tratament</h6>
+              <p className="text-muted small mb-3">
+                Planificare si estimari
+              </p>
+              <Button variant="outline-warning" size="sm" block>
+                <i className="ti ti-arrow-right me-1"></i>
+                Vezi Planuri
+              </Button>
+            </CardBody>
+          </Card>
         </div>
       </div>
 
@@ -737,39 +853,92 @@ export default function PatientDetailsPage() {
             <CardHeader title="Actiuni Rapide" icon="ti ti-bolt" />
             <CardBody>
               <div className="d-grid gap-2">
+                {/* Primary action - Schedule */}
                 <Button
                   variant="primary"
                   onClick={() =>
                     navigate('/appointments/create', { state: { patientId: patient.id } })
                   }
+                  title="Programeaza o noua vizita pentru acest pacient"
                 >
                   <i className="ti ti-calendar-plus me-2"></i>
                   Programeaza Vizita
                 </Button>
-                <Button
-                  variant="soft-info"
-                  onClick={() => navigate(`/clinical/charting?patientId=${patient.id}`)}
-                >
-                  <i className="ti ti-dental me-2"></i>
-                  Fisa Clinica
-                </Button>
-                <Button
-                  variant="soft-warning"
-                  onClick={() => navigate(`/clinical/treatment-plans?patientId=${patient.id}`)}
-                >
-                  <i className="ti ti-file-description me-2"></i>
-                  Plan Tratament
-                </Button>
-                <Button
-                  variant="soft-success"
-                  onClick={() => navigate(`/billing/invoices/new?patientId=${patient.id}`)}
-                >
-                  <i className="ti ti-file-invoice me-2"></i>
-                  Factura Noua
-                </Button>
+
+                {/* Clinical actions group */}
+                <div className="border rounded p-2 bg-light">
+                  <div className="text-muted small fw-semibold mb-2 px-1">
+                    <i className="ti ti-dental me-1"></i>
+                    Actiuni Clinice
+                  </div>
+                  <div className="d-grid gap-2">
+                    <Button
+                      variant="soft-info"
+                      size="sm"
+                      onClick={() => navigate(`/clinical/${patient.id}`)}
+                      title="Deschide fisa clinica completa"
+                    >
+                      <i className="ti ti-dental me-2"></i>
+                      Fisa Clinica
+                    </Button>
+                    <Button
+                      variant="soft-info"
+                      size="sm"
+                      onClick={() => navigate(`/imaging/${patient.id}`)}
+                      title="Vizualizeaza radiografiile"
+                    >
+                      <i className="ti ti-radiation me-2"></i>
+                      Radiografii
+                    </Button>
+                    <Button
+                      variant="soft-warning"
+                      size="sm"
+                      onClick={() => {
+                        navigate(`/clinical/${patient.id}`);
+                        // In a real app, this would open the treatment plans tab
+                      }}
+                      title="Creaza sau editeaza plan de tratament"
+                    >
+                      <i className="ti ti-file-description me-2"></i>
+                      Plan Tratament
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Financial actions group */}
+                <div className="border rounded p-2 bg-light">
+                  <div className="text-muted small fw-semibold mb-2 px-1">
+                    <i className="ti ti-cash me-1"></i>
+                    Actiuni Financiare
+                  </div>
+                  <div className="d-grid gap-2">
+                    <Button
+                      variant="soft-success"
+                      size="sm"
+                      onClick={() => navigate(`/billing/invoices/new?patientId=${patient.id}`)}
+                      title="Genereaza factura noua"
+                    >
+                      <i className="ti ti-file-invoice me-2"></i>
+                      Factura Noua
+                    </Button>
+                    <Button
+                      variant="soft-warning"
+                      size="sm"
+                      onClick={() => navigate(`/billing?patientId=${patient.id}`)}
+                      title="Vezi situatia financiara"
+                    >
+                      <i className="ti ti-receipt me-2"></i>
+                      Situatie Financiara
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Other actions */}
                 <Button
                   variant="soft-secondary"
+                  size="sm"
                   onClick={() => navigate(`/patients/${id}/edit`)}
+                  title="Editeaza informatiile pacientului"
                 >
                   <i className="ti ti-edit me-2"></i>
                   Editeaza Profil

@@ -9,6 +9,7 @@
  */
 
 import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import { AppShell } from '../components/layout/AppShell';
@@ -17,6 +18,9 @@ import { Button } from '../components/ui-new/Button';
 import { Badge } from '../components/ui-new/Badge';
 import { Modal } from '../components/ui-new/Modal';
 import { Input, SearchInput, Textarea } from '../components/ui-new/Input';
+import { Breadcrumb, type BreadcrumbItem } from '../components/ui-new/Breadcrumb';
+import { PatientQuickInfoCard } from '../components/patients/PatientQuickInfoCard';
+import { usePatient } from '../hooks/usePatients';
 
 // Types
 type ModalityType = 'toate' | 'panoramic' | 'periapical' | 'cbct' | 'foto';
@@ -139,11 +143,18 @@ const MOCK_STUDIES: ImagingStudy[] = [
 ];
 
 export function ImagingPage() {
+  const { patientId } = useParams<{ patientId?: string }>();
+  const navigate = useNavigate();
+
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [modalityFilter, setModalityFilter] = useState<ModalityType>('toate');
   const [selectedStudy, setSelectedStudy] = useState<ImagingStudy | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
+
+  // Fetch patient data if patientId is provided
+  const { data: patientResponse } = usePatient(patientId);
+  const patient = patientResponse?.data;
 
   // Upload form state
   const [uploadForm, setUploadForm] = useState({
@@ -232,16 +243,72 @@ export function ImagingPage() {
     }
   };
 
+  // Breadcrumb navigation
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Dashboard', href: '/dashboard', icon: 'ti ti-home' },
+    ...(patientId && patient
+      ? [
+          { label: 'Pacienti', href: '/patients', icon: 'ti ti-users' },
+          { label: `${patient.firstName} ${patient.lastName}`, href: `/patients/${patientId}`, icon: 'ti ti-user' },
+        ]
+      : []),
+    { label: 'Imagistica', icon: 'ti ti-photo' },
+  ];
+
+  const handleBack = () => {
+    if (patientId) {
+      navigate(`/patients/${patientId}`);
+    } else if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
   return (
     <AppShell
       title="Imagistica"
       subtitle="Radiografii si studii imagistice"
       actions={
-        <Button icon="ti ti-upload" onClick={() => setShowUploadModal(true)}>
-          Incarca Imagine
-        </Button>
+        <div className="d-flex gap-2">
+          {patientId && (
+            <Button variant="outline-secondary" icon="ti ti-arrow-left" onClick={handleBack}>
+              Inapoi
+            </Button>
+          )}
+          <Button icon="ti ti-upload" onClick={() => setShowUploadModal(true)}>
+            Incarca Imagine
+          </Button>
+        </div>
       }
     >
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb items={breadcrumbItems} className="mb-3" />
+
+      {/* Patient Quick Info Card (when viewing patient-specific imaging) */}
+      {patientId && patient && (
+        <div className="mb-4">
+          <PatientQuickInfoCard
+            patient={{
+              id: patient.id,
+              firstName: patient.firstName || '',
+              lastName: patient.lastName || '',
+              dateOfBirth: patient.dateOfBirth,
+              gender: patient.gender as 'male' | 'female' | 'other' | undefined,
+              medicalAlerts: patient.medicalHistory
+                ? {
+                    allergies: patient.medicalHistory.allergies as Array<{ allergen: string; severity?: string }>,
+                    conditions: patient.medicalHistory.conditions as Array<{ condition: string }>,
+                    medications: patient.medicalHistory.medications as Array<{ name: string }>,
+                  }
+                : undefined,
+            }}
+            compact={true}
+            showActions={false}
+          />
+        </div>
+      )}
+
       <div className="row">
         {/* Filter Bar */}
         <div className="col-12 mb-4">

@@ -13,25 +13,25 @@
    ========================================================================== */
 
 .odontogram-editor {
-  --odontogram-bg: #ffffff;
-  --odontogram-border: #e7e8eb;
+  --odontogram-bg: var(--white);
+  --odontogram-border: var(--border-color);
   --odontogram-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 
   /* Tooth colors */
   --tooth-bg: #f8f8f4;
   --tooth-border: #c8c0b8;
-  --tooth-hover-shadow: 0 8px 25px rgba(46, 55, 164, 0.25);
-  --tooth-selected-border: #2e37a4;
+  --tooth-hover-shadow: 0 8px 25px rgba(var(--primary-rgb), 0.25);
+  --tooth-selected-border: var(--primary);
 
   /* Condition colors */
-  --condition-healthy: #27ae60;
-  --condition-caries: #ef1e1e;
-  --condition-filling: #2e37a4;
-  --condition-crown: #800080;
-  --condition-missing: #6c7688;
-  --condition-implant: #3538cd;
-  --condition-root-canal: #e2b93b;
-  --condition-bridge: #2f80ed;
+  --condition-healthy: var(--success);
+  --condition-caries: var(--danger);
+  --condition-filling: var(--primary);
+  --condition-crown: var(--purple);
+  --condition-missing: var(--gray-400);
+  --condition-implant: var(--indigo);
+  --condition-root-canal: var(--warning);
+  --condition-bridge: var(--info);
 
   /* Animation durations */
   --transition-fast: 150ms;
@@ -45,11 +45,11 @@
 
 /* Dark mode support */
 [data-bs-theme='dark'] .odontogram-editor {
-  --odontogram-bg: #1a1a2e;
-  --odontogram-border: #2a2a4a;
+  --odontogram-bg: var(--white);
+  --odontogram-border: var(--border-color);
   --odontogram-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  --tooth-bg: #2a2a4a;
-  --tooth-border: #3a3a5a;
+  --tooth-bg: var(--light-200);
+  --tooth-border: var(--gray-100);
 }
 
 /* ==========================================================================
@@ -104,9 +104,9 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--gray-500, #6c7688);
+  color: var(--gray-500);
   padding: 4px 12px;
-  background: var(--light, #f5f6f8);
+  background: var(--light);
   border-radius: 4px;
 }
 
@@ -144,7 +144,7 @@
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--gray-400, #858d9c);
+  color: var(--gray-400);
 }
 
 .separator-icon {
@@ -153,9 +153,9 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: var(--light, #f5f6f8);
+  background: var(--light);
   border-radius: 50%;
-  color: var(--gray-500, #6c7688);
+  color: var(--gray-500);
 }
 
 .separator-icon i {
@@ -177,10 +177,10 @@
 .tooth-number {
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--gray-600, #545f74);
+  color: var(--gray-600);
   line-height: 1;
   padding: 2px 4px;
-  background: var(--light, #f5f6f8);
+  background: var(--light);
   border-radius: 3px;
   transition: all var(--transition-fast) ease;
 }
@@ -218,12 +218,12 @@
 }
 
 .tooth-button:not(:disabled):hover .tooth-svg {
-  filter: drop-shadow(0 8px 16px rgba(46, 55, 164, 0.2));
+  filter: drop-shadow(0 8px 16px rgba(var(--primary-rgb), 0.2));
 }
 
 .tooth-button:not(:disabled):hover .tooth-number {
-  color: var(--primary, #2e37a4);
-  background: var(--primary-transparent, #ecedf7);
+  color: var(--primary);
+  background: var(--primary-transparent);
 }
 
 /* Selected State */
@@ -233,12 +233,12 @@
 }
 
 .tooth-button-selected .tooth-svg {
-  filter: drop-shadow(0 10px 20px rgba(46, 55, 164, 0.35));
+  filter: drop-shadow(0 10px 20px rgba(var(--primary-rgb), 0.35));
 }
 
 .tooth-button-selected .tooth-number {
-  color: #ffffff;
-  background: var(--primary, #2e37a4);
+  color: var(--white);
+  background: var(--primary);
 }
 
 /* Focus State - Accessibility */
@@ -247,7 +247,7 @@
 }
 
 .tooth-button:focus-visible {
-  outline: 3px solid var(--primary, #2e37a4);
+  outline: 3px solid var(--primary);
   outline-offset: 4px;
   border-radius: 8px;
 }
@@ -312,8 +312,8 @@
   align-items: center;
   gap: 4px;
   padding: 10px 14px;
-  background: var(--gray-900, #0a1b39);
-  color: #ffffff;
+  background: var(--foreground, #1c1917);
+  color: var(--bg, #fafaf9);
   border-radius: 8px;
   font-size: 0.75rem;
   white-space: nowrap;
@@ -332,7 +332,7 @@
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--gray-900, #0a1b39);
+  border-top-color: var(--foreground, #1c1917);
 }
 
 .tooth-button:hover .tooth-tooltip,
@@ -348,8 +348,9 @@
 }
 
 .tooth-tooltip-type {
-  color: var(--gray-300, #9da4b0);
+  color: var(--text-muted, #78716c);
   font-size: 0.7rem;
+  opacity: 0.8;
 }
 
 .tooth-tooltip-condition {
@@ -384,7 +385,7 @@
 }
 .tooth-tooltip-condition.condition-root-canal {
   background: var(--condition-root-canal);
-  color: #000000;
+  color: var(--black);
 }
 .tooth-tooltip-condition.condition-bridge {
   background: var(--condition-bridge);
@@ -433,7 +434,7 @@
   justify-content: center;
   gap: 16px 24px;
   padding: 16px 20px;
-  background: var(--light, #f5f6f8);
+  background: var(--light);
   border-radius: 8px;
   border: 1px solid var(--odontogram-border);
 }
@@ -455,7 +456,7 @@
 .legend-label {
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--gray-700, #3b4961);
+  color: var(--gray-700);
 }
 
 /* ==========================================================================
@@ -464,7 +465,7 @@
 
 .condition-editor {
   padding: 24px;
-  background: var(--light, #f5f6f8);
+  background: var(--light);
   border-radius: 12px;
   border: 1px solid var(--odontogram-border);
   animation: slideIn 0.3s ease;
@@ -492,17 +493,17 @@
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--heading-color, #0a1b39);
+  color: var(--heading-color);
 }
 
 .editor-title i {
-  color: var(--primary, #2e37a4);
+  color: var(--primary);
 }
 
 .editor-tooth-type {
   font-size: 0.85rem;
   font-weight: 400;
-  color: var(--gray-500, #6c7688);
+  color: var(--gray-500);
   margin-left: 4px;
 }
 
@@ -514,7 +515,7 @@
   display: block;
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--gray-700, #3b4961);
+  color: var(--gray-700);
   margin-bottom: 12px;
 }
 
@@ -530,29 +531,29 @@
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: #ffffff;
+  background: var(--white);
   border: 2px solid var(--odontogram-border);
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--gray-700, #3b4961);
+  color: var(--gray-700);
   cursor: pointer;
   transition: all var(--transition-fast) ease;
 }
 
 .condition-option:hover {
-  border-color: var(--primary, #2e37a4);
-  background: var(--primary-transparent, #ecedf7);
+  border-color: var(--primary);
+  background: var(--primary-transparent);
 }
 
 .condition-option-selected {
-  border-color: var(--primary, #2e37a4);
-  background: var(--primary, #2e37a4);
-  color: #ffffff;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
 }
 
 .condition-option:focus-visible {
-  outline: 3px solid var(--primary, #2e37a4);
+  outline: 3px solid var(--primary);
   outline-offset: 2px;
 }
 
@@ -579,34 +580,34 @@
   justify-content: center;
   font-size: 1rem;
   font-weight: 700;
-  background: #ffffff;
+  background: var(--white);
   border: 2px solid var(--odontogram-border);
   border-radius: 8px;
-  color: var(--gray-600, #545f74);
+  color: var(--gray-600);
   cursor: pointer;
   transition: all var(--transition-fast) ease;
 }
 
 .surface-button:hover {
-  border-color: var(--primary, #2e37a4);
-  color: var(--primary, #2e37a4);
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .surface-button-selected {
-  border-color: var(--primary, #2e37a4);
-  background: var(--primary, #2e37a4);
-  color: #ffffff;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
 }
 
 .surface-button:focus-visible {
-  outline: 3px solid var(--primary, #2e37a4);
+  outline: 3px solid var(--primary);
   outline-offset: 2px;
 }
 
 .surface-legend {
   margin-top: 10px;
   font-size: 0.75rem;
-  color: var(--gray-500, #6c7688);
+  color: var(--gray-500);
 }
 
 /* Editor Actions */
@@ -627,6 +628,254 @@
   justify-content: flex-end;
   padding-top: 16px;
   border-top: 1px solid var(--odontogram-border);
+}
+
+/* ==========================================================================
+   Tooth History Timeline
+   ========================================================================== */
+
+.tooth-history-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--odontogram-border);
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.history-title {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--heading-color);
+}
+
+.history-title i {
+  color: var(--primary);
+}
+
+.history-count {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  background: var(--light);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.history-empty {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: var(--white);
+  border: 1px dashed var(--odontogram-border);
+  border-radius: 8px;
+  color: var(--gray-500);
+  font-size: 0.85rem;
+}
+
+.history-empty i {
+  color: var(--condition-healthy);
+  font-size: 1.1rem;
+}
+
+/* Timeline container */
+.history-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-left: 8px;
+}
+
+/* Individual history entry */
+.history-entry {
+  display: flex;
+  gap: 16px;
+  padding: 12px 0;
+  position: relative;
+}
+
+.history-entry:last-child {
+  padding-bottom: 0;
+}
+
+.history-entry-latest .history-content {
+  background: var(--white);
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--odontogram-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Timeline connector (dot and line) */
+.history-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.history-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 3px solid var(--white);
+  box-shadow: 0 0 0 2px var(--odontogram-border), 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.history-line {
+  width: 2px;
+  flex: 1;
+  min-height: 24px;
+  background: linear-gradient(180deg, var(--odontogram-border) 0%, transparent 100%);
+  margin-top: -2px;
+}
+
+/* History entry content */
+.history-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-date {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  margin-bottom: 6px;
+}
+
+.history-date time {
+  text-transform: capitalize;
+}
+
+/* Condition change display */
+.history-change {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.history-condition {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 2px solid transparent;
+}
+
+.history-condition-previous {
+  background: transparent;
+  color: var(--gray-600);
+}
+
+.history-condition-new {
+  color: var(--white);
+}
+
+.history-arrow {
+  color: var(--gray-400);
+  font-size: 0.9rem;
+}
+
+/* Surfaces display */
+.history-surfaces {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.history-surfaces-label {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.history-surface-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--light);
+  border: 1px solid var(--odontogram-border);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--gray-600);
+}
+
+/* Provider info */
+.history-provider {
+  display: flex;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-bottom: 4px;
+}
+
+.history-provider i {
+  color: var(--primary);
+  font-size: 0.9rem;
+}
+
+/* Notes */
+.history-notes {
+  display: flex;
+  align-items: flex-start;
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+.history-notes i {
+  color: var(--gray-400);
+  font-size: 0.85rem;
+  margin-top: 1px;
+}
+
+/* Dark mode support for history */
+[data-bs-theme='dark'] .tooth-history-section {
+  border-top-color: var(--odontogram-border);
+}
+
+[data-bs-theme='dark'] .history-empty {
+  background: var(--odontogram-bg);
+  border-color: var(--odontogram-border);
+}
+
+[data-bs-theme='dark'] .history-entry-latest .history-content {
+  background: var(--odontogram-bg);
+  border-color: var(--odontogram-border);
+}
+
+[data-bs-theme='dark'] .history-dot {
+  border-color: var(--odontogram-bg);
+}
+
+[data-bs-theme='dark'] .history-surface-badge {
+  background: var(--odontogram-bg);
+  border-color: var(--odontogram-border);
 }
 
 /* ==========================================================================
@@ -741,6 +990,26 @@
   .tooth-tooltip {
     display: none;
   }
+
+  /* History responsive styles */
+  .history-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .history-entry {
+    gap: 12px;
+  }
+
+  .history-change {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .history-arrow {
+    transform: rotate(90deg);
+  }
 }
 
 /* ==========================================================================
@@ -750,7 +1019,7 @@
 @media print {
   .odontogram-editor {
     box-shadow: none;
-    border: 1px solid #ccc;
+    border: 1px solid var(--border-color);
   }
 
   .tooth-button:hover {

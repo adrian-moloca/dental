@@ -1,0 +1,196 @@
+/**
+ * Floating Action Button (FAB) Styles
+ *
+ * Material Design inspired floating action button with speed dial functionality.
+ */
+
+.fab-container {
+  position: fixed;
+  z-index: 1040; /* Below modals (1055) but above most content */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-container.fab-bottom-right {
+  bottom: 2rem;
+  right: 2rem;
+}
+
+.fab-container.fab-bottom-left {
+  bottom: 2rem;
+  left: 2rem;
+}
+
+/* Main FAB Button */
+.fab-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 24px;
+  padding: 0;
+  border: none;
+}
+
+.fab-button:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 0 3px 6px rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+
+.fab-button:active {
+  transform: scale(0.95);
+}
+
+.fab-button i {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-open .fab-button i {
+  transform: rotate(90deg);
+}
+
+/* Speed Dial Actions Container */
+.fab-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+  animation: fabSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fabSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Individual Action Button */
+.fab-action {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  animation: fabActionSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+}
+
+@keyframes fabActionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fab-action:hover {
+  transform: translateX(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.fab-action:active {
+  transform: translateX(-2px);
+}
+
+.fab-action i {
+  font-size: 20px;
+}
+
+.fab-action-label {
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .fab-container.fab-bottom-right,
+  .fab-container.fab-bottom-left {
+    bottom: 1rem;
+  }
+
+  .fab-container.fab-bottom-right {
+    right: 1rem;
+  }
+
+  .fab-container.fab-bottom-left {
+    left: 1rem;
+  }
+
+  .fab-button {
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
+  }
+
+  .fab-action {
+    padding: 0.625rem 1rem;
+    font-size: 13px;
+  }
+
+  .fab-action i {
+    font-size: 18px;
+  }
+
+  /* Show only icons on very small screens */
+  @media (max-width: 480px) {
+    .fab-action-label {
+      display: none;
+    }
+
+    .fab-action {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 50%;
+      justify-content: center;
+    }
+  }
+}
+
+/* Backdrop when open (optional) */
+.fab-open::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.05);
+  z-index: -1;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Print - hide FAB */
+@media print {
+  .fab-container {
+    display: none !important;
+  }
+}

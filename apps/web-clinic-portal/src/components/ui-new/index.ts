@@ -60,3 +60,18 @@ export type { TooltipProps } from './Tooltip';
 
 export { Breadcrumb } from './Breadcrumb';
 export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb';
+
+export { Breadcrumbs } from './Breadcrumbs';
+export type { BreadcrumbsProps, BreadcrumbItem as BreadcrumbsItem } from './Breadcrumbs';
+
+export { LoadingState } from './LoadingState';
+export type { LoadingStateProps } from './LoadingState';
+
+export { EmptyState } from './EmptyState';
+export type { EmptyStateProps } from './EmptyState';
+
+export { ErrorState } from './ErrorState';
+export type { ErrorStateProps } from './ErrorState';
+
+export { FloatingActionButton } from './FloatingActionButton';
+export type { FloatingActionButtonProps } from './FloatingActionButton';

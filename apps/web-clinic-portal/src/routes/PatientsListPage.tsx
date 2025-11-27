@@ -22,10 +22,12 @@ import {
   TableCell,
   TableActions,
   ActionButton,
-  TableEmpty,
   DataTableHeader,
   DataTableFooter,
   Pagination,
+  LoadingState,
+  EmptyState,
+  ErrorState,
 } from '../components/ui-new';
 
 export default function PatientsListPage() {
@@ -66,32 +68,29 @@ export default function PatientsListPage() {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase() || 'PA';
   };
 
+  // Breadcrumbs
+  const breadcrumbs = [
+    { label: 'Acasa', path: '/dashboard', icon: 'ti ti-home' },
+    { label: 'Pacienti', path: '/patients' },
+  ];
+
   // Loading skeleton
   if (isLoading) {
     return (
       <AppShell
         title="Pacienti"
         subtitle="Gestioneaza fisele pacientilor"
+        breadcrumbs={breadcrumbs}
         actions={
           <Button variant="primary" onClick={() => navigate('/patients/new')}>
             <i className="ti ti-plus me-1"></i>
-            Pacient Nou
+            Adauga Pacient
           </Button>
         }
       >
         <Card className="shadow-sm">
           <CardBody>
-            <div className="placeholder-glow">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="d-flex gap-3 py-3 border-bottom">
-                  <span className="placeholder col-1"></span>
-                  <span className="placeholder col-3"></span>
-                  <span className="placeholder col-2"></span>
-                  <span className="placeholder col-2"></span>
-                  <span className="placeholder col-1"></span>
-                </div>
-              ))}
-            </div>
+            <LoadingState type="table" rows={10} message="Se incarca pacientii..." />
           </CardBody>
         </Card>
       </AppShell>
@@ -104,18 +103,20 @@ export default function PatientsListPage() {
       <AppShell
         title="Pacienti"
         subtitle="Gestioneaza fisele pacientilor"
+        breadcrumbs={breadcrumbs}
       >
         <Card className="shadow-sm border-danger">
-          <CardBody className="text-center py-5">
-            <div className="avatar avatar-xl bg-danger-transparent rounded-circle mx-auto mb-3">
-              <i className="ti ti-alert-circle fs-32 text-danger"></i>
-            </div>
-            <h5 className="fw-bold mb-2">Eroare la incarcarea pacientilor</h5>
-            <p className="text-muted mb-4">{(error as Error).message}</p>
-            <Button variant="primary" onClick={() => refetch()}>
-              <i className="ti ti-refresh me-1"></i>
-              Reincearca
-            </Button>
+          <CardBody>
+            <ErrorState
+              title="Eroare la incarcarea pacientilor"
+              message={(error as Error).message || 'Nu am putut incarca lista de pacienti. Va rugam incercati din nou.'}
+              actions={
+                <Button variant="primary" onClick={() => refetch()}>
+                  <i className="ti ti-refresh me-1"></i>
+                  Reincearca
+                </Button>
+              }
+            />
           </CardBody>
         </Card>
       </AppShell>
@@ -128,10 +129,11 @@ export default function PatientsListPage() {
     <AppShell
       title="Pacienti"
       subtitle="Gestioneaza fisele pacientilor"
+      breadcrumbs={breadcrumbs}
       actions={
         <Button variant="primary" onClick={() => navigate('/patients/new')}>
           <i className="ti ti-plus me-1"></i>
-          Pacient Nou
+          Adauga Pacient
         </Button>
       }
     >
@@ -165,13 +167,13 @@ export default function PatientsListPage() {
 
         <CardBody className="p-0">
           {patients.length === 0 ? (
-            <TableEmpty
+            <EmptyState
               icon="ti ti-users-group"
               title={searchQuery ? 'Niciun rezultat gasit' : 'Niciun pacient inregistrat'}
               description={
                 searchQuery
                   ? 'Incearca sa modifici criteriile de cautare sau sterge cautarea pentru a vedea toti pacientii.'
-                  : 'Adauga primul pacient pentru a incepe.'
+                  : 'Adauga primul pacient pentru a incepe gestionarea fiselor medicale.'
               }
               action={
                 !searchQuery && (
@@ -274,6 +276,12 @@ export default function PatientsListPage() {
                           actionType="edit"
                           tooltip="Editeaza"
                           onClick={() => navigate(`/patients/${patient.id}/edit`)}
+                        />
+                        <ActionButton
+                          icon="ti ti-dental"
+                          actionType="default"
+                          tooltip="Date Clinice"
+                          onClick={() => navigate(`/clinical/charting?patientId=${patient.id}`)}
                         />
                         <ActionButton
                           icon="ti ti-calendar-plus"

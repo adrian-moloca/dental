@@ -25,8 +25,10 @@ import {
   TableCell,
   TableActions,
   ActionButton,
-  TableEmpty,
   DataTableHeader,
+  LoadingState,
+  EmptyState,
+  ErrorState,
 } from '../components/ui-new';
 import { Calendar } from '../components/calendar';
 import type { CalendarEvent, Resource } from '../components/calendar';
@@ -183,24 +185,29 @@ export default function AppointmentsListPage() {
     setShowQuickCreate(true);
   };
 
+  // Breadcrumbs
+  const breadcrumbs = [
+    { label: 'Acasa', path: '/dashboard', icon: 'ti ti-home' },
+    { label: 'Programari', path: '/appointments' },
+  ];
+
   // Loading state
   if (isLoading) {
     return (
       <AppShell
         title="Programari"
         subtitle="Calendar si lista programari"
+        breadcrumbs={breadcrumbs}
         actions={
           <Button variant="primary" onClick={() => navigate('/appointments/create')}>
             <i className="ti ti-plus me-1"></i>
-            Programare Noua
+            Adauga Programare
           </Button>
         }
       >
         <Card className="shadow-sm">
           <CardBody>
-            <div className="placeholder-glow">
-              <div className="placeholder col-12 mb-3" style={{ height: 400 }}></div>
-            </div>
+            <LoadingState type="page" message="Se incarca programarile..." />
           </CardBody>
         </Card>
       </AppShell>
@@ -210,18 +217,23 @@ export default function AppointmentsListPage() {
   // Error state
   if (error) {
     return (
-      <AppShell title="Programari" subtitle="Calendar si lista programari">
+      <AppShell
+        title="Programari"
+        subtitle="Calendar si lista programari"
+        breadcrumbs={breadcrumbs}
+      >
         <Card className="shadow-sm border-danger">
-          <CardBody className="text-center py-5">
-            <div className="avatar avatar-xl bg-danger-transparent rounded-circle mx-auto mb-3">
-              <i className="ti ti-alert-circle fs-32 text-danger"></i>
-            </div>
-            <h5 className="fw-bold mb-2">Eroare la incarcarea programarilor</h5>
-            <p className="text-muted mb-4">{(error as Error).message}</p>
-            <Button variant="primary" onClick={() => refetch()}>
-              <i className="ti ti-refresh me-1"></i>
-              Reincearca
-            </Button>
+          <CardBody>
+            <ErrorState
+              title="Eroare la incarcarea programarilor"
+              message={(error as Error).message || 'Nu am putut incarca programarile. Va rugam incercati din nou.'}
+              actions={
+                <Button variant="primary" onClick={() => refetch()}>
+                  <i className="ti ti-refresh me-1"></i>
+                  Reincearca
+                </Button>
+              }
+            />
           </CardBody>
         </Card>
       </AppShell>
@@ -234,15 +246,16 @@ export default function AppointmentsListPage() {
     <AppShell
       title="Programari"
       subtitle="Calendar si lista programari"
+      breadcrumbs={breadcrumbs}
       actions={
         <div className="d-flex gap-2">
           <Button variant="outline-secondary" onClick={() => setShowQuickCreate(true)}>
             <i className="ti ti-bolt me-1"></i>
-            Rapid
+            Adaugare Rapida
           </Button>
           <Button variant="primary" onClick={() => navigate('/appointments/create')}>
             <i className="ti ti-plus me-1"></i>
-            Programare Noua
+            Adauga Programare
           </Button>
         </div>
       }
@@ -335,10 +348,10 @@ export default function AppointmentsListPage() {
 
           <CardBody className="p-0">
             {appointments.length === 0 ? (
-              <TableEmpty
+              <EmptyState
                 icon="ti ti-calendar-off"
                 title="Nicio programare"
-                description="Nu exista programari in intervalul selectat."
+                description="Nu exista programari in intervalul selectat. Adauga o programare noua pentru a incepe."
                 action={
                   <Button variant="primary" onClick={() => navigate('/appointments/create')}>
                     <i className="ti ti-plus me-1"></i>
@@ -561,7 +574,7 @@ export default function AppointmentsListPage() {
               Anuleaza
             </Button>
             <Button type="submit" variant="primary" loading={createAppointment.isPending}>
-              {createAppointment.isPending ? 'Se creeaza...' : 'Creeaza Programare'}
+              {createAppointment.isPending ? 'Se salveaza...' : 'Salveaza'}
             </Button>
           </div>
         </form>

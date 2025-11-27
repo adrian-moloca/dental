@@ -1,16 +1,23 @@
 /**
- * Clinical Page - Pagina Clinica pentru Pacient
+ * Clinical Page - Enhanced with Quick Actions
  *
  * Main clinical module entry point showing odontogram, clinical notes,
  * procedures, and treatment plans for a specific patient.
+ *
+ * ENHANCEMENTS:
+ * - Quick Actions Panel in sidebar
+ * - Patient Contact Actions (click-to-call, click-to-email)
+ * - Floating Action Button for mobile-like quick access
+ * - Keyboard shortcuts for navigation
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import { Card, CardHeader, CardBody } from '../components/ui-new/Card';
 import { Button } from '../components/ui-new/Button';
 import { Badge } from '../components/ui-new/Badge';
+import { Breadcrumb, type BreadcrumbItem } from '../components/ui-new/Breadcrumb';
 import {
   Table,
   TableHead,
@@ -28,8 +35,15 @@ import {
   useUpdateOdontogram,
 } from '../hooks/useClinical';
 import { usePatient } from '../hooks/usePatients';
+import { useAppointments } from '../hooks/useAppointments';
 import { OdontogramEditor } from '../components/clinical/OdontogramEditor';
+import { PatientContextBar } from '../components/clinical/PatientContextBar';
+import { QuickActionsToolbar } from '../components/clinical/QuickActionsToolbar';
+import { QuickActionsPanel } from '../components/clinical/QuickActionsPanel';
+import { PatientContactActions } from '../components/clinical/PatientContactActions';
+import { FloatingActionButton } from '../components/clinical/FloatingActionButton';
 import clsx from 'clsx';
+import toast from 'react-hot-toast';
 
 type TabType = 'odontogram' | 'notes' | 'procedures' | 'plans';
 
@@ -60,6 +74,52 @@ export function ClinicalPage() {
     }
   };
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Only trigger if Shift is pressed and no input is focused
+      if (!e.shiftKey || (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
+        return;
+      }
+
+      switch (e.key.toUpperCase()) {
+        case 'N':
+          e.preventDefault();
+          setActiveTab('notes');
+          toast.success('Shortcut: Note Clinice');
+          break;
+        case 'O':
+          e.preventDefault();
+          setActiveTab('odontogram');
+          toast.success('Shortcut: Odontograma');
+          break;
+        case 'P':
+          e.preventDefault();
+          setActiveTab('procedures');
+          toast.success('Shortcut: Proceduri');
+          break;
+        case 'T':
+          e.preventDefault();
+          setActiveTab('plans');
+          toast.success('Shortcut: Planuri Tratament');
+          break;
+        case 'B':
+          e.preventDefault();
+          handleBack();
+          break;
+        case '?':
+          e.preventDefault();
+          toast.success('Comenzi rapide:\nShift+N: Note\nShift+O: Odontogram\nShift+P: Proceduri\nShift+T: Planuri\nShift+B: Inapoi', {
+            duration: 6000
+          });
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [navigate, handleBack]);
+
   // Fetch patient data
   const { data: patientResponse, isLoading: patientLoading } = usePatient(patientId);
   const patient = patientResponse?.data;
@@ -70,6 +130,16 @@ export function ClinicalPage() {
   const { data: procedures, isLoading: proceduresLoading } = useProcedures(patientId!);
   const { data: odontogram, isLoading: odontogramLoading } = useOdontogram(patientId!);
   const updateOdontogram = useUpdateOdontogram();
+
+  // Fetch appointments for contact actions
+  const { data: appointmentsData } = useAppointments({
+    patientId,
+    limit: 10,
+  });
+
+  const nextAppointment = appointmentsData?.data?.find(
+    (a: { status: string }) => a.status === 'scheduled' || a.status === 'confirmed'
+  );
 
   const handleSaveOdontogram = async (data: ToothData[]) => {
     await updateOdontogram.mutateAsync({
@@ -115,19 +185,34 @@ export function ClinicalPage() {
   };
 
   const alertsCount = () => {
-    // Cast to extended type with alerts field if it exists in the API response
     const patientWithAlerts = patient as typeof patient & { alerts?: PatientAlert };
     const allergies = patientWithAlerts?.alerts?.allergies?.length || 0;
     const conditions = patientWithAlerts?.alerts?.medicalConditions?.length || 0;
     return allergies + conditions;
   };
 
-  // Tab definitions
+  // Tab definitions with shortcuts
   const tabs = [
-    { id: 'odontogram' as TabType, label: 'Odontograma', icon: 'ti ti-dental' },
-    { id: 'notes' as TabType, label: 'Note Clinice', icon: 'ti ti-notes' },
-    { id: 'procedures' as TabType, label: 'Proceduri', icon: 'ti ti-clipboard-list' },
-    { id: 'plans' as TabType, label: 'Planuri Tratament', icon: 'ti ti-list-check' },
+    { id: 'odontogram' as TabType, label: 'Odontograma', icon: 'ti ti-dental', shortcut: 'Shift+O' },
+    { id: 'notes' as TabType, label: 'Note Clinice', icon: 'ti ti-notes', shortcut: 'Shift+N' },
+    { id: 'procedures' as TabType, label: 'Proceduri', icon: 'ti ti-clipboard-list', shortcut: 'Shift+P' },
+    { id: 'plans' as TabType, label: 'Planuri Tratament', icon: 'ti ti-list-check', shortcut: 'Shift+T' },
+  ];
+
+  // Quick actions for common procedures
+  const handleQuickProcedure = (procedureType: string) => {
+    toast.success(`Adaugare rapida: ${procedureType}`, { icon: '⚡' });
+    setActiveTab('procedures');
+  };
+
+  // Breadcrumb navigation
+  const breadcrumbItems: BreadcrumbItem[] = [
+    { label: 'Dashboard', href: '/dashboard', icon: 'ti ti-home' },
+    { label: 'Pacienti', href: '/patients', icon: 'ti ti-users' },
+    ...(patient ? [
+      { label: `${patient.firstName} ${patient.lastName}`, href: `/patients/${patientId}`, icon: 'ti ti-user' }
+    ] : []),
+    { label: 'Date Clinice', icon: 'ti ti-dental' }
   ];
 
   // Page actions
@@ -137,11 +222,26 @@ export function ClinicalPage() {
         variant="outline-secondary"
         icon="ti ti-arrow-left"
         onClick={handleBack}
+        title="Inapoi (Shift+B)"
       >
         Inapoi
       </Button>
-      <Button variant="outline-primary" icon="ti ti-printer">
+      <Button
+        variant="outline-primary"
+        icon="ti ti-printer"
+        onClick={() => toast('Functionalitate in dezvoltare')}
+      >
         Printeaza Fisa
+      </Button>
+      <Button
+        variant="soft-info"
+        icon="ti ti-keyboard"
+        onClick={() => toast.success('Comenzi rapide:\nShift+N: Note\nShift+O: Odontogram\nShift+P: Proceduri\nShift+T: Planuri\nShift+B: Inapoi\nShift+?: Ajutor', {
+          duration: 6000
+        })}
+        title="Vezi comenzile rapide (Shift+?)"
+      >
+        <i className="ti ti-keyboard"></i>
       </Button>
     </div>
   );
@@ -158,75 +258,107 @@ export function ClinicalPage() {
     );
   }
 
+  const patientPhone = patient?.phones?.[0]?.number;
+  const patientEmail = patient?.emails?.[0]?.address;
+
   return (
     <AppShell
       title="Date Clinice"
       subtitle="Gestioneaza informatiile clinice ale pacientului"
       actions={pageActions}
     >
-      <div className="row">
-        <div className="col-12">
-          {/* Patient Context Header */}
-          <Card className="mb-4">
-            <CardBody>
-              <div className="row align-items-center">
-                {/* Patient Avatar & Info */}
-                <div className="col-md-6">
-                  <div className="d-flex align-items-center gap-3">
-                    <div className="avatar avatar-xl rounded-circle bg-primary-light">
-                      <span className="avatar-text text-primary fw-bold fs-4">
-                        {getPatientInitials()}
-                      </span>
-                    </div>
-                    <div>
-                      <h4 className="mb-1">
-                        {patient?.firstName} {patient?.lastName}
-                      </h4>
-                      <div className="d-flex gap-3 text-muted">
-                        {getPatientAge() && <span>Varsta: {getPatientAge()} ani</span>}
-                        {patient?.id && (
-                          <>
-                            <span>•</span>
-                            <span>ID Pacient: {patient.id.slice(0, 8)}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+      {/* Breadcrumb Navigation */}
+      <Breadcrumb items={breadcrumbItems} className="mb-3" />
+
+      {/* Patient Header with Contact Actions */}
+      <Card className="mb-4 shadow-sm">
+        <CardBody>
+          <div className="row align-items-center">
+            {/* Avatar and Name */}
+            <div className="col-md-6 mb-3 mb-md-0">
+              <div className="d-flex align-items-center gap-3">
+                <div className="avatar avatar-xl rounded-circle bg-primary-light">
+                  <span className="avatar-text text-primary fw-bold fs-4">
+                    {getPatientInitials()}
+                  </span>
                 </div>
-
-                {/* Medical Alerts Summary */}
-                <div className="col-md-6">
-                  <div className="d-flex justify-content-md-end gap-3">
-                    {(() => {
-                      const patientWithAlerts = patient as typeof patient & { alerts?: PatientAlert };
-                      const allergiesCount = patientWithAlerts?.alerts?.allergies?.length || 0;
-                      const conditionsCount = patientWithAlerts?.alerts?.medicalConditions?.length || 0;
-
-                      return alertsCount() > 0 ? (
-                        <>
-                          {allergiesCount > 0 && (
-                            <Badge variant="soft-danger" icon="ti ti-alert-triangle">
-                              {allergiesCount} Alergii
-                            </Badge>
-                          )}
-                          {conditionsCount > 0 && (
-                            <Badge variant="soft-warning" icon="ti ti-heart-pulse">
-                              {conditionsCount} Afectiuni
-                            </Badge>
-                          )}
-                        </>
-                      ) : (
-                        <Badge variant="soft-success" icon="ti ti-check">
-                          Fara Alerte Medicale
-                        </Badge>
-                      );
-                    })()}
+                <div>
+                  <h4 className="mb-1">
+                    {patient?.firstName} {patient?.lastName}
+                  </h4>
+                  <div className="d-flex gap-3 text-muted">
+                    {getPatientAge() && <span>Varsta: {getPatientAge()} ani</span>}
+                    {patient?.id && (
+                      <>
+                        <span>•</span>
+                        <span>ID: {patient.id.slice(0, 8)}</span>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
-            </CardBody>
-          </Card>
+            </div>
+
+            {/* Contact Actions */}
+            <div className="col-md-6">
+              <PatientContactActions
+                phone={patientPhone}
+                email={patientEmail}
+                nextAppointmentDate={nextAppointment?.startTime}
+                appointmentStatus={nextAppointment?.status}
+                className="justify-content-md-end"
+              />
+            </div>
+          </div>
+
+          {/* Medical Alerts Summary */}
+          {alertsCount() > 0 && (
+            <div className="mt-3 pt-3 border-top">
+              <div className="d-flex justify-content-start gap-3">
+                {(() => {
+                  const patientWithAlerts = patient as typeof patient & { alerts?: PatientAlert };
+                  const allergiesCount = patientWithAlerts?.alerts?.allergies?.length || 0;
+                  const conditionsCount = patientWithAlerts?.alerts?.medicalConditions?.length || 0;
+
+                  return (
+                    <>
+                      {allergiesCount > 0 && (
+                        <Badge variant="soft-danger" icon="ti ti-alert-triangle">
+                          {allergiesCount} Alergii
+                        </Badge>
+                      )}
+                      {conditionsCount > 0 && (
+                        <Badge variant="soft-warning" icon="ti ti-heart-pulse">
+                          {conditionsCount} Afectiuni
+                        </Badge>
+                      )}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+          )}
+        </CardBody>
+      </Card>
+
+      <div className="row">
+        {/* Main Content Area */}
+        <div className="col-xl-9">
+          {/* Quick Actions Toolbar for Procedures Tab */}
+          {activeTab === 'procedures' && (
+            <div className="mb-4">
+              <QuickActionsToolbar
+                onAddExam={() => handleQuickProcedure('Examinare Clinica')}
+                onAddCleaning={() => handleQuickProcedure('Detartraj')}
+                onAddFilling={() => handleQuickProcedure('Plomba')}
+                onAddExtraction={() => handleQuickProcedure('Extractie')}
+                onAddRootCanal={() => handleQuickProcedure('Canal Radicular')}
+                onAddCrown={() => handleQuickProcedure('Coroana')}
+                onAddXray={() => navigate(`/imaging/${patientId}`)}
+                onAddNote={() => setActiveTab('notes')}
+              />
+            </div>
+          )}
 
           {/* Bootstrap Nav Tabs */}
           <ul className="nav nav-tabs nav-tabs-bottom mb-4" role="tablist">
@@ -237,6 +369,7 @@ export function ClinicalPage() {
                   type="button"
                   role="tab"
                   onClick={() => setActiveTab(tab.id)}
+                  title={tab.shortcut}
                 >
                   <i className={tab.icon}></i>
                   <span className="ms-2">{tab.label}</span>
@@ -250,28 +383,24 @@ export function ClinicalPage() {
             {/* Odontogram Tab */}
             {activeTab === 'odontogram' && (
               <div className="tab-pane fade show active">
-                <div className="row">
-                  <div className="col-12">
-                    <Card>
-                      <CardHeader title="Odontograma" icon="ti ti-dental" />
-                      <CardBody>
-                        {odontogramLoading ? (
-                          <div className="text-center py-5">
-                            <div className="spinner-border text-primary" role="status">
-                              <span className="visually-hidden">Se incarca...</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <OdontogramEditor
-                            patientId={patientId!}
-                            data={(odontogram?.data?.entries?.[0]?.teeth as ToothData[]) || []}
-                            onSave={handleSaveOdontogram}
-                          />
-                        )}
-                      </CardBody>
-                    </Card>
-                  </div>
-                </div>
+                <Card>
+                  <CardHeader title="Odontograma" icon="ti ti-dental" />
+                  <CardBody>
+                    {odontogramLoading ? (
+                      <div className="text-center py-5">
+                        <div className="spinner-border text-primary" role="status">
+                          <span className="visually-hidden">Se incarca...</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <OdontogramEditor
+                        patientId={patientId!}
+                        data={(odontogram?.data?.entries?.[0]?.teeth as ToothData[]) || []}
+                        onSave={handleSaveOdontogram}
+                      />
+                    )}
+                  </CardBody>
+                </Card>
               </div>
             )}
 
@@ -529,7 +658,6 @@ export function ClinicalPage() {
                                 </div>
                               </div>
 
-                              {/* Plan Options/Phases */}
                               {plan.options && plan.options.length > 0 && (
                                 <div className="d-flex flex-column gap-2">
                                   {plan.options.map((option) => (
@@ -561,7 +689,6 @@ export function ClinicalPage() {
                                 </div>
                               )}
 
-                              {/* Plan Summary */}
                               {plan.options && plan.options.length > 0 && (
                                 <div className="mt-2 text-muted small">
                                   <i className="ti ti-layers-linked me-1"></i>
@@ -579,7 +706,25 @@ export function ClinicalPage() {
             )}
           </div>
         </div>
+
+        {/* Sidebar - Quick Actions Panel */}
+        <div className="col-xl-3">
+          <div className="sticky-top" style={{ top: '80px' }}>
+            <QuickActionsPanel
+              patientId={patientId!}
+              patientName={patient ? `${patient.firstName} ${patient.lastName}` : undefined}
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Floating Action Button */}
+      {patient && (
+        <FloatingActionButton
+          patientId={patientId!}
+          position="bottom-right"
+        />
+      )}
     </AppShell>
   );
 }

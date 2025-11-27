@@ -1,7 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Icon, type IconName } from '../ui/Icon';
+
+// Storage keys for persistence
+const STORAGE_KEY_EXPANDED = 'sidebar-expanded-items';
+const STORAGE_KEY_SCROLL = 'sidebar-scroll-position';
 
 type NavItem = {
   label: string;
@@ -29,7 +33,8 @@ const navSections: NavSection[] = [
   {
     label: 'Operatiuni Clinice',
     items: [
-      { label: 'Clinical', href: '/clinical', icon: 'clipboard' },
+      { label: 'Date Clinice', href: '/clinical', icon: 'clipboard' },
+      { label: 'Interventii', href: '/clinical/interventions', icon: 'stethoscope' },
       { label: 'Imagistica', href: '/imaging', icon: 'photo' },
       { label: 'Documente', href: '/documents', icon: 'document', disabled: true },
     ],
@@ -62,7 +67,7 @@ const navSections: NavSection[] = [
   {
     label: 'Echipa',
     items: [
-      { label: 'Echipa', href: '/team', icon: 'userGroup', disabled: true },
+      { label: 'Angajati', href: '/staff', icon: 'userGroup' },
     ],
   },
   {
@@ -80,19 +85,59 @@ const navSections: NavSection[] = [
       },
     ],
   },
+  {
+    label: 'Ajutor',
+    items: [
+      { label: 'Suport', href: '/support', icon: 'questionMarkCircle' },
+    ],
+  },
 ];
 
-function NavItemLink({ item, depth = 0 }: { item: NavItem; depth?: number }) {
+// Helper to get expanded items from localStorage
+const getStoredExpandedItems = (): Set<string> => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY_EXPANDED);
+    if (stored) {
+      return new Set(JSON.parse(stored));
+    }
+  } catch {
+    // Ignore localStorage errors
+  }
+  return new Set();
+};
+
+// Helper to save expanded items to localStorage
+const saveExpandedItems = (items: Set<string>) => {
+  try {
+    localStorage.setItem(STORAGE_KEY_EXPANDED, JSON.stringify([...items]));
+  } catch {
+    // Ignore localStorage errors
+  }
+};
+
+interface NavItemLinkProps {
+  item: NavItem;
+  depth?: number;
+  expandedItems: Set<string>;
+  onToggleExpand: (href: string, expanded: boolean) => void;
+}
+
+function NavItemLink({ item, depth = 0, expandedItems, onToggleExpand }: NavItemLinkProps) {
   const location = useLocation();
+  const hasChildren = item.children && item.children.length > 0;
+
+  // Use persisted state or fallback to checking if child is active
   const [isExpanded, setIsExpanded] = useState(() => {
+    if (expandedItems.has(item.href)) {
+      return true;
+    }
     // Auto-expand if any child is active
-    if (item.children) {
-      return item.children.some(child => location.pathname.startsWith(child.href));
+    if (hasChildren) {
+      return item.children!.some(child => location.pathname.startsWith(child.href));
     }
     return false;
   });
 
-  const hasChildren = item.children && item.children.length > 0;
   const isActive = hasChildren
     ? location.pathname.startsWith(item.href)
     : location.pathname === item.href || location.pathname.startsWith(item.href + '/');
@@ -103,7 +148,9 @@ function NavItemLink({ item, depth = 0 }: { item: NavItem; depth?: number }) {
   const handleToggle = (e: React.MouseEvent) => {
     if (hasChildren) {
       e.preventDefault();
-      setIsExpanded(!isExpanded);
+      const newExpanded = !isExpanded;
+      setIsExpanded(newExpanded);
+      onToggleExpand(item.href, newExpanded);
     }
   };
 
@@ -186,7 +233,13 @@ function NavItemLink({ item, depth = 0 }: { item: NavItem; depth?: number }) {
       {hasChildren && isExpanded && (
         <div className="mt-1 space-y-1" role="group" aria-label={`${item.label} submenu`}>
           {item.children!.map((child) => (
-            <NavItemLink key={child.href} item={child} depth={depth + 1} />
+            <NavItemLink
+              key={child.href}
+              item={child}
+              depth={depth + 1}
+              expandedItems={expandedItems}
+              onToggleExpand={onToggleExpand}
+            />
           ))}
         </div>
       )}
@@ -195,8 +248,45 @@ function NavItemLink({ item, depth = 0 }: { item: NavItem; depth?: number }) {
 }
 
 export function SidebarNav() {
+  const navRef = useRef<HTMLElement>(null);
+
+  // State for expanded items with persistence
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(() => getStoredExpandedItems());
+
+  // Handle toggle expand with persistence
+  const handleToggleExpand = useCallback((href: string, expanded: boolean) => {
+    setExpandedItems(prev => {
+      const next = new Set(prev);
+      if (expanded) {
+        next.add(href);
+      } else {
+        next.delete(href);
+      }
+      saveExpandedItems(next);
+      return next;
+    });
+  }, []);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const savedScroll = sessionStorage.getItem(STORAGE_KEY_SCROLL);
+    if (savedScroll && navRef.current) {
+      const navElement = navRef.current.querySelector('nav');
+      if (navElement) {
+        navElement.scrollTop = parseInt(savedScroll, 10);
+      }
+    }
+  }, []);
+
+  // Save scroll position on scroll
+  const handleScroll = useCallback((e: React.UIEvent<HTMLElement>) => {
+    const target = e.target as HTMLElement;
+    sessionStorage.setItem(STORAGE_KEY_SCROLL, String(target.scrollTop));
+  }, []);
+
   return (
     <aside
+      ref={navRef}
       className="hidden w-64 flex-shrink-0 lg:block border-r border-[var(--border)] bg-[var(--surface)]"
       aria-label="Main navigation"
     >
@@ -205,7 +295,13 @@ export function SidebarNav() {
         <div className="mt-2 text-xl font-semibold text-[var(--primary)]">Clinic Portal</div>
       </div>
 
-      <nav className="p-4 space-y-6 overflow-y-auto" role="navigation" aria-label="Primary">
+      <nav
+        className="p-4 space-y-6 overflow-y-auto"
+        role="navigation"
+        aria-label="Primary"
+        style={{ maxHeight: 'calc(100vh - 120px)' }}
+        onScroll={handleScroll}
+      >
         {navSections.map((section, index) => (
           <div key={index}>
             {section.label && (
@@ -215,7 +311,12 @@ export function SidebarNav() {
             )}
             <div className="space-y-1">
               {section.items.map((item) => (
-                <NavItemLink key={item.href} item={item} />
+                <NavItemLink
+                  key={item.href}
+                  item={item}
+                  expandedItems={expandedItems}
+                  onToggleExpand={handleToggleExpand}
+                />
               ))}
             </div>
           </div>

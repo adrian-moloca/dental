@@ -21,9 +21,21 @@ interface ToothCondition {
   surfaces: string[];
 }
 
+interface ToothHistoryEntry {
+  id: string;
+  date: Date;
+  previousCondition: string;
+  newCondition: string;
+  surfaces: string[];
+  providerId?: string;
+  providerName?: string;
+  notes?: string;
+}
+
 interface ToothData {
   toothNumber: number;
   conditions: ToothCondition[];
+  history?: ToothHistoryEntry[];
 }
 
 interface OdontogramEditorProps {
@@ -483,6 +495,34 @@ function getToothTypeName(type: string): string {
   return names[type] || type;
 }
 
+// Helper to get condition label in Romanian
+function getConditionLabel(conditionValue: string): string {
+  const condition = conditions.find((c) => c.value === conditionValue);
+  return condition ? condition.label : conditionValue;
+}
+
+// Helper to get condition color
+function getConditionColor(conditionValue: string): string {
+  const condition = conditions.find((c) => c.value === conditionValue);
+  return condition ? condition.color : '#6C7688';
+}
+
+// Generate unique ID for history entries
+function generateHistoryId(): string {
+  return `hist_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+// Format date in Romanian locale
+function formatDateRomanian(date: Date): string {
+  return new Date(date).toLocaleDateString('ro-RO', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 // ============================================================================
 // LEGEND COMPONENT
 // ============================================================================
@@ -496,6 +536,146 @@ function OdontogramLegend() {
           <span className="legend-label">{cond.label}</span>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// TOOTH HISTORY TIMELINE COMPONENT
+// ============================================================================
+
+interface ToothHistoryTimelineProps {
+  toothNumber: number;
+  history: ToothHistoryEntry[];
+}
+
+function ToothHistoryTimeline({ toothNumber, history }: ToothHistoryTimelineProps) {
+  // If no history, show the default "healthy" state as the only entry
+  const displayHistory: ToothHistoryEntry[] =
+    history.length > 0
+      ? history
+      : [
+          {
+            id: 'initial_healthy',
+            date: new Date(),
+            previousCondition: '',
+            newCondition: 'healthy',
+            surfaces: [],
+            notes: 'Stare initiala',
+          },
+        ];
+
+  // Sort history by date, most recent first
+  const sortedHistory = [...displayHistory].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  return (
+    <div
+      className="tooth-history-section"
+      role="region"
+      aria-labelledby={`history-title-${toothNumber}`}
+    >
+      <div className="history-header">
+        <h6 id={`history-title-${toothNumber}`} className="history-title">
+          <i className="ti ti-history me-2" aria-hidden="true" />
+          Istoric Interventii / Evolutie Dinte #{toothNumber}
+        </h6>
+        <span className="history-count">
+          {history.length} {history.length === 1 ? 'interventie' : 'interventii'}
+        </span>
+      </div>
+
+      {history.length === 0 ? (
+        <div className="history-empty" role="status">
+          <i className="ti ti-info-circle me-2" aria-hidden="true" />
+          <span>Nicio interventie inregistrata. Dintele este sanatos.</span>
+        </div>
+      ) : (
+        <div className="history-timeline" role="list" aria-label="Cronologie interventii">
+          {sortedHistory.map((entry, index) => (
+            <div
+              key={entry.id}
+              className={`history-entry ${index === 0 ? 'history-entry-latest' : ''}`}
+              role="listitem"
+            >
+              {/* Timeline connector */}
+              <div className="history-connector" aria-hidden="true">
+                <span
+                  className="history-dot"
+                  style={{ backgroundColor: getConditionColor(entry.newCondition) }}
+                />
+                {index < sortedHistory.length - 1 && <span className="history-line" />}
+              </div>
+
+              {/* Entry content */}
+              <div className="history-content">
+                <div className="history-date">
+                  <time dateTime={new Date(entry.date).toISOString()}>
+                    {formatDateRomanian(entry.date)}
+                  </time>
+                </div>
+
+                <div className="history-change">
+                  {entry.previousCondition ? (
+                    <>
+                      <span
+                        className="history-condition history-condition-previous"
+                        style={{ borderColor: getConditionColor(entry.previousCondition) }}
+                      >
+                        {getConditionLabel(entry.previousCondition)}
+                      </span>
+                      <i className="ti ti-arrow-right history-arrow" aria-label="apoi" />
+                      <span
+                        className="history-condition history-condition-new"
+                        style={{
+                          backgroundColor: getConditionColor(entry.newCondition),
+                          borderColor: getConditionColor(entry.newCondition),
+                        }}
+                      >
+                        {getConditionLabel(entry.newCondition)}
+                      </span>
+                    </>
+                  ) : (
+                    <span
+                      className="history-condition history-condition-new"
+                      style={{
+                        backgroundColor: getConditionColor(entry.newCondition),
+                        borderColor: getConditionColor(entry.newCondition),
+                      }}
+                    >
+                      {getConditionLabel(entry.newCondition)}
+                    </span>
+                  )}
+                </div>
+
+                {entry.surfaces.length > 0 && (
+                  <div className="history-surfaces">
+                    <span className="history-surfaces-label">Suprafete:</span>
+                    {entry.surfaces.map((surface) => (
+                      <span key={surface} className="history-surface-badge">
+                        {surface}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {entry.providerName && (
+                  <div className="history-provider">
+                    <i className="ti ti-user-circle me-1" aria-hidden="true" />
+                    {entry.providerName}
+                  </div>
+                )}
+
+                {entry.notes && (
+                  <div className="history-notes">
+                    <i className="ti ti-note me-1" aria-hidden="true" />
+                    {entry.notes}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -608,20 +788,47 @@ export function OdontogramEditor({ patientId: _patientId, data = [], onSave, rea
     const newTeethData = new Map(teethData);
     const existingTooth = newTeethData.get(selectedTooth);
 
+    // Get the previous condition for history tracking
+    const previousCondition = existingTooth?.conditions?.[0]?.condition || 'healthy';
+    const appliedSurfaces = selectedSurfaces.length > 0 ? selectedSurfaces : [...surfaces];
+
     const newCondition: ToothCondition = {
       condition: selectedCondition,
-      surfaces: selectedSurfaces.length > 0 ? selectedSurfaces : [...surfaces],
+      surfaces: appliedSurfaces,
     };
 
+    // Create history entry only if condition actually changed
+    const historyEntry: ToothHistoryEntry | null =
+      previousCondition !== selectedCondition
+        ? {
+            id: generateHistoryId(),
+            date: new Date(),
+            previousCondition: previousCondition,
+            newCondition: selectedCondition,
+            surfaces: appliedSurfaces,
+            // Provider info would typically come from auth context
+            // providerName: currentUser?.name,
+          }
+        : null;
+
     if (existingTooth) {
+      const updatedHistory = historyEntry
+        ? [...(existingTooth.history || []), historyEntry]
+        : existingTooth.history || [];
+
       newTeethData.set(selectedTooth, {
         ...existingTooth,
         conditions: [newCondition, ...existingTooth.conditions.slice(1)],
+        history: updatedHistory,
       });
     } else {
+      // New tooth data - add initial history entry
+      const initialHistory: ToothHistoryEntry[] = historyEntry ? [historyEntry] : [];
+
       newTeethData.set(selectedTooth, {
         toothNumber: selectedTooth,
         conditions: [newCondition],
+        history: initialHistory,
       });
     }
 
@@ -769,6 +976,12 @@ export function OdontogramEditor({ patientId: _patientId, data = [], onSave, rea
               Renunta
             </button>
           </div>
+
+          {/* Tooth History Timeline */}
+          <ToothHistoryTimeline
+            toothNumber={selectedTooth}
+            history={teethData.get(selectedTooth)?.history || []}
+          />
         </div>
       )}
 

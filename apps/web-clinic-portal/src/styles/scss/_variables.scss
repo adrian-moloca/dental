@@ -43,15 +43,15 @@
   --success-transparent: #F4FBF7;
   --success-rgb: 39, 174, 96;
 
-  --info: #2F80ED;
-  --info-hover: #3D7FD7;
-  --info-transparent: #F4F9FE;
-  --info-rgb: 47, 128, 237;
+  --info: #1D6FDD;                    // WCAG AA: Darkened for better contrast (was #2F80ED)
+  --info-hover: #1A5FCC;
+  --info-transparent: #EEF5FD;        // Slightly darker background for soft badges
+  --info-rgb: 29, 111, 221;
 
-  --warning: #E2B93B;
-  --warning-hover: #CEAD47;
-  --warning-transparent: #FEFBF5;
-  --warning-rgb: 253, 175, 34;
+  --warning: #D4A10A;                 // WCAG AA: Darkened for better contrast (was #E2B93B)
+  --warning-hover: #B88F0A;
+  --warning-transparent: #FEF9ED;     // Slightly darker background for soft badges
+  --warning-rgb: 212, 161, 10;
 
   --danger: #EF1E1E;
   --danger-hover: #D93030;

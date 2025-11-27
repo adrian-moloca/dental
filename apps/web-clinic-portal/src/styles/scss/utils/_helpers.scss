@@ -599,3 +599,31 @@ $spacings: (
     height: 12px;
   }
 }
+
+// Transition utilities
+.transition-all {
+  transition: all 0.2s ease !important;
+}
+
+.transition-transform {
+  transition: transform 0.2s ease !important;
+}
+
+.transition-colors {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease !important;
+}
+
+// Card hover enhancements
+.hover-card {
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-lg) !important;
+  }
+}
+
+// Primary light background (for avatars)
+.bg-primary-light {
+  background-color: rgba(var(--primary-rgb), 0.1) !important;
+}

@@ -20,6 +20,7 @@ interface MenuItem {
   icon: string;
   badge?: string;
   badgeColor?: string;
+  shortcut?: string;
   children?: MenuItem[];
 }
 
@@ -33,67 +34,75 @@ const menuSections: MenuSection[] = [
   {
     title: 'Principal',
     items: [
-      { title: 'Tablou de Bord', path: '/dashboard', icon: 'ti ti-layout-dashboard' },
-    ],
-  },
-  {
-    title: 'Pacienti',
-    items: [
       {
-        title: 'Pacienti',
-        icon: 'ti ti-users',
-        children: [
-          { title: 'Lista Pacienti', path: '/patients', icon: 'ti ti-list' },
-          { title: 'Adauga Pacient', path: '/patients/new', icon: 'ti ti-user-plus' },
-        ],
+        title: 'Dashboard',
+        path: '/dashboard',
+        icon: 'ti ti-dashboard',
+        shortcut: 'D'
       },
     ],
   },
   {
-    title: 'Programari',
+    title: 'Pacienti & Programari',
     items: [
       {
         title: 'Programari',
-        icon: 'ti ti-calendar-event',
+        icon: 'ti ti-calendar',
+        shortcut: 'P',
         children: [
-          { title: 'Toate Programarile', path: '/appointments', icon: 'ti ti-list' },
+          { title: 'Calendar', path: '/appointments', icon: 'ti ti-calendar-event' },
           { title: 'Programare Noua', path: '/appointments/create', icon: 'ti ti-calendar-plus' },
-          { title: 'Coada Receptie', path: '/reception', icon: 'ti ti-clock-hour-3' },
         ],
       },
+      {
+        title: 'Pacienti',
+        icon: 'ti ti-users',
+        shortcut: 'C',
+        children: [
+          { title: 'Lista Pacienti', path: '/patients', icon: 'ti ti-list' },
+          { title: 'Pacient Nou', path: '/patients/create', icon: 'ti ti-user-plus' },
+        ],
+      },
+      { title: 'Receptie', path: '/reception', icon: 'ti ti-door-enter', shortcut: 'R' },
     ],
   },
   {
-    title: 'Financiar',
+    title: 'Activitate Clinica',
     items: [
+      { title: 'Date Clinice', path: '/clinical', icon: 'ti ti-dental', shortcut: 'T' },
       {
         title: 'Facturare',
-        icon: 'ti ti-receipt',
+        icon: 'ti ti-file-invoice',
+        shortcut: 'F',
         children: [
-          { title: 'Facturi', path: '/billing', icon: 'ti ti-file-invoice' },
-          { title: 'Factura Noua', path: '/billing/invoices/new', icon: 'ti ti-file-plus' },
+          { title: 'Facturi', path: '/billing', icon: 'ti ti-receipt' },
+          { title: 'Factura Noua', path: '/billing/invoices/create', icon: 'ti ti-file-plus' },
         ],
       },
+      { title: 'Rapoarte', path: '/reports', icon: 'ti ti-chart-bar', shortcut: 'A' },
     ],
   },
   {
     title: 'Operatiuni',
     items: [
-      { title: 'Inventar', path: '/inventory', icon: 'ti ti-packages' },
+      { title: 'Inventar', path: '/inventory', icon: 'ti ti-packages', shortcut: 'I' },
       { title: 'Imagistica', path: '/imaging', icon: 'ti ti-photo-scan' },
+      {
+        title: 'Echipa',
+        icon: 'ti ti-users-group',
+        shortcut: 'E',
+        children: [
+          { title: 'Personal', path: '/staff', icon: 'ti ti-users' },
+          { title: 'Program Lucru', path: '/providers/schedule', icon: 'ti ti-calendar-time' },
+        ],
+      },
     ],
   },
   {
-    title: 'Setari',
+    title: 'Configurare',
     items: [
-      {
-        title: 'Setari',
-        icon: 'ti ti-settings',
-        children: [
-          { title: 'Securitate', path: '/settings/security', icon: 'ti ti-shield-lock' },
-          { title: 'Sesiuni', path: '/settings/sessions', icon: 'ti ti-device-laptop' },
-        ],
-      },
+      { title: 'Module & Abonamente', path: '/modules', icon: 'ti ti-apps', badge: 'Nou', badgeColor: 'success', shortcut: 'M' },
+      { title: 'Setari', path: '/settings', icon: 'ti ti-settings', shortcut: 'S' },
     ],
   },
 ];
@@ -142,6 +151,11 @@ function SidebarMenuItem({ item, isExpanded, onToggle, level = 0 }: SidebarMenuI
         >
           <i className={item.icon}></i>
           <span>{item.title}</span>
+          {item.shortcut && (
+            <span className="menu-shortcut" title={`Scurtatura: Ctrl+${item.shortcut}`}>
+              {item.shortcut}
+            </span>
+          )}
           {item.badge && (
             <span className={`badge badge-soft-${item.badgeColor || 'primary'}`}>
               {item.badge}
@@ -177,6 +191,11 @@ function SidebarMenuItem({ item, isExpanded, onToggle, level = 0 }: SidebarMenuI
       >
         <i className={item.icon}></i>
         <span>{item.title}</span>
+        {item.shortcut && (
+          <span className="menu-shortcut" title={`Scurtatura: Ctrl+${item.shortcut}`}>
+            {item.shortcut}
+          </span>
+        )}
         {item.badge && (
           <span className={`badge badge-soft-${item.badgeColor || 'primary'}`}>
             {item.badge}
@@ -294,11 +313,12 @@ export function Sidebar() {
             <div className="trial-item-icon d-flex align-items-center justify-content-center mx-auto mb-3">
               <i className="ti ti-sparkles text-primary fs-3xl"></i>
             </div>
-            <h6>Actualizeaza Planul</h6>
-            <p>Obtine acces la toate functiile premium</p>
-            <button className="btn btn-primary btn-sm mt-3 w-100">
-              Actualizeaza Acum
-            </button>
+            <h6>Extinde Clinica</h6>
+            <p>Descopera module premium pentru clinica ta</p>
+            <NavLink to="/modules" className="btn btn-primary btn-sm mt-3 w-100" onClick={closeMobileSidebar}>
+              <i className="ti ti-apps me-1"></i>
+              Vezi Module
+            </NavLink>
           </div>
         </div>
       </aside>

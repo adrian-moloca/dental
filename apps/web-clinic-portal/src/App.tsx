@@ -36,7 +36,15 @@ import SettingsSessionsPage from './routes/SettingsSessionsPage';
 import SettingsSecurityPage from './routes/SettingsSecurityPage';
 import SettingsProfilePage from './routes/SettingsProfilePage';
 import SettingsClinicPage from './routes/SettingsClinicPage';
+import SettingsPage from './routes/SettingsPage';
 import { ReportsPage } from './routes/ReportsPage';
+import ProviderSchedulePage from './routes/ProviderSchedulePage';
+import TreatmentPlanCreatePage from './routes/TreatmentPlanCreatePage';
+import { InterventionsPage } from './routes/InterventionsPage';
+import { ModulesPage } from './routes/ModulesPage';
+import SupportPage from './routes/SupportPage';
+import { StaffPage } from './routes/StaffPage';
+import { ClinicalOverviewPage } from './routes/ClinicalOverviewPage';
 import { DevTools } from './components/DevTools';
 
 function AppContent() {
@@ -101,6 +109,14 @@ function AppContent() {
                 }
               />
               <Route
+                path="/patients/create"
+                element={
+                  <ProtectedRoute>
+                    <CreatePatientPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/patients/new"
                 element={
                   <ProtectedRoute>
@@ -153,6 +169,14 @@ function AppContent() {
                 }
               />
               <Route
+                path="/billing/invoices/create"
+                element={
+                  <ProtectedRoute>
+                    <CreateInvoicePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/billing/invoices/new"
                 element={
                   <ProtectedRoute>
@@ -171,10 +195,34 @@ function AppContent() {
 
               {/* Clinical */}
               <Route
+                path="/clinical"
+                element={
+                  <ProtectedRoute>
+                    <ClinicalOverviewPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/clinical/:patientId"
                 element={
                   <ProtectedRoute>
                     <ClinicalPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clinical/treatment-plans/create"
+                element={
+                  <ProtectedRoute>
+                    <TreatmentPlanCreatePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/clinical/interventions"
+                element={
+                  <ProtectedRoute>
+                    <InterventionsPage />
                   </ProtectedRoute>
                 }
               />
@@ -217,10 +265,34 @@ function AppContent() {
                 }
               />
 
+              {/* Staff / Echipa */}
+              <Route
+                path="/staff"
+                element={
+                  <ProtectedRoute>
+                    <StaffPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Providers / Schedule */}
+              <Route
+                path="/providers/schedule"
+                element={
+                  <ProtectedRoute>
+                    <ProviderSchedulePage />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Settings */}
               <Route
                 path="/settings"
-                element={<Navigate to="/settings/profile" replace />}
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
               />
               <Route
                 path="/settings/profile"
@@ -251,6 +323,26 @@ function AppContent() {
                 element={
                   <ProtectedRoute>
                     <SettingsSessionsPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Modules & Subscriptions */}
+              <Route
+                path="/modules"
+                element={
+                  <ProtectedRoute>
+                    <ModulesPage />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Support */}
+              <Route
+                path="/support"
+                element={
+                  <ProtectedRoute>
+                    <SupportPage />
                   </ProtectedRoute>
                 }
               />
