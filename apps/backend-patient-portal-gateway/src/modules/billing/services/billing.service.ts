@@ -12,7 +12,7 @@ export class BillingService {
 
   async listInvoices(patientId: string, tenantContext: TenantContext, params?: any) {
     const invoices = await this.billingClient.listInvoices(patientId, tenantContext, params);
-    return invoices.map(i => this.billingAdapter.transformInvoice(i));
+    return invoices.map((i) => this.billingAdapter.transformInvoice(i));
   }
 
   async getInvoice(invoiceId: string, tenantContext: TenantContext) {
@@ -22,7 +22,7 @@ export class BillingService {
 
   async listPayments(patientId: string, tenantContext: TenantContext) {
     const payments = await this.billingClient.listPayments(patientId, tenantContext);
-    return payments.map(p => this.billingAdapter.transformPayment(p));
+    return payments.map((p) => this.billingAdapter.transformPayment(p));
   }
 
   async getBalance(patientId: string, tenantContext: TenantContext) {

@@ -2,7 +2,10 @@ import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ImagingService } from '../services/imaging.service';
 import { PatientAuthGuard } from '@/common/guards/patient-auth.guard';
-import { CurrentPatient, CurrentPatientPayload } from '@/common/decorators/current-patient.decorator';
+import {
+  CurrentPatient,
+  CurrentPatientPayload,
+} from '@/common/decorators/current-patient.decorator';
 
 @ApiTags('portal/imaging')
 @Controller('portal/patient/imaging')

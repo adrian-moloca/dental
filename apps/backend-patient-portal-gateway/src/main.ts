@@ -41,8 +41,8 @@ async function bootstrap(): Promise<void> {
       createHelmetConfig({
         enableCSP: nodeEnv === 'production',
         enableHSTS: nodeEnv === 'production',
-      })
-    )
+      }),
+    ),
   );
 
   // Configure CORS (using shared-security)
@@ -50,7 +50,7 @@ async function bootstrap(): Promise<void> {
     createCorsConfigFromEnv({
       CORS_ALLOWED_ORIGINS: corsOrigins.join(','),
       CORS_ALLOW_CREDENTIALS: corsCredentials.toString(),
-    })
+    }),
   );
 
   // Apply global validation pipe

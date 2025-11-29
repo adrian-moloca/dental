@@ -3,7 +3,10 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { EngagementService } from '../services/engagement.service';
 import { PatientAuthGuard } from '@/common/guards/patient-auth.guard';
-import { CurrentPatient, CurrentPatientPayload } from '@/common/decorators/current-patient.decorator';
+import {
+  CurrentPatient,
+  CurrentPatientPayload,
+} from '@/common/decorators/current-patient.decorator';
 
 @ApiTags('portal/engagement')
 @Controller('portal/patient/engagement')

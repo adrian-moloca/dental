@@ -16,7 +16,7 @@ export class ClinicalService {
 
   async listVisits(patientId: string, tenantContext: TenantContext) {
     const visits = await this.clinicalClient.listVisits(patientId, tenantContext);
-    return visits.map(v => this.clinicalAdapter.transformVisit(v));
+    return visits.map((v) => this.clinicalAdapter.transformVisit(v));
   }
 
   async getVisit(visitId: string, tenantContext: TenantContext) {
@@ -26,7 +26,7 @@ export class ClinicalService {
 
   async listTreatmentPlans(patientId: string, tenantContext: TenantContext) {
     const plans = await this.clinicalClient.listTreatmentPlans(patientId, tenantContext);
-    return plans.map(p => this.clinicalAdapter.transformTreatmentPlan(p));
+    return plans.map((p) => this.clinicalAdapter.transformTreatmentPlan(p));
   }
 
   async getTreatmentPlan(planId: string, tenantContext: TenantContext) {

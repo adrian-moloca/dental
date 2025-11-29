@@ -18,32 +18,38 @@ interface TimelineEntryProps {
 const ACTIVITY_TYPE_CONFIG = {
   appointment: {
     label: 'Programare',
-    color: 'primary',
+    color: 'primary' as const,
+    badgeVariant: 'soft-primary' as const,
     defaultIcon: 'ti-calendar',
   },
   clinical_note: {
     label: 'Nota Clinica',
-    color: 'info',
+    color: 'info' as const,
+    badgeVariant: 'soft-info' as const,
     defaultIcon: 'ti-file-text',
   },
   treatment: {
     label: 'Tratament',
-    color: 'success',
+    color: 'success' as const,
+    badgeVariant: 'soft-success' as const,
     defaultIcon: 'ti-dental',
   },
   document: {
     label: 'Document',
-    color: 'warning',
+    color: 'warning' as const,
+    badgeVariant: 'soft-warning' as const,
     defaultIcon: 'ti-file',
   },
   payment: {
     label: 'Plata',
-    color: 'success',
+    color: 'success' as const,
+    badgeVariant: 'soft-success' as const,
     defaultIcon: 'ti-cash',
   },
   communication: {
     label: 'Comunicare',
-    color: 'secondary',
+    color: 'secondary' as const,
+    badgeVariant: 'soft-secondary' as const,
     defaultIcon: 'ti-mail',
   },
 };
@@ -83,7 +89,7 @@ export function TimelineEntry({ activity, onViewDetails }: TimelineEntryProps) {
                 )}
               </div>
             </div>
-            <Badge variant={`soft-${color}`} size="sm">
+            <Badge variant={config.badgeVariant} size="sm">
               {config.label}
             </Badge>
           </div>

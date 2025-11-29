@@ -110,7 +110,7 @@ export class ChangeLogService {
     limit: number = 100,
     entityType?: string,
   ): Promise<OfflineChange[]> {
-    const query: any = {
+    const query: Record<string, unknown> = {
       tenantId,
       organizationId,
       sequenceNumber: { $gt: sinceSequence },

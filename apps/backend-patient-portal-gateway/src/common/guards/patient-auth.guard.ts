@@ -7,12 +7,7 @@
  * @module common/guards/patient-auth-guard
  */
 
-import {
-  Injectable,
-  ExecutionContext,
-  UnauthorizedException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, ExecutionContext, UnauthorizedException, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
@@ -58,12 +53,7 @@ export class PatientAuthGuard extends AuthGuard('jwt') {
    *
    * Validates that the authenticated user is a patient.
    */
-  handleRequest<TUser = any>(
-    err: any,
-    user: any,
-    info: any,
-    context: ExecutionContext,
-  ): TUser {
+  handleRequest<TUser = any>(err: any, user: any, info: any, context: ExecutionContext): TUser {
     // Log authentication failures
     if (err || !user) {
       const request = context?.switchToHttp().getRequest();

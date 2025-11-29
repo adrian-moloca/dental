@@ -53,7 +53,7 @@ export class PatientOwnershipGuard implements CanActivate {
     // Verify that the patient is accessing their own resource
     if (authenticatedPatientId !== routePatientId) {
       this.logger.warn({
-        message: 'Patient attempted to access another patient\'s resource',
+        message: "Patient attempted to access another patient's resource",
         authenticatedPatientId,
         requestedPatientId: routePatientId,
         path: request.url,

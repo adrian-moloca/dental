@@ -54,10 +54,7 @@ export class ImagingServiceClient {
   /**
    * List imaging studies for patient
    */
-  async listStudies(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<ImagingStudy[]> {
+  async listStudies(patientId: string, tenantContext: TenantContext): Promise<ImagingStudy[]> {
     return this.httpClient.get<ImagingStudy[]>(
       this.baseUrl,
       `/api/patients/${patientId}/imaging-studies`,
@@ -68,10 +65,7 @@ export class ImagingServiceClient {
   /**
    * Get imaging study details
    */
-  async getStudy(
-    studyId: string,
-    tenantContext: TenantContext,
-  ): Promise<ImagingStudyDetails> {
+  async getStudy(studyId: string, tenantContext: TenantContext): Promise<ImagingStudyDetails> {
     return this.httpClient.get<ImagingStudyDetails>(
       this.baseUrl,
       `/api/imaging-studies/${studyId}`,

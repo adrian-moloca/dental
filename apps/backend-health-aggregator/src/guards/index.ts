@@ -1,1 +1,2 @@
-export { RateLimitGuard } from './rate-limit.guard';
+// Guards index file - currently no guards are exported
+// Add guard exports here when needed

@@ -1,26 +1,15 @@
-import { Module, Scope } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { REQUEST } from '@nestjs/core';
-import { DataLoaderService, DATALOADERS } from './dataloader.service';
-import { User } from '../../modules/users/entities/user.entity';
-import { Session } from '../../modules/sessions/entities/session.entity';
-import { Role } from '../../modules/rbac/entities/role.entity';
-import { Permission } from '../../modules/rbac/entities/permission.entity';
+import { Module } from '@nestjs/common';
+import { DataLoaderService } from './dataloader.service';
 
+/**
+ * DataLoaderModule - Placeholder for N+1 query prevention
+ *
+ * Note: DataLoader functionality is not yet implemented.
+ * The service currently returns null for all loaders.
+ * TODO: Implement actual DataLoader batching when needed.
+ */
 @Module({
-  imports: [TypeOrmModule.forFeature([User, Session, Role, Permission])],
-  providers: [
-    DataLoaderService,
-    // Request-scoped DataLoaders provider
-    {
-      provide: DATALOADERS,
-      scope: Scope.REQUEST,
-      inject: [DataLoaderService, REQUEST],
-      useFactory: (dataLoaderService: DataLoaderService) => {
-        return dataLoaderService.createLoaders();
-      },
-    },
-  ],
-  exports: [DataLoaderService, DATALOADERS],
+  providers: [DataLoaderService],
+  exports: [DataLoaderService],
 })
 export class DataLoaderModule {}

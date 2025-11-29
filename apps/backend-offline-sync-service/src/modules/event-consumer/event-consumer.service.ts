@@ -1,14 +1,14 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import * as amqp from 'amqplib';
+import { connect, Channel, ChannelModel, ConsumeMessage } from 'amqplib';
 import { ChangeLogService } from '../changelog/changelog.service';
 import { ChangeOperation } from '@dentalos/shared-domain';
 
 @Injectable()
 export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(EventConsumerService.name);
-  private connection: any = null;
-  private channel: any = null;
+  private connection: ChannelModel | null = null;
+  private channel: Channel | null = null;
 
   private readonly eventPatterns = [
     'patient.*',
@@ -42,7 +42,7 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
   private async connect(): Promise<void> {
     try {
       const rabbitmqUrl = this.configService.get<string>('rabbitmq.url');
-      this.connection = await amqp.connect(rabbitmqUrl!);
+      this.connection = await connect(rabbitmqUrl!);
       this.channel = await this.connection.createChannel();
 
       this.logger.log('Connected to RabbitMQ for event consumption');
@@ -56,6 +56,10 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
 
   private async setupConsumers(): Promise<void> {
     try {
+      if (!this.channel) {
+        throw new Error('Channel is not initialized');
+      }
+
       const exchange = 'dentalos.events';
       await this.channel.assertExchange(exchange, 'topic', { durable: true });
 
@@ -71,10 +75,10 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
       // Start consuming
       await this.channel.consume(
         queue,
-        async (msg: any) => {
+        async (msg: ConsumeMessage | null) => {
           if (msg) {
             await this.handleEvent(msg);
-            this.channel.ack(msg);
+            this.channel?.ack(msg);
           }
         },
         { noAck: false },
@@ -89,7 +93,7 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async handleEvent(msg: any): Promise<void> {
+  private async handleEvent(msg: ConsumeMessage): Promise<void> {
     try {
       const event = JSON.parse(msg.content.toString());
       const routingKey = msg.fields.routingKey;
@@ -133,14 +137,14 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
   }
 
   private extractEntityInfo(
-    event: any,
+    event: Record<string, unknown>,
     routingKey: string,
   ): {
     entityType: string;
     entityId: string;
     operation: ChangeOperation;
-    data: any;
-    previousData?: any;
+    data: Record<string, unknown>;
+    previousData?: Record<string, unknown>;
   } | null {
     // Determine operation based on event type
     let operation: ChangeOperation = ChangeOperation.UPDATE;
@@ -170,7 +174,7 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
     }
 
     const entityId = event[entityIdField];
-    if (!entityId) {
+    if (!entityId || typeof entityId !== 'string') {
       return null;
     }
 
@@ -185,11 +189,11 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
       entityId,
       operation,
       data: event,
-      previousData: event.previousData,
+      previousData: event.previousData as Record<string, unknown> | undefined,
     };
   }
 
-  private findEntityIdField(event: any): string | null {
+  private findEntityIdField(event: Record<string, unknown>): string | null {
     const possibleFields = [
       'patientId',
       'appointmentId',

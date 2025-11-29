@@ -4,8 +4,6 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
-  Inject,
-  forwardRef,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -99,7 +97,6 @@ export class SchedulesService {
     @InjectModel(ScheduleException.name)
     private readonly exceptionModel: Model<ScheduleExceptionDocument>,
     private readonly eventEmitter: EventEmitter2,
-    @Inject(forwardRef(() => CacheService))
     private readonly cacheService: CacheService,
   ) {}
 

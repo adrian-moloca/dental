@@ -33,9 +33,7 @@ export class HealthController {
   @ApiOperation({ summary: 'Readiness probe' })
   @HealthCheck()
   readiness() {
-    return this.health.check([
-      () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
-    ]);
+    return this.health.check([() => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024)]);
   }
 
   @Get('detailed')

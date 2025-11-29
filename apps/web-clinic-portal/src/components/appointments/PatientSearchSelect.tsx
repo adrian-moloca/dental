@@ -46,8 +46,8 @@ export function PatientSearchSelect({
   // Load selected patient if value is provided
   useEffect(() => {
     if (value && !selectedPatient) {
-      patientsClient.getById(value).then((response) => {
-        setSelectedPatient(response.data);
+      patientsClient.getById(value).then((patient) => {
+        setSelectedPatient(patient);
       }).catch(() => {
         setSelectedPatient(undefined);
       });

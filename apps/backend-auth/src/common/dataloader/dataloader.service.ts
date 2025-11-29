@@ -1,22 +1,17 @@
 import { Injectable } from '@nestjs/common';
-// TODO: Uncomment when dataloaders are implemented
-// import { InjectRepository } from '@nestjs/typeorm';
-// import { Repository } from 'typeorm';
-// import { User } from '../../modules/users/entities/user.entity';
-// import { Session } from '../../modules/sessions/entities/session.entity';
-// import { Role } from '../../modules/rbac/entities/role.entity';
-// import { Permission } from '../../modules/rbac/entities/permission.entity';
 
 /**
  * DataLoader Service - Batch loading and N+1 query prevention
- * Automatically batches and caches requests within a single request context
- * Adapted for PostgreSQL/TypeORM (Auth Service)
+ *
+ * Note: This is a placeholder implementation. DataLoader functionality
+ * should be implemented when query batching becomes necessary.
+ * All methods currently return null.
+ *
+ * TODO: Implement actual DataLoader batching using the dataloader package
  */
 
 @Injectable()
 export class DataLoaderService {
-  constructor() {} // private readonly _permissionRepository: Repository<Permission> // @InjectRepository(Permission) // private readonly _roleRepository: Repository<Role>, // @InjectRepository(Role) // private readonly _sessionRepository: Repository<Session>, // @InjectRepository(Session) // private readonly _userRepository: Repository<User>, // @InjectRepository(User) // TODO: Implement dataloaders
-
   /**
    * Create user loader
    * Batches user lookups by ID
@@ -95,20 +90,4 @@ export class DataLoaderService {
       permissionsByUserLoader: this.createPermissionsByUserLoader(),
     };
   }
-}
-
-/**
- * Request-scoped DataLoader provider
- * Creates fresh loaders for each request to prevent cross-request data leakage
- */
-export const DATALOADERS = Symbol('DATALOADERS');
-
-export interface DataLoaders {
-  userLoader: unknown;
-  sessionLoader: unknown;
-  sessionsByUserLoader: unknown;
-  roleLoader: unknown;
-  permissionLoader: unknown;
-  rolesByUserLoader: unknown;
-  permissionsByUserLoader: unknown;
 }

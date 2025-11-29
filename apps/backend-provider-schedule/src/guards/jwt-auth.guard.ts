@@ -49,11 +49,11 @@ export class JwtAuthGuard implements CanActivate {
   private readonly jwtSecret: string;
   private readonly jwtIssuer: string;
 
-  constructor(_configService: ConfigService<AppConfig>) {
+  constructor(configService: ConfigService<AppConfig>) {
     // Load JWT configuration from environment
     // SECURITY: JWT_SECRET must be a strong, randomly generated secret (min 256 bits)
-    this.jwtSecret = process.env.JWT_SECRET || '';
-    this.jwtIssuer = process.env.JWT_ISSUER || 'dentalos-auth-service';
+    this.jwtSecret = configService.get('jwt.secret', { infer: true }) || '';
+    this.jwtIssuer = configService.get('jwt.issuer', { infer: true }) || 'dentalos-auth-service';
   }
 
   /**

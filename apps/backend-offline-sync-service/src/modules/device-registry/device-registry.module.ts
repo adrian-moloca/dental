@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DeviceRegistryController } from './device-registry.controller';
 import { DeviceRegistryService } from './device-registry.service';
 import { DeviceRegistryDoc, DeviceRegistrySchema } from './schemas/device-registry.schema';
@@ -20,7 +19,6 @@ import { DeviceRegistryDoc, DeviceRegistrySchema } from './schemas/device-regist
         },
       }),
     }),
-    EventEmitterModule.forRoot(),
   ],
   controllers: [DeviceRegistryController],
   providers: [DeviceRegistryService],

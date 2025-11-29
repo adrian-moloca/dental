@@ -89,8 +89,18 @@ export default function PatientEditPage() {
             <ErrorState
               title="Eroare la incarcarea pacientului"
               message={error ? (error as Error).message : 'Pacientul nu a fost gasit'}
-              onRetry={() => window.location.reload()}
-              onBack={handleBack}
+              actions={
+                <div className="d-flex gap-2 justify-content-center">
+                  <Button variant="outline-secondary" onClick={handleBack}>
+                    <i className="ti ti-arrow-left me-1"></i>
+                    Inapoi
+                  </Button>
+                  <Button variant="primary" onClick={() => window.location.reload()}>
+                    <i className="ti ti-refresh me-1"></i>
+                    Reincearca
+                  </Button>
+                </div>
+              }
             />
           </CardBody>
         </Card>
@@ -108,14 +118,13 @@ export default function PatientEditPage() {
             <i className="ti ti-arrow-left me-1"></i>
             Inapoi
           </Button>
-          <Button
-            variant="soft-info"
-            as={Link}
+          <Link
             to={`/patients/${id}`}
+            className="btn btn-soft-info"
           >
             <i className="ti ti-eye me-1"></i>
             Vezi Profil
-          </Button>
+          </Link>
         </div>
       }
     >
@@ -166,11 +175,11 @@ export default function PatientEditPage() {
               emergencyContact: patient.emergencyContact,
 
               // Medical Alerts
-              alerts: patient.alerts || {
-                allergies: [],
-                medicalConditions: [],
-                medications: [],
-                flags: [],
+              alerts: {
+                allergies: patient.alerts?.allergies || [],
+                medicalConditions: patient.alerts?.medicalConditions || [],
+                medications: patient.alerts?.medications || [],
+                flags: patient.alerts?.flags || [],
               },
 
               // Insurance

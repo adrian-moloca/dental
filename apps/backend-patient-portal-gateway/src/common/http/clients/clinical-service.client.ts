@@ -106,10 +106,7 @@ export class ClinicalServiceClient {
   /**
    * List visits for patient
    */
-  async listVisits(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<Visit[]> {
+  async listVisits(patientId: string, tenantContext: TenantContext): Promise<Visit[]> {
     return this.httpClient.get<Visit[]>(
       this.baseUrl,
       `/api/patients/${patientId}/visits`,
@@ -120,15 +117,8 @@ export class ClinicalServiceClient {
   /**
    * Get visit by ID
    */
-  async getVisit(
-    visitId: string,
-    tenantContext: TenantContext,
-  ): Promise<Visit> {
-    return this.httpClient.get<Visit>(
-      this.baseUrl,
-      `/api/visits/${visitId}`,
-      tenantContext,
-    );
+  async getVisit(visitId: string, tenantContext: TenantContext): Promise<Visit> {
+    return this.httpClient.get<Visit>(this.baseUrl, `/api/visits/${visitId}`, tenantContext);
   }
 
   /**

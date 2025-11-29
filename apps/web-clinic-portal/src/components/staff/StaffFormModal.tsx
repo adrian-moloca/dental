@@ -115,10 +115,11 @@ type WeekDay = (typeof weekDays)[number]['key'];
 export interface StaffFormModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: Partial<StaffMember>) => void;
+  onSubmit: (data: Partial<StaffMember>) => void | Promise<void>;
   staff: StaffMember | null;
   roleConfig: Record<StaffMember['role'], RoleConfig>;
   departments: string[];
+  isLoading?: boolean;
 }
 
 interface FormData {

@@ -101,8 +101,8 @@ export function AppointmentBookingWizard({
   // Fetch patient details if initialPatientId is provided
   useEffect(() => {
     if (initialPatientId && !formData.patient) {
-      patientsClient.getById(initialPatientId).then((response) => {
-        setFormData((prev) => ({ ...prev, patient: response.data }));
+      patientsClient.getById(initialPatientId).then((patient) => {
+        setFormData((prev) => ({ ...prev, patient }));
       }).catch(() => {
         // Patient not found, clear ID
         setFormData((prev) => ({ ...prev, patientId: '' }));

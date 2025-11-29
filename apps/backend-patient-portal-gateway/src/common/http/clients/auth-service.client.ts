@@ -97,12 +97,7 @@ export class AuthServiceClient {
       tenantId: dto.tenantId,
     };
 
-    return this.httpClient.post<AuthResponse>(
-      this.baseUrl,
-      '/api/auth/login',
-      tenantContext,
-      dto,
-    );
+    return this.httpClient.post<AuthResponse>(this.baseUrl, '/api/auth/login', tenantContext, dto);
   }
 
   /**
@@ -123,10 +118,7 @@ export class AuthServiceClient {
   /**
    * Verify MFA code
    */
-  async verifyMfa(
-    dto: MfaVerifyDto,
-    tenantContext: TenantContext,
-  ): Promise<AuthResponse> {
+  async verifyMfa(dto: MfaVerifyDto, tenantContext: TenantContext): Promise<AuthResponse> {
     return this.httpClient.post<AuthResponse>(
       this.baseUrl,
       '/api/auth/mfa/verify',
@@ -139,21 +131,13 @@ export class AuthServiceClient {
    * Logout (invalidate token)
    */
   async logout(tenantContext: TenantContext): Promise<void> {
-    await this.httpClient.post<void>(
-      this.baseUrl,
-      '/api/auth/logout',
-      tenantContext,
-    );
+    await this.httpClient.post<void>(this.baseUrl, '/api/auth/logout', tenantContext);
   }
 
   /**
    * Get current user info
    */
   async getCurrentUser(tenantContext: TenantContext): Promise<any> {
-    return this.httpClient.get<any>(
-      this.baseUrl,
-      '/api/auth/me',
-      tenantContext,
-    );
+    return this.httpClient.get<any>(this.baseUrl, '/api/auth/me', tenantContext);
   }
 }

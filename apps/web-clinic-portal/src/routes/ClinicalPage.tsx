@@ -37,6 +37,9 @@ import {
 import type {
   ToothConditionType,
   ToothSurface,
+  OdontogramDto,
+  ToothDataDto,
+  ToothConditionRecord,
 } from '../api/clinicalClient';
 import { usePatient } from '../hooks/usePatients';
 import { useAppointments } from '../hooks/useAppointments';
@@ -171,11 +174,11 @@ export function ClinicalPage() {
   const mapOdontogramToToothData = (odontogramData: OdontogramDto | undefined): ToothData[] => {
     if (!odontogramData?.teeth) return [];
 
-    return Object.entries(odontogramData.teeth).map(([toothNumber, tooth]) => ({
+    return Object.entries(odontogramData.teeth).map(([toothNumber, tooth]: [string, ToothDataDto]) => ({
       toothNumber: parseInt(toothNumber, 10),
       conditions: (tooth.conditions || [])
-        .filter((c) => !c.deletedAt) // Only show active conditions
-        .map((c) => ({
+        .filter((c: ToothConditionRecord) => !c.deletedAt) // Only show active conditions
+        .map((c: ToothConditionRecord) => ({
           condition: c.condition,
           surfaces: c.surfaces || [],
         })),
@@ -662,7 +665,7 @@ export function ClinicalPage() {
                                 <div>
                                   <h5 className="mb-1">{plan.title}</h5>
                                   <div className="text-muted small">
-                                    {formatDate(plan.planDate)}
+                                    {formatDate(plan.createdAt)}
                                   </div>
                                 </div>
                                 <div>
@@ -672,10 +675,10 @@ export function ClinicalPage() {
                                   {plan.status === 'in_progress' && (
                                     <Badge variant="soft-info">In Progres</Badge>
                                   )}
-                                  {plan.status === 'approved' && (
+                                  {plan.status === 'accepted' && (
                                     <Badge variant="soft-cyan">Aprobat</Badge>
                                   )}
-                                  {plan.status === 'pending' && (
+                                  {plan.status === 'presented' && (
                                     <Badge variant="soft-warning">In Asteptare</Badge>
                                   )}
                                   {plan.status === 'draft' && (
@@ -684,28 +687,28 @@ export function ClinicalPage() {
                                 </div>
                               </div>
 
-                              {plan.options && plan.options.length > 0 && (
+                              {plan.alternatives && plan.alternatives.length > 0 && (
                                 <div className="d-flex flex-column gap-2">
-                                  {plan.options.map((option) => (
+                                  {plan.alternatives.map((alternative) => (
                                     <div
-                                      key={option.optionId}
+                                      key={alternative.id}
                                       className="p-3 bg-light rounded border"
                                     >
                                       <div className="d-flex justify-content-between align-items-center mb-2">
-                                        <span className="fw-semibold">{option.name}</span>
+                                        <span className="fw-semibold">{alternative.name}</span>
                                         <span className="text-primary fw-bold">
-                                          {option.totalEstimatedCost.toFixed(2)} RON
+                                          {((alternative.totalCents ?? 0) / 100).toFixed(2)} RON
                                         </span>
                                       </div>
-                                      {option.procedures && option.procedures.length > 0 && (
+                                      {alternative.phases && alternative.phases.length > 0 && (
                                         <div className="d-flex flex-column gap-1">
-                                          {option.procedures.map((proc, idx) => (
+                                          {alternative.phases.map((phase, idx: number) => (
                                             <div
                                               key={idx}
                                               className="d-flex justify-content-between text-muted small"
                                             >
-                                              <span>{proc.description}</span>
-                                              <span>{proc.estimatedCost.toFixed(2)} RON</span>
+                                              <span>{phase.name}</span>
+                                              <span>{((phase.subtotalCents ?? 0) / 100).toFixed(2)} RON</span>
                                             </div>
                                           ))}
                                         </div>
@@ -715,10 +718,10 @@ export function ClinicalPage() {
                                 </div>
                               )}
 
-                              {plan.options && plan.options.length > 0 && (
+                              {plan.alternatives && plan.alternatives.length > 0 && (
                                 <div className="mt-2 text-muted small">
                                   <i className="ti ti-layers-linked me-1"></i>
-                                  {plan.options.length} {plan.options.length === 1 ? 'Optiune' : 'Optiuni'}
+                                  {plan.alternatives.length} {plan.alternatives.length === 1 ? 'Alternativa' : 'Alternative'}
                                 </div>
                               )}
                             </CardBody>

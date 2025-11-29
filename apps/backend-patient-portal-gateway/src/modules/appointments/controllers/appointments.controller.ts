@@ -1,8 +1,23 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { AppointmentsService } from '../services/appointments.service';
 import { PatientAuthGuard } from '@/common/guards/patient-auth.guard';
-import { CurrentPatient, CurrentPatientPayload } from '@/common/decorators/current-patient.decorator';
+import {
+  CurrentPatient,
+  CurrentPatientPayload,
+} from '@/common/decorators/current-patient.decorator';
 
 @ApiTags('portal/appointments')
 @Controller('portal/patient/appointments')
@@ -14,12 +29,16 @@ export class AppointmentsController {
   @Get()
   @ApiOperation({ summary: 'List patient appointments' })
   async listAppointments(@CurrentPatient() patient: CurrentPatientPayload, @Query() params: any) {
-    return this.appointmentsService.listAppointments(patient.patientId, {
-      tenantId: patient.tenantId,
-      organizationId: patient.organizationId,
-      clinicId: patient.clinicId,
-      patientId: patient.patientId,
-    }, params);
+    return this.appointmentsService.listAppointments(
+      patient.patientId,
+      {
+        tenantId: patient.tenantId,
+        organizationId: patient.organizationId,
+        clinicId: patient.clinicId,
+        patientId: patient.patientId,
+      },
+      params,
+    );
   }
 
   @Get(':id')
@@ -36,17 +55,24 @@ export class AppointmentsController {
   @Post()
   @ApiOperation({ summary: 'Book new appointment' })
   async createAppointment(@Body() dto: any, @CurrentPatient() patient: CurrentPatientPayload) {
-    return this.appointmentsService.createAppointment({ ...dto, patientId: patient.patientId }, {
-      tenantId: patient.tenantId,
-      organizationId: patient.organizationId,
-      clinicId: patient.clinicId,
-      patientId: patient.patientId,
-    });
+    return this.appointmentsService.createAppointment(
+      { ...dto, patientId: patient.patientId },
+      {
+        tenantId: patient.tenantId,
+        organizationId: patient.organizationId,
+        clinicId: patient.clinicId,
+        patientId: patient.patientId,
+      },
+    );
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Reschedule appointment' })
-  async updateAppointment(@Param('id') id: string, @Body() dto: any, @CurrentPatient() patient: CurrentPatientPayload) {
+  async updateAppointment(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @CurrentPatient() patient: CurrentPatientPayload,
+  ) {
     return this.appointmentsService.updateAppointment(id, dto, {
       tenantId: patient.tenantId,
       organizationId: patient.organizationId,
@@ -58,7 +84,10 @@ export class AppointmentsController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Cancel appointment' })
-  async cancelAppointment(@Param('id') id: string, @CurrentPatient() patient: CurrentPatientPayload) {
+  async cancelAppointment(
+    @Param('id') id: string,
+    @CurrentPatient() patient: CurrentPatientPayload,
+  ) {
     await this.appointmentsService.cancelAppointment(id, {
       tenantId: patient.tenantId,
       organizationId: patient.organizationId,

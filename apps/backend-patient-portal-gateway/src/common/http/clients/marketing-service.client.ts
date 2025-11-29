@@ -81,10 +81,7 @@ export class MarketingServiceClient {
   /**
    * Get loyalty info for patient
    */
-  async getLoyaltyInfo(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<LoyaltyInfo> {
+  async getLoyaltyInfo(patientId: string, tenantContext: TenantContext): Promise<LoyaltyInfo> {
     return this.httpClient.get<LoyaltyInfo>(
       this.baseUrl,
       `/api/loyalty/patients/${patientId}`,
@@ -95,10 +92,7 @@ export class MarketingServiceClient {
   /**
    * Get referral info for patient
    */
-  async getReferralInfo(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<ReferralInfo> {
+  async getReferralInfo(patientId: string, tenantContext: TenantContext): Promise<ReferralInfo> {
     return this.httpClient.get<ReferralInfo>(
       this.baseUrl,
       `/api/referrals/patients/${patientId}`,
@@ -109,10 +103,7 @@ export class MarketingServiceClient {
   /**
    * Get personalized offers for patient
    */
-  async getOffers(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<Offer[]> {
+  async getOffers(patientId: string, tenantContext: TenantContext): Promise<Offer[]> {
     return this.httpClient.get<Offer[]>(
       this.baseUrl,
       `/api/campaigns/patients/${patientId}/offers`,
@@ -128,12 +119,10 @@ export class MarketingServiceClient {
     dto: SubmitFeedbackDto,
     tenantContext: TenantContext,
   ): Promise<any> {
-    return this.httpClient.post<any>(
-      this.baseUrl,
-      `/api/feedback`,
-      tenantContext,
-      { ...dto, patientId },
-    );
+    return this.httpClient.post<any>(this.baseUrl, `/api/feedback`, tenantContext, {
+      ...dto,
+      patientId,
+    });
   }
 
   /**
@@ -144,11 +133,9 @@ export class MarketingServiceClient {
     dto: SubmitNpsDto,
     tenantContext: TenantContext,
   ): Promise<any> {
-    return this.httpClient.post<any>(
-      this.baseUrl,
-      `/api/nps`,
-      tenantContext,
-      { ...dto, patientId },
-    );
+    return this.httpClient.post<any>(this.baseUrl, `/api/nps`, tenantContext, {
+      ...dto,
+      patientId,
+    });
   }
 }

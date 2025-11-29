@@ -7,6 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { extractCorrelationId } from '../common/correlation-id.util';
 
 /**
  * Error response structure
@@ -52,7 +53,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     // Extract correlation ID from request headers for distributed tracing
-    const correlationId = this.extractCorrelationId(request);
+    const correlationId = extractCorrelationId(request);
 
     // Determine if we're in development mode
     const isDevelopment = process.env.NODE_ENV === 'development';
@@ -227,40 +228,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
   }
 
-  /**
-   * Extracts correlation ID from request headers
-   *
-   * Edge cases handled:
-   * - Falls back to generating new correlation ID if not present
-   * - Handles both lowercase and uppercase header names
-   *
-   * @param request - Express request object
-   * @returns Correlation ID
-   */
-  private extractCorrelationId(request: Request): string {
-    // Try to get correlation ID from headers
-    // Edge case: Support both lowercase and uppercase header names
-    const correlationId =
-      request.get('x-correlation-id') ||
-      request.get('X-Correlation-ID') ||
-      // Fallback: Generate new correlation ID if not present
-      this.generateCorrelationId();
-
-    return correlationId;
-  }
-
-  /**
-   * Generates a new correlation ID
-   *
-   * Edge case: Uses timestamp + random string for uniqueness
-   *
-   * @returns Generated correlation ID
-   */
-  private generateCorrelationId(): string {
-    // Simple correlation ID generation: timestamp + random string
-    // Edge case: Good enough for tracing, not cryptographically secure
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-  }
 
   /**
    * Converts HTTP status code to error code

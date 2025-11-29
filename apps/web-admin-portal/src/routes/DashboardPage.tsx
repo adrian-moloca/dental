@@ -16,7 +16,6 @@ const totalOrganizations = organizations.length;
 const activeOrganizations = organizations.filter((o) => o.status === 'active').length;
 const totalCabinets = cabinets.length;
 const activeCabinets = cabinets.filter((c) => c.status === 'active').length;
-const _totalSubscriptions = subscriptions.length;
 const activeSubscriptions = subscriptions.filter((s) => s.status === 'active' || s.status === 'trial').length;
 const totalUsers = users.length;
 const activeUsers = users.filter((u) => u.status === 'active').length;

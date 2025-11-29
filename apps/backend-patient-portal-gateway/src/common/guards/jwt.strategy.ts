@@ -25,7 +25,7 @@ import type { CurrentPatientPayload } from '../decorators/current-patient.decora
  * Allowed JWT algorithms
  * SECURITY: Only RS256 is permitted to prevent algorithm confusion attacks
  */
-const ALLOWED_JWT_ALGORITHMS: ('RS256')[] = ['RS256'];
+const ALLOWED_JWT_ALGORITHMS: 'RS256'[] = ['RS256'];
 
 export interface JwtPayload {
   sub: string; // userId

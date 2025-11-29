@@ -71,10 +71,7 @@ export class PatientServiceClient {
   /**
    * Get patient profile by ID
    */
-  async getPatientById(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<PatientProfile> {
+  async getPatientById(patientId: string, tenantContext: TenantContext): Promise<PatientProfile> {
     return this.httpClient.get<PatientProfile>(
       this.baseUrl,
       `/api/patients/${patientId}`,
@@ -101,10 +98,7 @@ export class PatientServiceClient {
   /**
    * Get patient preferences
    */
-  async getPreferences(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<any> {
+  async getPreferences(patientId: string, tenantContext: TenantContext): Promise<any> {
     return this.httpClient.get<any>(
       this.baseUrl,
       `/api/patients/${patientId}/preferences`,
@@ -131,10 +125,7 @@ export class PatientServiceClient {
   /**
    * Export patient data (GDPR)
    */
-  async exportPatientData(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<any> {
+  async exportPatientData(patientId: string, tenantContext: TenantContext): Promise<any> {
     return this.httpClient.get<any>(
       this.baseUrl,
       `/api/gdpr/patients/${patientId}/export`,
@@ -145,10 +136,7 @@ export class PatientServiceClient {
   /**
    * Request patient data deletion (GDPR)
    */
-  async requestDeletion(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<any> {
+  async requestDeletion(patientId: string, tenantContext: TenantContext): Promise<any> {
     return this.httpClient.post<any>(
       this.baseUrl,
       `/api/gdpr/patients/${patientId}/deletion-request`,
@@ -159,10 +147,7 @@ export class PatientServiceClient {
   /**
    * Get patient consents
    */
-  async getConsents(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<any[]> {
+  async getConsents(patientId: string, tenantContext: TenantContext): Promise<any[]> {
     return this.httpClient.get<any[]>(
       this.baseUrl,
       `/api/patients/${patientId}/consents`,

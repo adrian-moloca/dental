@@ -31,7 +31,7 @@ import {
   buildProductionErrorResponse,
   buildDevelopmentErrorResponse,
 } from '@dentalos/shared-errors';
-import { getCorrelationId } from '../middleware/correlation-id.middleware';
+import { getCorrelationId } from '@dentalos/shared-tracing';
 import type { RequestWithUser } from '../interceptors/tenant-context.interceptor';
 
 /**
@@ -65,7 +65,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<RequestWithUser>();
 
     // Extract correlation ID from AsyncLocalStorage
-    const correlationId = getCorrelationId();
+    const correlationId = getCorrelationId() ?? 'unknown';
 
     // Extract tenant context from request (attached by TenantContextInterceptor)
     const tenantContext = this.getTenantContext(request);

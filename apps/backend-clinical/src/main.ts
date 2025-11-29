@@ -8,8 +8,6 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { createHelmetConfig, createCorsConfigFromEnv } from '@dentalos/shared-security';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters';
-import { LoggingInterceptor } from './common/interceptors';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -35,11 +33,13 @@ async function bootstrap() {
     }),
   );
 
+  // Global validation pipe for DTO validation
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
-  app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor());
+
+  // Note: HttpExceptionFilter, LoggingInterceptor, TransformInterceptor, and PerformanceInterceptor
+  // are registered globally in AppModule via APP_FILTER and APP_INTERCEPTOR providers
 
   // Set global API prefix
   // All endpoints including health are under /api/v1

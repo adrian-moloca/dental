@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { ro } from 'date-fns/locale';
+import { ro } from 'date-fns/locale/ro';
 import { useOdontogramHistory } from '../../../hooks/useToothHistory';
 import { Card, CardHeader, CardBody, Button, Badge } from '../../ui-new';
 import ToothSVG from '../Odontogram/ToothSVG';
@@ -23,7 +23,7 @@ const LOWER_TEETH = ['48', '47', '46', '45', '44', '43', '42', '41', '31', '32',
 export function OdontogramHistorySlider({ patientId }: OdontogramHistorySliderProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const playIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const playIntervalRef = useRef<number | null>(null);
 
   const { data: historyData, isLoading, error } = useOdontogramHistory(patientId);
 
@@ -163,8 +163,11 @@ export function OdontogramHistorySlider({ patientId }: OdontogramHistorySliderPr
                             conditions: toothData
                               ? [
                                   {
+                                    id: `${toothNumber}-${currentSnapshot?.timestamp || 'current'}`,
                                     condition: toothData.condition,
                                     surfaces: toothData.surfaces || [],
+                                    recordedAt: currentSnapshot?.timestamp || new Date().toISOString(),
+                                    recordedBy: 'system',
                                   },
                                 ]
                               : [],
@@ -197,8 +200,11 @@ export function OdontogramHistorySlider({ patientId }: OdontogramHistorySliderPr
                             conditions: toothData
                               ? [
                                   {
+                                    id: `${toothNumber}-${currentSnapshot?.timestamp || 'current'}`,
                                     condition: toothData.condition,
                                     surfaces: toothData.surfaces || [],
+                                    recordedAt: currentSnapshot?.timestamp || new Date().toISOString(),
+                                    recordedBy: 'system',
                                   },
                                 ]
                               : [],

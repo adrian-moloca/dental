@@ -211,10 +211,10 @@ export class HttpMicroserviceClient {
         correlationId,
         timeout: this.timeout,
       });
-      throw new InfrastructureError(
-        `Microservice request timed out after ${this.timeout}ms`,
-        { service: 'external_api', correlationId },
-      );
+      throw new InfrastructureError(`Microservice request timed out after ${this.timeout}ms`, {
+        service: 'external_api',
+        correlationId,
+      });
     }
 
     if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
@@ -225,10 +225,10 @@ export class HttpMicroserviceClient {
         correlationId,
         error: error.message,
       });
-      throw new InfrastructureError(
-        `Failed to connect to microservice: ${url}`,
-        { service: 'network', correlationId },
-      );
+      throw new InfrastructureError(`Failed to connect to microservice: ${url}`, {
+        service: 'network',
+        correlationId,
+      });
     }
 
     const axiosError = error as AxiosError;
@@ -272,9 +272,9 @@ export class HttpMicroserviceClient {
       error: error.message,
     });
 
-    throw new InfrastructureError(
-      'An unexpected error occurred calling microservice',
-      { service: 'external_api', correlationId },
-    );
+    throw new InfrastructureError('An unexpected error occurred calling microservice', {
+      service: 'external_api',
+      correlationId,
+    });
   }
 }

@@ -16,7 +16,7 @@ import {
   startOfMonth,
   endOfMonth,
 } from 'date-fns';
-import { ro } from 'date-fns/locale';
+import { ro } from 'date-fns/locale/ro';
 import { CalendarHeader } from './CalendarHeader';
 import { CalendarDayView } from './CalendarDayView';
 import type { Resource } from './CalendarDayView';
@@ -43,7 +43,7 @@ export interface CalendarProps {
 
 export const Calendar: React.FC<CalendarProps> = ({
   events,
-  resources: _resources,
+  resources,
   initialView = 'week',
   initialDate = new Date(),
   onEventClick,

@@ -85,34 +85,20 @@ export class BillingServiceClient {
     const query = queryParams.toString();
     const path = `/api/patients/${patientId}/invoices${query ? `?${query}` : ''}`;
 
-    return this.httpClient.get<Invoice[]>(
-      this.baseUrl,
-      path,
-      tenantContext,
-    );
+    return this.httpClient.get<Invoice[]>(this.baseUrl, path, tenantContext);
   }
 
   /**
    * Get invoice by ID
    */
-  async getInvoice(
-    invoiceId: string,
-    tenantContext: TenantContext,
-  ): Promise<Invoice> {
-    return this.httpClient.get<Invoice>(
-      this.baseUrl,
-      `/api/invoices/${invoiceId}`,
-      tenantContext,
-    );
+  async getInvoice(invoiceId: string, tenantContext: TenantContext): Promise<Invoice> {
+    return this.httpClient.get<Invoice>(this.baseUrl, `/api/invoices/${invoiceId}`, tenantContext);
   }
 
   /**
    * List payments for patient
    */
-  async listPayments(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<Payment[]> {
+  async listPayments(patientId: string, tenantContext: TenantContext): Promise<Payment[]> {
     return this.httpClient.get<Payment[]>(
       this.baseUrl,
       `/api/patients/${patientId}/payments`,
@@ -123,10 +109,7 @@ export class BillingServiceClient {
   /**
    * Get patient balance
    */
-  async getBalance(
-    patientId: string,
-    tenantContext: TenantContext,
-  ): Promise<PatientBalance> {
+  async getBalance(patientId: string, tenantContext: TenantContext): Promise<PatientBalance> {
     return this.httpClient.get<PatientBalance>(
       this.baseUrl,
       `/api/patients/${patientId}/balance`,
@@ -137,10 +120,7 @@ export class BillingServiceClient {
   /**
    * Pay invoice
    */
-  async payInvoice(
-    dto: PayInvoiceDto,
-    tenantContext: TenantContext,
-  ): Promise<Payment> {
+  async payInvoice(dto: PayInvoiceDto, tenantContext: TenantContext): Promise<Payment> {
     return this.httpClient.post<Payment>(
       this.baseUrl,
       `/api/invoices/${dto.invoiceId}/pay`,

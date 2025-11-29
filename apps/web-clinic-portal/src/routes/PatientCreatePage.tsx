@@ -388,15 +388,15 @@ export default function PatientCreatePage() {
           `\n\nContact Urgenta: ${emergencyContact.name} (${emergencyContact.relationship}) - ${emergencyContact.phone}`;
       }
 
-      const result = await createPatient.mutateAsync(submitData);
+      const patient = await createPatient.mutateAsync(submitData);
 
-      if (result.success && result.data?.id) {
+      if (patient?.id) {
         localStorage.removeItem('patientDraft');
         toast.success('Pacient inregistrat cu succes!');
 
         // Show success modal with options
         const action = await showSuccessOptions();
-        handlePostSubmitAction(action, result.data.id);
+        handlePostSubmitAction(action, patient.id);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Eroare la inregistrarea pacientului';

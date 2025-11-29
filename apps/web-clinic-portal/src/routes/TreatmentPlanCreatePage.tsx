@@ -61,28 +61,37 @@ interface ProcedureItem {
   quantity: number;
   unitPrice: number;
   discount: number;
+  discountPercent?: number;
   total: number;
+  duration?: number;
   estimatedDuration?: number;
+  notes?: string;
 }
 
 interface TreatmentPhase {
   id: string;
   name: string;
+  description?: string;
   order: number;
   procedures: ProcedureItem[];
   subtotal: number;
   isCollapsed: boolean;
+  sequenceRequired?: boolean;
 }
 
 interface AlternativePlan {
   id: string;
   name: string;
+  description?: string;
   phases: TreatmentPhase[];
   isRecommended: boolean;
   advantages: string[];
   disadvantages: string[];
   grandTotal: number;
 }
+
+// Alias for backward compatibility
+type Phase = TreatmentPhase;
 
 interface DiscountConfig {
   type: 'percentage' | 'fixed';

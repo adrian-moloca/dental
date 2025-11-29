@@ -5,7 +5,6 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   MessageBody,
-  ConnectedSocket,
 } from '@nestjs/websockets';
 import { UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
@@ -67,7 +66,6 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
   @SubscribeMessage('presence:update')
   async handlePresenceUpdate(
     @MessageBody() data: unknown,
-    @ConnectedSocket() _client: Socket,
     @WsCurrentUser() user: WsUser,
   ) {
     const dto = PresenceUpdateDtoSchema.parse(data) as PresenceUpdateDto;

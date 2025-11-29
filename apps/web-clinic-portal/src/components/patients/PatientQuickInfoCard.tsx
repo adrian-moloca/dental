@@ -7,6 +7,7 @@
  */
 
 import { format } from 'date-fns';
+import { ro } from 'date-fns/locale/ro';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardBody } from '../ui-new/Card';
 import { Badge } from '../ui-new/Badge';

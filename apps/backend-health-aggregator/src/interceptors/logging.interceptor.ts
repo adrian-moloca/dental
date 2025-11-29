@@ -2,6 +2,7 @@ import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } fr
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Request, Response } from 'express';
+import { extractCorrelationId } from '../common/correlation-id.util';
 
 /**
  * Logging Interceptor
@@ -43,7 +44,7 @@ export class LoggingInterceptor implements NestInterceptor {
 
     // Extract request metadata
     const { method, url } = request;
-    const correlationId = this.extractCorrelationId(request);
+    const correlationId = extractCorrelationId(request);
 
     // Log incoming request
     // Edge case: Log before processing to capture all requests, even those that fail
@@ -147,24 +148,6 @@ export class LoggingInterceptor implements NestInterceptor {
   }
 
   /**
-   * Extracts correlation ID from request headers
-   *
-   * Edge cases handled:
-   * - Falls back to generating new correlation ID if not present
-   * - Handles both lowercase and uppercase header names
-   *
-   * @param request - Express request object
-   * @returns Correlation ID
-   */
-  private extractCorrelationId(request: Request): string {
-    return (
-      request.get('x-correlation-id') ||
-      request.get('X-Correlation-ID') ||
-      this.generateCorrelationId()
-    );
-  }
-
-  /**
    * Extracts status code from error or response
    *
    * Edge cases handled:
@@ -194,16 +177,5 @@ export class LoggingInterceptor implements NestInterceptor {
 
     // Default to 500 for unknown errors
     return 500;
-  }
-
-  /**
-   * Generates a new correlation ID
-   *
-   * Edge case: Uses timestamp + random string for uniqueness
-   *
-   * @returns Generated correlation ID
-   */
-  private generateCorrelationId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
   }
 }

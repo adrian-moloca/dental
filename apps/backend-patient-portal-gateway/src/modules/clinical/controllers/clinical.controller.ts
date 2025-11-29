@@ -2,7 +2,10 @@ import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ClinicalService } from '../services/clinical.service';
 import { PatientAuthGuard } from '@/common/guards/patient-auth.guard';
-import { CurrentPatient, CurrentPatientPayload } from '@/common/decorators/current-patient.decorator';
+import {
+  CurrentPatient,
+  CurrentPatientPayload,
+} from '@/common/decorators/current-patient.decorator';
 
 @ApiTags('portal/clinical')
 @Controller('portal/patient/clinical')
@@ -57,7 +60,10 @@ export class ClinicalController {
 
   @Get('treatment-plans/:id')
   @ApiOperation({ summary: 'Get treatment plan details' })
-  async getTreatmentPlan(@Param('id') id: string, @CurrentPatient() patient: CurrentPatientPayload) {
+  async getTreatmentPlan(
+    @Param('id') id: string,
+    @CurrentPatient() patient: CurrentPatientPayload,
+  ) {
     return this.clinicalService.getTreatmentPlan(id, {
       tenantId: patient.tenantId,
       organizationId: patient.organizationId,

@@ -6,10 +6,6 @@ const ServerConfigSchema = z.object({
   nodeEnv: z.enum(['development', 'production', 'test']).default('development'),
 });
 
-const DatabaseConfigSchema = z.object({
-  uri: z.string().default('mongodb://localhost:27017/dentalos-realtime'),
-});
-
 const RedisConfigSchema = z.object({
   host: z.string().default('localhost'),
   port: z.number().default(6381),
@@ -30,12 +26,6 @@ export const serverConfig = registerAs('server', () =>
   ServerConfigSchema.parse({
     port: parseInt(process.env.PORT || '3020', 10),
     nodeEnv: process.env.NODE_ENV || 'development',
-  }),
-);
-
-export const databaseConfig = registerAs('database', () =>
-  DatabaseConfigSchema.parse({
-    uri: process.env.MONGODB_URI || 'mongodb://localhost:27017/dentalos-realtime',
   }),
 );
 

@@ -1,6 +1,7 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { generateRequestId } from '../common/correlation-id.util';
 
 /**
  * Performance Monitoring Interceptor
@@ -33,7 +34,7 @@ export class PerformanceInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse();
 
     const startTime = Date.now();
-    const requestId = request.headers['x-correlation-id'] || this.generateRequestId();
+    const requestId = (request.headers['x-correlation-id'] as string) || generateRequestId();
 
     // Extract context
     const method = request.method;
@@ -120,14 +121,5 @@ export class PerformanceInterceptor implements NestInterceptor {
       }
     }
     return 500;
-  }
-
-  /**
-   * Generates a unique request ID
-   *
-   * @returns Generated request ID
-   */
-  private generateRequestId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   }
 }

@@ -16,6 +16,7 @@ import {
   isSameMonth,
   isToday,
 } from 'date-fns';
+import { ro } from 'date-fns/locale/ro';
 import { CalendarMonthEvent } from './CalendarEvent';
 import type { CalendarEvent } from './CalendarEvent';
 

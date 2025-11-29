@@ -197,8 +197,8 @@ export default function SettingsPage() {
     },
   ]);
 
-  const [_showUserModal, _setShowUserModal] = useState(false);
-  const [_selectedUser, _setSelectedUser] = useState<UserData | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 
   // ============================================================================
   // STATE: SERVICES & PRICES
@@ -233,8 +233,8 @@ export default function SettingsPage() {
     },
   ]);
 
-  const [_showServiceModal, _setShowServiceModal] = useState(false);
-  const [_selectedService, _setSelectedService] = useState<ServiceData | null>(null);
+  const [showServiceModal, setShowServiceModal] = useState(false);
+  const [selectedService, setSelectedService] = useState<ServiceData | null>(null);
 
   // ============================================================================
   // STATE: WORKING HOURS

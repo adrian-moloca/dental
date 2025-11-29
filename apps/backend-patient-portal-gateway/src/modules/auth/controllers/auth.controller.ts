@@ -6,21 +6,8 @@
  * @module modules/auth/controllers/auth-controller
  */
 
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  HttpCode,
-  HttpStatus,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from '../services/auth.service';
 import { PatientRegisterDto } from '../dto/register.dto';
@@ -88,10 +75,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify MFA code' })
   @ApiResponse({ status: 200, description: 'MFA verification successful' })
   @ApiResponse({ status: 401, description: 'Invalid MFA code' })
-  async verifyMfa(
-    @Body() dto: MfaVerifyDto,
-    @CurrentPatient() patient: CurrentPatientPayload,
-  ) {
+  async verifyMfa(@Body() dto: MfaVerifyDto, @CurrentPatient() patient: CurrentPatientPayload) {
     return this.authService.verifyMfa(dto, {
       tenantId: patient.tenantId,
       organizationId: patient.organizationId,

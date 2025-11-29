@@ -86,11 +86,7 @@ export class SchedulingServiceClient {
     const query = queryParams.toString();
     const path = `/api/appointments/patient/${patientId}${query ? `?${query}` : ''}`;
 
-    return this.httpClient.get<AppointmentDto[]>(
-      this.baseUrl,
-      path,
-      tenantContext,
-    );
+    return this.httpClient.get<AppointmentDto[]>(this.baseUrl, path, tenantContext);
   }
 
   /**
@@ -141,10 +137,7 @@ export class SchedulingServiceClient {
   /**
    * Cancel appointment
    */
-  async cancelAppointment(
-    appointmentId: string,
-    tenantContext: TenantContext,
-  ): Promise<void> {
+  async cancelAppointment(appointmentId: string, tenantContext: TenantContext): Promise<void> {
     await this.httpClient.delete<void>(
       this.baseUrl,
       `/api/appointments/${appointmentId}`,

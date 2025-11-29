@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Row, Col, Table, Card as BsCard, Modal, Form } from 'react-bootstrap';
 import { AppShell } from '../components/layout';
 import { Button, Badge, Input, KPICard } from '../components/ui';
@@ -75,11 +75,6 @@ export default function UsersPage() {
     }
     return mockCabinets.filter((cab) => cab.organizationId === formData.organizationId);
   }, [formData.organizationId]);
-
-  // Reset cabinet filter when organization changes
-  useEffect(() => {
-    setCabinetFilter('all');
-  }, [organizationFilter]);
 
   // Filter users based on all criteria
   const filteredUsers = useMemo(() => {
@@ -307,7 +302,10 @@ export default function UsersPage() {
                 <Form.Select
                   size="sm"
                   value={organizationFilter}
-                  onChange={(e) => setOrganizationFilter(e.target.value)}
+                  onChange={(e) => {
+                    setOrganizationFilter(e.target.value);
+                    setCabinetFilter('all');
+                  }}
                 >
                   <option value="all">All Organizations</option>
                   {mockOrganizations.map((org) => (

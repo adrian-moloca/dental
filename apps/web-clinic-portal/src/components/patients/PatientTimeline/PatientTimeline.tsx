@@ -15,7 +15,9 @@ interface PatientTimelineProps {
   patientId: string;
 }
 
-const ACTIVITY_TYPES = [
+type BadgeVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'warning' | 'info' | 'soft-secondary';
+
+const ACTIVITY_TYPES: Array<{ value: string; label: string; icon: string; color: BadgeVariant }> = [
   { value: 'appointment', label: 'Programari', icon: 'ti-calendar', color: 'primary' },
   { value: 'clinical_note', label: 'Note Clinice', icon: 'ti-file-text', color: 'info' },
   { value: 'treatment', label: 'Tratamente', icon: 'ti-dental', color: 'success' },

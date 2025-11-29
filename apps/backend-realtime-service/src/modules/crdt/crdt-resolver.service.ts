@@ -8,7 +8,6 @@ import {
 
 @Injectable()
 export class CRDTResolverService {
-  constructor() {}
 
   async mergePatches(
     _tenantId: string,

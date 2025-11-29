@@ -27,6 +27,7 @@ import { ProcedureCatalogModule } from './modules/procedure-catalog/procedure-ca
 import { ConsentsModule } from './modules/consents/consents.module';
 import { RetentionModule } from './modules/retention/retention.module';
 import { InterventionsModule } from './modules/interventions/interventions.module';
+import { DocumentTemplatesModule } from './modules/document-templates/document-templates.module';
 
 // Common Modules
 import { CacheModule } from './common/cache/cache.module';
@@ -101,6 +102,7 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     ConsentsModule,
     RetentionModule, // Romanian medical records retention (10 years)
     InterventionsModule, // Quick clinical interventions
+    DocumentTemplatesModule, // Legal document generation for Romanian dental practices
   ],
   providers: [
     // Global JWT authentication

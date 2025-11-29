@@ -2,7 +2,10 @@ import { Controller, Get, Post, Param, Body, Query, UseGuards } from '@nestjs/co
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BillingService } from '../services/billing.service';
 import { PatientAuthGuard } from '@/common/guards/patient-auth.guard';
-import { CurrentPatient, CurrentPatientPayload } from '@/common/decorators/current-patient.decorator';
+import {
+  CurrentPatient,
+  CurrentPatientPayload,
+} from '@/common/decorators/current-patient.decorator';
 
 @ApiTags('portal/billing')
 @Controller('portal/patient/billing')
@@ -14,12 +17,16 @@ export class BillingController {
   @Get('invoices')
   @ApiOperation({ summary: 'List invoices' })
   async listInvoices(@CurrentPatient() patient: CurrentPatientPayload, @Query() params: any) {
-    return this.billingService.listInvoices(patient.patientId, {
-      tenantId: patient.tenantId,
-      organizationId: patient.organizationId,
-      clinicId: patient.clinicId,
-      patientId: patient.patientId,
-    }, params);
+    return this.billingService.listInvoices(
+      patient.patientId,
+      {
+        tenantId: patient.tenantId,
+        organizationId: patient.organizationId,
+        clinicId: patient.clinicId,
+        patientId: patient.patientId,
+      },
+      params,
+    );
   }
 
   @Get('invoices/:id')
@@ -57,12 +64,19 @@ export class BillingController {
 
   @Post('invoices/:id/pay')
   @ApiOperation({ summary: 'Pay invoice' })
-  async payInvoice(@Param('id') id: string, @Body() dto: any, @CurrentPatient() patient: CurrentPatientPayload) {
-    return this.billingService.payInvoice({ ...dto, invoiceId: id }, {
-      tenantId: patient.tenantId,
-      organizationId: patient.organizationId,
-      clinicId: patient.clinicId,
-      patientId: patient.patientId,
-    });
+  async payInvoice(
+    @Param('id') id: string,
+    @Body() dto: any,
+    @CurrentPatient() patient: CurrentPatientPayload,
+  ) {
+    return this.billingService.payInvoice(
+      { ...dto, invoiceId: id },
+      {
+        tenantId: patient.tenantId,
+        organizationId: patient.organizationId,
+        clinicId: patient.clinicId,
+        patientId: patient.patientId,
+      },
+    );
   }
 }

@@ -1,28 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { CRDTResolverService } from '../src/modules/crdt/crdt-resolver.service';
-import { LamportClockService } from '../src/modules/crdt/lamport-clock.service';
 import { CRDTResolutionStrategy } from '@dentalos/shared-domain';
 
 describe('CRDTResolverService', () => {
   let service: CRDTResolverService;
-  let lamportClockService: jest.Mocked<LamportClockService>;
 
   beforeEach(async () => {
-    const mockLamportClockService = {
-      getTime: jest.fn(),
-      incrementAndGet: jest.fn(),
-      updateIfGreater: jest.fn(),
-    };
-
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        CRDTResolverService,
-        { provide: LamportClockService, useValue: mockLamportClockService },
-      ],
+      providers: [CRDTResolverService],
     }).compile();
 
     service = module.get<CRDTResolverService>(CRDTResolverService);
-    lamportClockService = module.get(LamportClockService) as jest.Mocked<LamportClockService>;
   });
 
   it('should be defined', () => {

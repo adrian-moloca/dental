@@ -34,11 +34,11 @@ export default function CreatePatientPage() {
   const handleSubmit = async (data: CreatePatientDto) => {
     try {
       setErrorMessage('');
-      const result = await createPatient.mutateAsync(data);
+      const patient = await createPatient.mutateAsync(data);
 
-      if (result.success && result.data?.id) {
+      if (patient?.id) {
         toast.success('Pacient creat cu succes!');
-        navigate(`/patients/${result.data.id}`);
+        navigate(`/patients/${patient.id}`);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Eroare la crearea pacientului';

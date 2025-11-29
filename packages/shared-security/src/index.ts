@@ -1,25 +1,25 @@
 // HTTP Security
-export * from './http-security/helmet.config.js';
-export * from './http-security/cors.config.js';
+export * from './http-security/helmet.config';
+export * from './http-security/cors.config';
 
 // Guards
-export * from './guards/tenant-context.guard.js';
-export * from './guards/permission.guard.js';
-export * from './guards/license.guard.js';
+export * from './guards/tenant-context.guard';
+export * from './guards/permission.guard';
+export * from './guards/license.guard';
 
 // Rate Limiting
-export * from './rate-limiting/throttler.config.js';
+export * from './rate-limiting/throttler.config';
 
 // Reliability
-export * from './reliability/health-check.types.js';
-export * from './reliability/timeout.utils.js';
+export * from './reliability/health-check.types';
+export * from './reliability/timeout.utils';
 
 // Logging
-export * from './logging/logger.utils.js';
+export * from './logging/logger.utils';
 
 // Security Hardening
-export * from './hardening/enhanced-helmet.js';
-export * from './hardening/rate-limiter.js';
+export * from './hardening/enhanced-helmet';
+export * from './hardening/rate-limiter';
 
 // Field-Level Encryption (PII protection)
-export * from './encryption/index.js';
+export * from './encryption';

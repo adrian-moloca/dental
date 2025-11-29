@@ -50,9 +50,7 @@ export class ClinicalDataAdapter {
       provider: `Dr. ${visit.provider.firstName} ${visit.provider.lastName}`,
       reason: visit.chiefComplaint || 'Routine visit',
       summary: this.sanitizeClinicalNote(visit.treatmentSummary),
-      proceduresPerformed: visit.procedures.map((p: any) =>
-        this.formatProcedure(p),
-      ),
+      proceduresPerformed: visit.procedures.map((p: any) => this.formatProcedure(p)),
     };
   }
 

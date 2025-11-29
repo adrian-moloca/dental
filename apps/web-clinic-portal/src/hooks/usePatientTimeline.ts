@@ -12,8 +12,10 @@ export function usePatientTimeline(patientId: string, filters: TimelineFilters =
   return useInfiniteQuery({
     queryKey: ['patient-timeline', patientId, filters],
     queryFn: ({ pageParam }) =>
-      timelineClient.getTimeline(patientId, { ...filters, cursor: pageParam }),
-    getNextPageParam: (lastPage) => (lastPage.hasMore ? lastPage.nextCursor : undefined),
+      timelineClient.getTimeline(patientId, { ...filters, cursor: pageParam as string | undefined }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage: { hasMore: boolean; nextCursor?: string }) =>
+      lastPage.hasMore ? lastPage.nextCursor : undefined,
     enabled: !!patientId,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes

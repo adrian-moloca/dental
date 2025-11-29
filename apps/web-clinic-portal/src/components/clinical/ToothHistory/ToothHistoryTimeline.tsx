@@ -7,10 +7,30 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { ro } from 'date-fns/locale';
+import { ro } from 'date-fns/locale/ro';
 import { useToothHistory } from '../../../hooks/useToothHistory';
 import { Card, CardHeader, CardBody, Badge, Button, EmptyState } from '../../ui-new';
-import { getConditionColor } from '../Odontogram/types';
+
+type BadgeVariant = 'soft-primary' | 'soft-secondary' | 'soft-success' | 'soft-danger' | 'soft-warning' | 'soft-info';
+
+// Map condition types to Badge variants
+const getConditionBadgeVariant = (condition: string): BadgeVariant => {
+  const conditionMap: Record<string, BadgeVariant> = {
+    healthy: 'soft-success',
+    caries: 'soft-danger',
+    filling: 'soft-info',
+    crown: 'soft-warning',
+    root_canal: 'soft-warning',
+    extraction: 'soft-danger',
+    implant: 'soft-primary',
+    bridge: 'soft-info',
+    veneer: 'soft-info',
+    missing: 'soft-secondary',
+    fracture: 'soft-danger',
+    abscess: 'soft-danger',
+  };
+  return conditionMap[condition] || 'soft-secondary';
+};
 
 interface ToothHistoryTimelineProps {
   patientId: string;
@@ -199,8 +219,11 @@ export function ToothHistoryTimeline({
         {!isLoading && !error && filteredHistory && filteredHistory.length > 0 && (
           <div className="timeline">
             {filteredHistory.map((entry) => {
-              const conditionColor = getConditionColor(entry.condition);
-              const bgClass = `bg-${conditionColor}-transparent`;
+              const badgeVariant = getConditionBadgeVariant(entry.condition);
+
+              // Extract simple color name for bg class from badge variant
+              const colorName = badgeVariant.replace('soft-', '');
+              const bgClass = `bg-${colorName}-transparent`;
 
               return (
                 <div key={entry.id} className="timeline-item">
@@ -230,7 +253,7 @@ export function ToothHistoryTimeline({
                         </div>
                       </div>
                       <Badge
-                        variant={`soft-${conditionColor}`}
+                        variant={badgeVariant}
                         size="sm"
                       >
                         {entry.condition}

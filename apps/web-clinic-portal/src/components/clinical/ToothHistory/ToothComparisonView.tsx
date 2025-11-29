@@ -167,8 +167,11 @@ export function ToothComparisonView({
                         conditions: fromToothData
                           ? [
                               {
+                                id: `${selectedTooth}-from-${dateFrom}`,
                                 condition: fromToothData.condition,
                                 surfaces: fromToothData.surfaces || [],
+                                recordedAt: dateFrom,
+                                recordedBy: 'system',
                               },
                             ]
                           : [],
@@ -236,8 +239,11 @@ export function ToothComparisonView({
                         conditions: toToothData
                           ? [
                               {
+                                id: `${selectedTooth}-to-${dateTo}`,
                                 condition: toToothData.condition,
                                 surfaces: toToothData.surfaces || [],
+                                recordedAt: dateTo,
+                                recordedBy: 'system',
                               },
                             ]
                           : [],

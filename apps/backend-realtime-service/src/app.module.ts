@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
 import {
   serverConfig,
-  databaseConfig,
   redisConfig,
   jwtConfig,
   corsConfig,
@@ -42,9 +40,8 @@ import { EventConsumerModule } from './modules/event-consumer/event-consumer.mod
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [serverConfig, databaseConfig, redisConfig, jwtConfig, corsConfig, rabbitmqConfig],
+      load: [serverConfig, redisConfig, jwtConfig, corsConfig, rabbitmqConfig],
     }),
-    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('jwt.secret'),
