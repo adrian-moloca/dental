@@ -17,6 +17,32 @@ export enum AppointmentStatus {
 }
 
 /**
+ * Status transition history entry
+ * Records each status change for audit trail
+ */
+export interface StatusTransitionEntry {
+  /** Previous status */
+  fromStatus: AppointmentStatus;
+  /** New status */
+  toStatus: AppointmentStatus;
+  /** Action that triggered the transition */
+  action: string;
+  /** When the transition occurred (ISO string) */
+  timestamp: string;
+  /** User ID who performed the transition */
+  userId: string;
+  /** Optional reason for the transition */
+  reason?: string;
+  /** Additional metadata */
+  metadata?: Record<string, unknown>;
+}
+
+/**
+ * Cancellation type - who initiated the cancellation
+ */
+export type CancellationType = 'patient' | 'provider' | 'clinic';
+
+/**
  * Booking metadata interface
  * Tracks the full lifecycle of an appointment
  */
@@ -47,18 +73,28 @@ export interface BookingMetadata {
   completedBy?: string;
   completedAt?: Date;
   completionNotes?: string;
+  proceduresConducted?: string[];
 
   // Rescheduling
   rescheduledFrom?: string;
   rescheduledTo?: string;
+  rescheduledBy?: string;
+  rescheduledAt?: Date;
+  rescheduleReason?: string;
+  rescheduleCount?: number;
 
   // Cancellation
   cancellationReason?: string;
   cancelledBy?: string;
   cancelledAt?: Date;
+  cancellationType?: CancellationType;
+  lateCancellation?: boolean;
 
   // No-show
   noShowReason?: string;
+  noShowMarkedBy?: string;
+  noShowMarkedAt?: Date;
+  contactAttempts?: number;
 }
 
 export type AppointmentDocument = HydratedDocument<Appointment>;
@@ -156,11 +192,36 @@ export class Appointment extends Document {
   bookingMetadata?: BookingMetadata;
 
   /**
+   * Status transition history
+   * Complete audit trail of all status changes
+   */
+  @Prop({ type: [Object], default: [] })
+  statusHistory?: StatusTransitionEntry[];
+
+  /**
    * Linked clinical procedure IDs
    * Tracks which procedures were completed during this appointment
    */
   @Prop({ type: [String], default: [] })
   clinicalProcedureIds?: string[];
+
+  /**
+   * Buffer time before appointment in minutes
+   */
+  @Prop({ type: Number, required: false, default: 0 })
+  bufferBefore?: number;
+
+  /**
+   * Buffer time after appointment in minutes
+   */
+  @Prop({ type: Number, required: false, default: 0 })
+  bufferAfter?: number;
+
+  /**
+   * Whether overbooking is allowed for this appointment
+   */
+  @Prop({ type: Boolean, required: false, default: false })
+  allowOverbooking?: boolean;
 
   /**
    * MongoDB timestamps

@@ -139,4 +139,79 @@ export const schedulingClient = {
     const response = await schedulingApi.post('/appointments/bulk-confirm', { ids, method });
     return response.data;
   },
+
+  /**
+   * GET /availability/slots
+   * Get available time slots for booking
+   */
+  async getAvailableSlots(params: {
+    providerId: string;
+    date: string; // ISO date string
+    duration: number; // minutes
+    appointmentTypeId?: string;
+  }): Promise<{
+    date: string;
+    slots: Array<{
+      start: string; // ISO datetime
+      end: string; // ISO datetime
+      isAvailable: boolean;
+      reason?: string;
+    }>;
+  }> {
+    const response = await schedulingApi.get('/availability/slots', { params });
+    return response.data;
+  },
+
+  /**
+   * POST /appointments/:id/reschedule
+   * Reschedule an existing appointment
+   */
+  async reschedule(
+    id: string,
+    data: {
+      newStart: Date;
+      newEnd: Date;
+      reason: string;
+      notes?: string;
+      providerId?: string;
+      notifyPatient?: boolean;
+    }
+  ): Promise<AppointmentDto> {
+    const response = await schedulingApi.post(`/appointments/${id}/reschedule`, data);
+    return response.data;
+  },
+
+  /**
+   * GET /appointment-types
+   * List all appointment types
+   */
+  async getAppointmentTypes(): Promise<
+    Array<{
+      id: string;
+      name: string;
+      duration: number;
+      color?: string;
+      description?: string;
+    }>
+  > {
+    const response = await schedulingApi.get('/appointment-types');
+    return response.data;
+  },
+
+  /**
+   * GET /providers
+   * List all providers
+   */
+  async getProviders(params?: { clinicId?: string }): Promise<
+    Array<{
+      id: string;
+      firstName: string;
+      lastName: string;
+      specialty?: string;
+      photo?: string;
+    }>
+  > {
+    const response = await schedulingApi.get('/providers', { params });
+    return response.data;
+  },
 };

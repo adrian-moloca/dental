@@ -47,7 +47,9 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
 
       this.logger.log('Connected to RabbitMQ for event consumption');
     } catch (error) {
-      this.logger.error(`Failed to connect to RabbitMQ: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to connect to RabbitMQ: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -80,7 +82,9 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
 
       this.logger.log('Event consumer started');
     } catch (error) {
-      this.logger.error(`Failed to setup consumers: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to setup consumers: ${error instanceof Error ? error.message : String(error)}`,
+      );
       throw error;
     }
   }
@@ -118,16 +122,26 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
         eventType: event.eventType || routingKey,
       });
 
-      this.logger.debug(`Processed event ${routingKey} for entity ${entityInfo.entityType}:${entityInfo.entityId}`);
+      this.logger.debug(
+        `Processed event ${routingKey} for entity ${entityInfo.entityType}:${entityInfo.entityId}`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to handle event: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Failed to handle event: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
   private extractEntityInfo(
     event: any,
     routingKey: string,
-  ): { entityType: string; entityId: string; operation: ChangeOperation; data: any; previousData?: any } | null {
+  ): {
+    entityType: string;
+    entityId: string;
+    operation: ChangeOperation;
+    data: any;
+    previousData?: any;
+  } | null {
     // Determine operation based on event type
     let operation: ChangeOperation = ChangeOperation.UPDATE;
 
@@ -217,7 +231,9 @@ export class EventConsumerService implements OnModuleInit, OnModuleDestroy {
       }
       this.logger.log('Disconnected from RabbitMQ');
     } catch (error) {
-      this.logger.error(`Error disconnecting from RabbitMQ: ${error instanceof Error ? error.message : String(error)}`);
+      this.logger.error(
+        `Error disconnecting from RabbitMQ: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

@@ -36,8 +36,10 @@ export interface AnafApiConfig {
 export interface SubmissionConfig {
   /** Maximum number of retry attempts */
   maxRetries: number;
-  /** Delay between retries in milliseconds */
+  /** Base delay between retries in milliseconds */
   retryDelayMs: number;
+  /** Maximum delay between retries in milliseconds (for exponential backoff cap) */
+  maxRetryDelayMs?: number;
   /** Interval for checking submission status in milliseconds */
   statusCheckIntervalMs: number;
   /** Deadline for e-factura submission in hours (5 days = 120 hours for Romania) */
@@ -207,6 +209,6 @@ export interface EFacturaContact {
 export interface TenantContext {
   tenantId: string;
   organizationId: string;
-  clinicId: string;
+  clinicId?: string;
   userId?: string;
 }

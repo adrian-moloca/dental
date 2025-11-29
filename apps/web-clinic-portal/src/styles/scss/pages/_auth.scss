@@ -10,6 +10,15 @@
   width: 100%;
 }
 
+// Auth cover wrapper - controls responsive visibility
+.auth-cover-wrapper {
+  display: none !important;  // Hidden by default on small screens
+
+  @media (min-width: 992px) {
+    display: flex !important;  // Visible on large screens (lg breakpoint)
+  }
+}
+
 // Left cover panel
 .auth-cover {
   width: 100%;

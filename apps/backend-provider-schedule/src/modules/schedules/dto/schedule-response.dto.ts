@@ -9,6 +9,8 @@ export const ScheduleResponseSchema = z.object({
   tenantId: z.string().uuid(),
   organizationId: z.string().uuid(),
   providerId: z.string().uuid(),
+  clinicId: z.string().uuid(),
+  timezone: z.string().default('Europe/Bucharest'),
   weeklyHours: WeeklyHoursSchema,
   breaks: z.array(BreakPeriodSchema),
   locationIds: z.array(z.string().uuid()),

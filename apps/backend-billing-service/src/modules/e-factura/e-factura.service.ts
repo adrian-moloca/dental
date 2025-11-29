@@ -192,7 +192,7 @@ export class EFacturaService {
         // Update submission with error
         submission.status = EFacturaSubmissionStatus.ERROR;
         submission.lastErrorMessage = error instanceof Error ? error.message : String(error);
-        submission.nextRetryAt = this.calculateNextRetryTime();
+        submission.nextRetryAt = this.calculateNextRetryTime(submission.retryCount);
         await submission.save();
 
         await this.createLog({
@@ -631,7 +631,7 @@ export class EFacturaService {
         } catch (error) {
           submission.status = EFacturaSubmissionStatus.ERROR;
           submission.lastErrorMessage = error instanceof Error ? error.message : String(error);
-          submission.nextRetryAt = this.calculateNextRetryTime();
+          submission.nextRetryAt = this.calculateNextRetryTime(submission.retryCount);
           await submission.save();
         }
       }
@@ -934,6 +934,57 @@ export class EFacturaService {
     return this.oauthService.getTokenStatus(cui);
   }
 
+  /**
+   * Generate XML and submit an invoice to E-Factura in one operation
+   *
+   * This is a convenience method for auto-submit scenarios where
+   * the invoice has already been validated for eligibility.
+   *
+   * @param invoiceId - MongoDB ObjectId of the invoice
+   * @param context - Tenant context
+   * @returns Submission result with upload index
+   */
+  async generateAndSubmit(
+    invoiceId: string,
+    context: TenantContext,
+  ): Promise<{ submissionId: string; uploadIndex?: string; status: string }> {
+    this.logger.log(`Generate and submit invoice ${invoiceId} to E-Factura`);
+
+    const submission = await this.submitInvoice(invoiceId, context, {
+      correlationId: uuidv4(),
+    });
+
+    return {
+      submissionId: submission._id.toString(),
+      uploadIndex: submission.uploadIndex,
+      status: submission.status,
+    };
+  }
+
+  /**
+   * Check if an invoice is a B2B invoice (has buyer CUI)
+   *
+   * E-Factura is mandatory only for B2B transactions in Romania.
+   * This method checks if the invoice has a valid buyer CUI.
+   *
+   * @param invoiceId - MongoDB ObjectId of the invoice
+   * @param context - Tenant context
+   * @returns true if the invoice is B2B (has buyer CUI)
+   */
+  async isInvoiceB2B(invoiceId: string, context: TenantContext): Promise<boolean> {
+    const invoice = await this.invoiceModel.findOne({
+      _id: invoiceId,
+      tenantId: context.tenantId,
+    });
+
+    if (!invoice) {
+      return false;
+    }
+
+    const b2bValidation = this.validateB2BRequirement(invoice);
+    return b2bValidation.isB2B;
+  }
+
   // ============================================
   // Private Helper Methods
   // ============================================
@@ -1093,7 +1144,7 @@ export class EFacturaService {
     }
 
     // Check if clinic has E-Factura enabled
-    if (this.clinicFiscalService) {
+    if (this.clinicFiscalService && context.clinicId) {
       try {
         const isConfigured = await this.clinicFiscalService.isClinicConfiguredForEFactura(
           context.clinicId,
@@ -1174,30 +1225,34 @@ export class EFacturaService {
    * Get seller information from clinic fiscal settings via enterprise-service
    */
   private async getSellerInfo(context: TenantContext): Promise<EFacturaSellerInfo> {
-    // Fetch seller info from enterprise service via ClinicFiscalService
-    if (!this.clinicFiscalService) {
-      throw new SellerConfigurationException(context.clinicId, [
-        'clinicFiscalService not available',
+    const clinicId = context.clinicId;
+
+    // clinicId is required for fetching seller info
+    if (!clinicId) {
+      throw new SellerConfigurationException('unknown', [
+        'clinicId is required for E-Factura submission',
       ]);
     }
 
+    // Fetch seller info from enterprise service via ClinicFiscalService
+    if (!this.clinicFiscalService) {
+      throw new SellerConfigurationException(clinicId, ['clinicFiscalService not available']);
+    }
+
     try {
-      const sellerInfo = await this.clinicFiscalService.getSellerInfo(context.clinicId);
+      const sellerInfo = await this.clinicFiscalService.getSellerInfo(clinicId);
 
       // Validate required fields
       if (!sellerInfo.cui || sellerInfo.cui === 'RO00000000') {
-        throw new SellerConfigurationException(context.clinicId, ['cui']);
+        throw new SellerConfigurationException(clinicId, ['cui']);
       }
 
       if (!sellerInfo.legalName) {
-        throw new SellerConfigurationException(context.clinicId, ['legalName']);
+        throw new SellerConfigurationException(clinicId, ['legalName']);
       }
 
       if (!sellerInfo.address?.streetName || !sellerInfo.address?.city) {
-        throw new SellerConfigurationException(context.clinicId, [
-          'address.streetName',
-          'address.city',
-        ]);
+        throw new SellerConfigurationException(clinicId, ['address.streetName', 'address.city']);
       }
 
       return sellerInfo;
@@ -1208,16 +1263,14 @@ export class EFacturaService {
 
       // Convert NotFoundException from clinic service to SellerConfigurationException
       if (error instanceof NotFoundException) {
-        throw new SellerConfigurationException(context.clinicId, [
-          'Clinic fiscal settings not configured',
-        ]);
+        throw new SellerConfigurationException(clinicId, ['Clinic fiscal settings not configured']);
       }
 
       this.logger.error(
-        `Failed to fetch seller info for clinic ${context.clinicId}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to fetch seller info for clinic ${clinicId}: ${error instanceof Error ? error.message : String(error)}`,
       );
 
-      throw new SellerConfigurationException(context.clinicId, [
+      throw new SellerConfigurationException(clinicId, [
         'Unable to fetch fiscal settings from enterprise service',
       ]);
     }
@@ -1478,11 +1531,45 @@ export class EFacturaService {
 
   /**
    * Calculate next retry time with exponential backoff
+   *
+   * Uses exponential backoff with jitter to prevent thundering herd problem.
+   * Formula: delay = min(maxDelay, baseDelay * 2^retryCount) + random jitter
+   *
+   * Default values:
+   * - Base delay: 1 minute
+   * - Max delay: 1 hour
+   * - Jitter: up to 30 seconds
+   *
+   * Example delays:
+   * - Retry 1: 1 min + jitter
+   * - Retry 2: 2 min + jitter
+   * - Retry 3: 4 min + jitter
+   * - Retry 4: 8 min + jitter
+   * - Retry 5: 16 min + jitter
    */
-  private calculateNextRetryTime(): Date {
+  private calculateNextRetryTime(retryCount: number = 0): Date {
     const config = this.getConfig();
-    // Simple linear backoff for now
-    return new Date(Date.now() + config.submission.retryDelayMs);
+    const baseDelayMs = config.submission.retryDelayMs || 60000; // 1 minute default
+    const maxDelayMs = config.submission.maxRetryDelayMs || 3600000; // 1 hour default
+    const jitterMs = 30000; // 30 seconds max jitter
+
+    // Calculate exponential delay: baseDelay * 2^retryCount
+    const exponentialDelay = baseDelayMs * Math.pow(2, retryCount);
+
+    // Cap at max delay
+    const cappedDelay = Math.min(exponentialDelay, maxDelayMs);
+
+    // Add random jitter (0 to jitterMs)
+    const jitter = Math.floor(Math.random() * jitterMs);
+
+    const totalDelayMs = cappedDelay + jitter;
+
+    this.logger.debug(
+      `Calculated next retry time: ${totalDelayMs}ms (retry ${retryCount + 1}, ` +
+        `base=${cappedDelay}ms, jitter=${jitter}ms)`,
+    );
+
+    return new Date(Date.now() + totalDelayMs);
   }
 
   /**

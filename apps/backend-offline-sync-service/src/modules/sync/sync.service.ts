@@ -41,7 +41,11 @@ export class SyncService {
           5,
         );
 
-        const hasConflict = this.detectConflict(change as OfflineChange, recentChanges, dto.lastSequence);
+        const hasConflict = this.detectConflict(
+          change as OfflineChange,
+          recentChanges,
+          dto.lastSequence,
+        );
 
         if (hasConflict) {
           // Resolve conflict using SERVER_WINS strategy by default
@@ -123,7 +127,8 @@ export class SyncService {
 
     // Check if there are server changes after the client's last known sequence
     const conflictingChanges = serverChanges.filter(
-      (sc) => sc.sequenceNumber > clientLastSequence && sc.sourceDeviceId !== clientChange.sourceDeviceId,
+      (sc) =>
+        sc.sequenceNumber > clientLastSequence && sc.sourceDeviceId !== clientChange.sourceDeviceId,
     );
 
     return conflictingChanges.length > 0;

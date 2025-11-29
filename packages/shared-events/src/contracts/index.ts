@@ -28,5 +28,9 @@ export {
   AppointmentBooked,
   AppointmentRescheduled,
   AppointmentCancelled,
+  AppointmentConfirmed,
+  AppointmentCheckedIn,
+  AppointmentStarted,
   AppointmentCompleted,
+  AppointmentNoShow,
 } from './appointment.events';

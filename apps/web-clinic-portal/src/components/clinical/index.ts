@@ -8,7 +8,15 @@
 // Core Components
 export { TreatmentPlanBuilder } from './TreatmentPlanBuilder';
 export { OdontogramEditor } from './OdontogramEditor';
-export { OdontogramEditorEnhanced } from './OdontogramEditorEnhanced';
+
+// New API-Connected Odontogram Components
+export {
+  OdontogramEditorConnected,
+  ToothSVG,
+  ToothConditionPalette,
+  ToothDetailsPanel,
+  useOdontogramEditor,
+} from './Odontogram';
 
 // Intervention & Product Management
 export { InterventionProductsEditor } from './InterventionProductsEditor';

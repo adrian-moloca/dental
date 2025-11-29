@@ -44,6 +44,13 @@ import {
   CompleteProcedureItemDto,
   CancelTreatmentPlanDto,
   TreatmentPlanQueryDto,
+  DeclineTreatmentPlanDto,
+  AddPhaseDto,
+  AddItemToPhaseDto,
+  ScheduleItemDto,
+  ReviseTreatmentPlanDto,
+  AddAlternativeDto,
+  UpdateTreatmentPlanItemDto,
 } from './dto/treatment-plan.dto';
 
 // ============================================================================
@@ -160,6 +167,38 @@ export interface TreatmentPlanCancelledEvent {
   reason: string;
   completedItemsCount: number;
   pendingItemsCount: number;
+  timestamp: Date;
+}
+
+/**
+ * Event emitted when treatment plan is declined by patient
+ */
+export interface TreatmentPlanDeclinedEvent {
+  treatmentPlanId: string;
+  patientId: string;
+  tenantId: string;
+  clinicId: string;
+  reason: string;
+  requestAlternative: boolean;
+  concerns: string[];
+  timestamp: Date;
+}
+
+/**
+ * Event emitted when a treatment item is scheduled
+ */
+export interface TreatmentItemScheduledEvent {
+  treatmentPlanId: string;
+  phaseId: string;
+  itemId: string;
+  patientId: string;
+  tenantId: string;
+  clinicId: string;
+  procedureCode: string;
+  procedureName: string;
+  appointmentId: string;
+  scheduledFor?: Date;
+  providerId?: string;
   timestamp: Date;
 }
 
@@ -762,6 +801,575 @@ export class TreatmentPlansService {
   }
 
   // ============================================================================
+  // DECLINE / REVISE METHODS
+  // ============================================================================
+
+  /**
+   * Patient declines a treatment plan
+   *
+   * Transitions: presented -> declined (using cancelled status with decline reason)
+   */
+  async declineTreatmentPlan(
+    planId: string,
+    dto: DeclineTreatmentPlanDto,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const plan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    // Can only decline a presented plan
+    if (plan.status !== 'presented') {
+      throw new BadRequestException(
+        `Cannot decline a plan in '${plan.status}' status. Only presented plans can be declined.`,
+      );
+    }
+
+    const updated = await this.repository.updateStatus(planId, 'cancelled', auditContext, {
+      reason: `Patient declined: ${dto.reason}`,
+      additionalUpdates: {
+        cancelledAt: new Date(),
+        cancelledBy: auditContext.userId,
+        cancellationReason: dto.reason,
+        providerNotes: plan.providerNotes
+          ? `${plan.providerNotes}\n\n--- Patient Declined ---\nReason: ${dto.reason}${dto.feedback ? '\nFeedback: ' + dto.feedback : ''}${dto.concerns.length > 0 ? '\nConcerns: ' + dto.concerns.join(', ') : ''}`
+          : `Patient Declined\nReason: ${dto.reason}${dto.feedback ? '\nFeedback: ' + dto.feedback : ''}`,
+        tags: [...plan.tags, 'declined'],
+      },
+    });
+
+    // Emit event
+    const event: TreatmentPlanDeclinedEvent = {
+      treatmentPlanId: planId,
+      patientId: plan.patientId,
+      tenantId: auditContext.tenantId,
+      clinicId: auditContext.clinicId,
+      reason: dto.reason,
+      requestAlternative: dto.requestAlternative,
+      concerns: dto.concerns,
+      timestamp: new Date(),
+    };
+
+    this.eventEmitter.emit('treatment.plan.declined', event);
+
+    this.logger.log(`Treatment plan ${planId} declined by patient. Reason: ${dto.reason}`);
+
+    return updated;
+  }
+
+  /**
+   * Create a revision of an existing treatment plan
+   *
+   * Creates a new plan based on an existing one (declined or presented).
+   * Links the new plan to the original as a revision.
+   */
+  async reviseTreatmentPlan(
+    planId: string,
+    dto: ReviseTreatmentPlanDto,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const originalPlan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    // Can only revise presented, declined, or cancelled plans
+    if (!['presented', 'cancelled'].includes(originalPlan.status)) {
+      throw new BadRequestException(
+        `Cannot revise a plan in '${originalPlan.status}' status. Plan must be presented or declined.`,
+      );
+    }
+
+    // Build phases from DTO or copy from original
+    const clonedPhaseDtos = dto.phases ?? this.clonePhases(originalPlan.phases);
+    const phases = this.buildPhases(clonedPhaseDtos);
+
+    // Calculate financials
+    const financial = this.calculateFinancials(phases, dto.financialOverrides);
+
+    // Build alternatives
+    const alternatives = dto.alternatives
+      ? dto.alternatives.map((alt) => ({
+          name: alt.name,
+          description: alt.description,
+          phases: this.buildPhases(alt.phases),
+          advantages: alt.advantages,
+          disadvantages: alt.disadvantages,
+          isRecommended: alt.isRecommended,
+          totalCents: this.calculateAlternativeTotal(alt.phases),
+        }))
+      : originalPlan.alternatives;
+
+    const revisedPlan = await this.repository.create(
+      {
+        patientId: originalPlan.patientId,
+        providerId: auditContext.userId,
+        title: originalPlan.title ? `${originalPlan.title} (Revised)` : 'Revised Treatment Plan',
+        description: dto.notes || originalPlan.description,
+        status: 'draft',
+        phases: phases as TreatmentPhase[],
+        alternatives: alternatives as unknown as typeof revisedPlan.alternatives,
+        financial,
+        approvals: [],
+        previousVersionId: planId,
+        revisionNumber: (originalPlan.revisionNumber || 0) + 1,
+        revisionReason: dto.reason,
+        expiresAt: originalPlan.expiresAt,
+        preAuthorizationNumber: originalPlan.preAuthorizationNumber,
+        preAuthorizationStatus: originalPlan.preAuthorizationStatus,
+        clinicalNoteId: originalPlan.clinicalNoteId,
+        providerNotes: `Revised from plan ${planId}.\nReason: ${dto.reason}`,
+        patientQuestions: originalPlan.patientQuestions,
+        tags: [...originalPlan.tags, 'revision'],
+        priority: originalPlan.priority,
+      },
+      auditContext,
+    );
+
+    // Emit event
+    const event: TreatmentPlanCreatedEvent = {
+      treatmentPlanId: revisedPlan._id.toString(),
+      patientId: originalPlan.patientId,
+      providerId: auditContext.userId,
+      tenantId: auditContext.tenantId,
+      clinicId: auditContext.clinicId,
+      totalCents: financial.totalCents,
+      procedureCount: this.countProcedures(phases),
+      phaseCount: phases.length,
+      timestamp: new Date(),
+    };
+
+    this.eventEmitter.emit('treatment.plan.created', event);
+
+    this.logger.log(`Created revision ${revisedPlan._id} of treatment plan ${planId}`);
+
+    return revisedPlan;
+  }
+
+  // ============================================================================
+  // PHASE / ITEM MANAGEMENT METHODS
+  // ============================================================================
+
+  /**
+   * Add a new phase to a treatment plan
+   */
+  async addPhase(
+    planId: string,
+    dto: AddPhaseDto,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const plan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    if (plan.status !== 'draft') {
+      throw new ForbiddenException('Can only add phases to draft plans');
+    }
+
+    // Build the new phase
+    const newPhase = this.buildPhases([dto])[0];
+
+    // Add to existing phases
+    const updatedPhases = [...plan.phases, newPhase as TreatmentPhase];
+
+    // Recalculate financials
+    const financial = this.calculateFinancials(updatedPhases, {
+      insuranceCoverageCents: plan.financial.insuranceCoverageCents,
+      currency: plan.financial.currency,
+    });
+
+    return this.repository.update(
+      planId,
+      { phases: updatedPhases, financial },
+      plan.version,
+      auditContext,
+      `Added phase: ${dto.name}`,
+    );
+  }
+
+  /**
+   * Remove a phase from a treatment plan
+   */
+  async removePhase(
+    planId: string,
+    phaseId: string,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const plan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    if (plan.status !== 'draft') {
+      throw new ForbiddenException('Can only remove phases from draft plans');
+    }
+
+    const phaseIndex = plan.phases.findIndex((p) => p._id.toString() === phaseId);
+    if (phaseIndex === -1) {
+      throw new BadRequestException(`Phase ${phaseId} not found`);
+    }
+
+    // Remove the phase
+    const updatedPhases = plan.phases.filter((_, i) => i !== phaseIndex);
+
+    if (updatedPhases.length === 0) {
+      throw new BadRequestException('Cannot remove the last phase. Delete the plan instead.');
+    }
+
+    // Recalculate financials
+    const financial = this.calculateFinancials(updatedPhases, {
+      insuranceCoverageCents: plan.financial.insuranceCoverageCents,
+      currency: plan.financial.currency,
+    });
+
+    return this.repository.update(
+      planId,
+      { phases: updatedPhases, financial },
+      plan.version,
+      auditContext,
+      `Removed phase: ${plan.phases[phaseIndex].name}`,
+    );
+  }
+
+  /**
+   * Add an item to a phase
+   */
+  async addItemToPhase(
+    planId: string,
+    phaseId: string,
+    dto: AddItemToPhaseDto,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const plan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    if (plan.status !== 'draft') {
+      throw new ForbiddenException('Can only add items to draft plans');
+    }
+
+    const phaseIndex = plan.phases.findIndex((p) => p._id.toString() === phaseId);
+    if (phaseIndex === -1) {
+      throw new BadRequestException(`Phase ${phaseId} not found`);
+    }
+
+    // Build the new item
+    const quantity = dto.quantity ?? 1;
+    const unitPrice = dto.unitPriceCents;
+    const discount = dto.discountCents ?? 0;
+    const tax = dto.taxCents ?? 0;
+    const total = quantity * unitPrice - discount + tax;
+
+    const newItem: Partial<TreatmentPlanItem> = {
+      procedureCode: dto.procedureCode,
+      procedureName: dto.procedureName,
+      teeth: dto.teeth ?? [],
+      surfaces: dto.surfaces ?? [],
+      quantity,
+      unitPriceCents: unitPrice,
+      discountCents: discount,
+      discountPercent: dto.discountPercent ?? 0,
+      taxCents: tax,
+      totalCents: total,
+      providerId: dto.providerId,
+      providerName: dto.providerName,
+      status: 'planned',
+      materials: dto.materials ?? [],
+      estimatedDurationMinutes: dto.estimatedDurationMinutes,
+      notes: dto.notes,
+      sortOrder: dto.sortOrder ?? plan.phases[phaseIndex].items.length,
+    };
+
+    // Add item to phase
+    plan.phases[phaseIndex].items.push(newItem as TreatmentPlanItem);
+
+    // Recalculate phase subtotal
+    plan.phases[phaseIndex].subtotalCents = plan.phases[phaseIndex].items.reduce(
+      (sum, item) => sum + item.totalCents,
+      0,
+    );
+
+    // Recalculate overall financials
+    const financial = this.calculateFinancials(plan.phases, {
+      insuranceCoverageCents: plan.financial.insuranceCoverageCents,
+      currency: plan.financial.currency,
+    });
+
+    return this.repository.update(
+      planId,
+      { phases: plan.phases, financial },
+      plan.version,
+      auditContext,
+      `Added item: ${dto.procedureCode}`,
+    );
+  }
+
+  /**
+   * Update an item in a phase
+   */
+  async updateItem(
+    planId: string,
+    phaseId: string,
+    itemId: string,
+    dto: UpdateTreatmentPlanItemDto,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const plan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    if (plan.status !== 'draft') {
+      throw new ForbiddenException('Can only update items in draft plans');
+    }
+
+    const phase = plan.phases.find((p) => p._id.toString() === phaseId);
+    if (!phase) {
+      throw new BadRequestException(`Phase ${phaseId} not found`);
+    }
+
+    const itemIndex = phase.items.findIndex((i) => i._id.toString() === itemId);
+    if (itemIndex === -1) {
+      throw new BadRequestException(`Item ${itemId} not found in phase`);
+    }
+
+    // Update item fields
+    const item = phase.items[itemIndex];
+    if (dto.procedureCode !== undefined) item.procedureCode = dto.procedureCode;
+    if (dto.procedureName !== undefined) item.procedureName = dto.procedureName;
+    if (dto.teeth !== undefined) item.teeth = dto.teeth;
+    if (dto.surfaces !== undefined) item.surfaces = dto.surfaces as string[];
+    if (dto.quantity !== undefined) item.quantity = dto.quantity;
+    if (dto.unitPriceCents !== undefined) item.unitPriceCents = dto.unitPriceCents;
+    if (dto.discountCents !== undefined) item.discountCents = dto.discountCents;
+    if (dto.discountPercent !== undefined) item.discountPercent = dto.discountPercent;
+    if (dto.taxCents !== undefined) item.taxCents = dto.taxCents;
+    if (dto.providerId !== undefined) item.providerId = dto.providerId;
+    if (dto.providerName !== undefined) item.providerName = dto.providerName;
+    if (dto.materials !== undefined) item.materials = dto.materials as typeof item.materials;
+    if (dto.estimatedDurationMinutes !== undefined)
+      item.estimatedDurationMinutes = dto.estimatedDurationMinutes;
+    if (dto.notes !== undefined) item.notes = dto.notes;
+    if (dto.sortOrder !== undefined) item.sortOrder = dto.sortOrder;
+
+    // Recalculate item total
+    item.totalCents = item.quantity * item.unitPriceCents - item.discountCents + item.taxCents;
+
+    // Recalculate phase subtotal
+    phase.subtotalCents = phase.items.reduce((sum, i) => sum + i.totalCents, 0);
+
+    // Recalculate overall financials
+    const financial = this.calculateFinancials(plan.phases, {
+      insuranceCoverageCents: plan.financial.insuranceCoverageCents,
+      currency: plan.financial.currency,
+    });
+
+    return this.repository.update(
+      planId,
+      { phases: plan.phases, financial },
+      plan.version,
+      auditContext,
+      `Updated item: ${item.procedureCode}`,
+    );
+  }
+
+  /**
+   * Remove an item from a phase
+   */
+  async removeItem(
+    planId: string,
+    phaseId: string,
+    itemId: string,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const plan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    if (plan.status !== 'draft') {
+      throw new ForbiddenException('Can only remove items from draft plans');
+    }
+
+    const phaseIndex = plan.phases.findIndex((p) => p._id.toString() === phaseId);
+    if (phaseIndex === -1) {
+      throw new BadRequestException(`Phase ${phaseId} not found`);
+    }
+
+    const itemIndex = plan.phases[phaseIndex].items.findIndex((i) => i._id.toString() === itemId);
+    if (itemIndex === -1) {
+      throw new BadRequestException(`Item ${itemId} not found in phase`);
+    }
+
+    const removedItem = plan.phases[phaseIndex].items[itemIndex];
+
+    // Remove the item
+    plan.phases[phaseIndex].items.splice(itemIndex, 1);
+
+    // If phase is now empty, remove the phase (unless it's the last one)
+    if (plan.phases[phaseIndex].items.length === 0 && plan.phases.length > 1) {
+      plan.phases.splice(phaseIndex, 1);
+    } else if (plan.phases[phaseIndex].items.length === 0) {
+      throw new BadRequestException(
+        'Cannot remove the last item from the last phase. Delete the plan instead.',
+      );
+    } else {
+      // Recalculate phase subtotal
+      plan.phases[phaseIndex].subtotalCents = plan.phases[phaseIndex].items.reduce(
+        (sum, item) => sum + item.totalCents,
+        0,
+      );
+    }
+
+    // Recalculate overall financials
+    const financial = this.calculateFinancials(plan.phases, {
+      insuranceCoverageCents: plan.financial.insuranceCoverageCents,
+      currency: plan.financial.currency,
+    });
+
+    return this.repository.update(
+      planId,
+      { phases: plan.phases, financial },
+      plan.version,
+      auditContext,
+      `Removed item: ${removedItem.procedureCode}`,
+    );
+  }
+
+  /**
+   * Schedule an item as an appointment
+   */
+  async scheduleItem(
+    planId: string,
+    phaseId: string,
+    itemId: string,
+    dto: ScheduleItemDto,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const plan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    // Must be accepted or in_progress to schedule
+    if (!['accepted', 'in_progress'].includes(plan.status)) {
+      throw new BadRequestException(`Cannot schedule items in a plan with status '${plan.status}'`);
+    }
+
+    const phase = plan.phases.find((p) => p._id.toString() === phaseId);
+    if (!phase) {
+      throw new BadRequestException(`Phase ${phaseId} not found`);
+    }
+
+    const item = phase.items.find((i) => i._id.toString() === itemId);
+    if (!item) {
+      throw new BadRequestException(`Item ${itemId} not found in phase`);
+    }
+
+    if (item.status === 'completed') {
+      throw new BadRequestException('Cannot schedule a completed item');
+    }
+
+    if (item.status === 'cancelled') {
+      throw new BadRequestException('Cannot schedule a cancelled item');
+    }
+
+    // Update item with appointment info
+    item.status = 'scheduled';
+    item.appointmentId = dto.appointmentId;
+    item.scheduledFor = dto.proposedDateTime;
+    if (dto.providerId) item.providerId = dto.providerId;
+
+    // Save updates
+    const updated = await this.repository.update(
+      planId,
+      { phases: plan.phases },
+      plan.version,
+      auditContext,
+      `Scheduled item: ${item.procedureCode}`,
+    );
+
+    // Emit event
+    const event: TreatmentItemScheduledEvent = {
+      treatmentPlanId: planId,
+      phaseId,
+      itemId,
+      patientId: plan.patientId,
+      tenantId: auditContext.tenantId,
+      clinicId: auditContext.clinicId,
+      procedureCode: item.procedureCode,
+      procedureName: item.procedureName,
+      appointmentId: dto.appointmentId || '',
+      scheduledFor: dto.proposedDateTime,
+      providerId: dto.providerId,
+      timestamp: new Date(),
+    };
+
+    this.eventEmitter.emit('treatment.item.scheduled', event);
+
+    this.logger.log(`Scheduled item ${itemId} (${item.procedureCode}) in treatment plan ${planId}`);
+
+    return updated;
+  }
+
+  // ============================================================================
+  // ALTERNATIVES MANAGEMENT METHODS
+  // ============================================================================
+
+  /**
+   * Add an alternative to a treatment plan
+   */
+  async addAlternative(
+    planId: string,
+    dto: AddAlternativeDto,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const plan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    if (plan.status !== 'draft') {
+      throw new ForbiddenException('Can only add alternatives to draft plans');
+    }
+
+    // If this is marked as recommended, unmark others
+    if (dto.isRecommended) {
+      for (const alt of plan.alternatives) {
+        alt.isRecommended = false;
+      }
+    }
+
+    // Build the new alternative
+    const newAlternative = {
+      name: dto.name,
+      description: dto.description,
+      phases: this.buildPhases(dto.phases) as TreatmentPhase[],
+      advantages: dto.advantages,
+      disadvantages: dto.disadvantages,
+      isRecommended: dto.isRecommended,
+      totalCents: this.calculateAlternativeTotal(dto.phases),
+    };
+
+    const updatedAlternatives = [...plan.alternatives, newAlternative];
+
+    return this.repository.update(
+      planId,
+      { alternatives: updatedAlternatives as typeof plan.alternatives },
+      plan.version,
+      auditContext,
+      `Added alternative: ${dto.name}`,
+    );
+  }
+
+  /**
+   * Remove an alternative from a treatment plan
+   */
+  async removeAlternative(
+    planId: string,
+    alternativeId: string,
+    auditContext: AuditContext,
+  ): Promise<TreatmentPlanDocument> {
+    const plan = await this.repository.findByIdOrFail(planId, auditContext);
+
+    if (plan.status !== 'draft') {
+      throw new ForbiddenException('Can only remove alternatives from draft plans');
+    }
+
+    const altIndex = plan.alternatives.findIndex((a) => a._id.toString() === alternativeId);
+    if (altIndex === -1) {
+      throw new BadRequestException(`Alternative ${alternativeId} not found`);
+    }
+
+    const removedAlt = plan.alternatives[altIndex];
+    const updatedAlternatives = plan.alternatives.filter((_, i) => i !== altIndex);
+
+    return this.repository.update(
+      planId,
+      { alternatives: updatedAlternatives },
+      plan.version,
+      auditContext,
+      `Removed alternative: ${removedAlt.name}`,
+    );
+  }
+
+  // ============================================================================
   // FINANCIAL CALCULATION METHODS
   // ============================================================================
 
@@ -1014,5 +1622,71 @@ export class TreatmentPlansService {
    */
   private countProcedures(phases: TreatmentPhase[] | Partial<TreatmentPhase>[]): number {
     return phases.reduce((count, phase) => count + (phase.items?.length ?? 0), 0);
+  }
+
+  /**
+   * Clone phases for revision (deep copy without _id)
+   * Returns data compatible with buildPhases input format
+   */
+  private clonePhases(phases: TreatmentPhase[]): Array<{
+    phaseNumber: number;
+    name: string;
+    description?: string;
+    sequenceRequired?: boolean;
+    items: Array<{
+      procedureCode: string;
+      procedureName: string;
+      teeth?: string[];
+      surfaces?: string[];
+      quantity?: number;
+      unitPriceCents: number;
+      discountCents?: number;
+      discountPercent?: number;
+      taxCents?: number;
+      providerId?: string;
+      providerName?: string;
+      materials?: Array<{
+        catalogItemId: string;
+        itemName: string;
+        quantity: number;
+        unit?: string;
+        estimatedCost?: number;
+      }>;
+      estimatedDurationMinutes?: number;
+      notes?: string;
+      sortOrder?: number;
+    }>;
+    sortOrder?: number;
+  }> {
+    return phases.map((phase) => ({
+      phaseNumber: phase.phaseNumber,
+      name: phase.name,
+      description: phase.description,
+      sequenceRequired: phase.sequenceRequired,
+      items: phase.items.map((item) => ({
+        procedureCode: item.procedureCode,
+        procedureName: item.procedureName,
+        teeth: [...item.teeth],
+        surfaces: [...item.surfaces],
+        quantity: item.quantity,
+        unitPriceCents: item.unitPriceCents,
+        discountCents: item.discountCents,
+        discountPercent: item.discountPercent,
+        taxCents: item.taxCents,
+        providerId: item.providerId,
+        providerName: item.providerName,
+        materials: item.materials.map((m) => ({
+          catalogItemId: m.catalogItemId,
+          itemName: m.itemName,
+          quantity: m.quantity,
+          unit: m.unit,
+          estimatedCost: m.estimatedCost,
+        })),
+        estimatedDurationMinutes: item.estimatedDurationMinutes,
+        notes: item.notes,
+        sortOrder: item.sortOrder,
+      })),
+      sortOrder: phase.sortOrder,
+    }));
   }
 }

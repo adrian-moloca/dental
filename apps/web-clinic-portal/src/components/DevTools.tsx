@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
 declare const __BUILD_TIME__: string;
 
@@ -8,6 +8,118 @@ interface ReloadEvent {
   timestamp: number;
   type: 'hmr' | 'manual' | 'page';
 }
+
+// Inline styles to avoid Tailwind/Bootstrap conflicts
+const styles = {
+  container: {
+    position: 'fixed',
+    bottom: '16px',
+    right: '16px',
+    zIndex: 9999,
+    maxWidth: '320px',
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+  } as CSSProperties,
+  minimizedButton: (bgColor: string) => ({
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 12px',
+    backgroundColor: bgColor,
+    color: '#fff',
+    borderRadius: '8px',
+    fontFamily: 'monospace',
+    fontSize: '12px',
+    fontWeight: 600,
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+    border: 'none',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  } as CSSProperties),
+  dot: (bgColor: string) => ({
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    backgroundColor: bgColor,
+  } as CSSProperties),
+  panel: (gradientFrom: string, gradientTo: string) => ({
+    background: `linear-gradient(135deg, ${gradientFrom} 0%, ${gradientTo} 100%)`,
+    backdropFilter: 'blur(8px)',
+    borderRadius: '12px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    overflow: 'hidden',
+  } as CSSProperties),
+  panelContent: {
+    padding: '16px',
+    color: '#fff',
+  } as CSSProperties,
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '16px',
+  } as CSSProperties,
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  } as CSSProperties,
+  statusLabel: {
+    fontWeight: 600,
+    fontSize: '14px',
+    margin: 0,
+  } as CSSProperties,
+  closeButton: {
+    background: 'none',
+    border: 'none',
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: '18px',
+    cursor: 'pointer',
+    padding: '4px',
+    lineHeight: 1,
+  } as CSSProperties,
+  infoBox: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: '8px',
+    padding: '12px',
+    marginBottom: '12px',
+  } as CSSProperties,
+  infoRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    fontSize: '12px',
+    marginBottom: '8px',
+  } as CSSProperties,
+  infoLabel: {
+    color: 'rgba(255,255,255,0.7)',
+    fontFamily: 'monospace',
+  } as CSSProperties,
+  infoValue: (color: string) => ({
+    color,
+    fontWeight: 600,
+    fontFamily: 'monospace',
+  } as CSSProperties),
+  button: {
+    width: '100%',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    color: '#fff',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    fontWeight: 600,
+    border: 'none',
+    cursor: 'pointer',
+    marginBottom: '8px',
+    transition: 'background-color 0.2s ease',
+  } as CSSProperties,
+  footer: {
+    fontSize: '10px',
+    color: 'rgba(255,255,255,0.6)',
+    fontFamily: 'monospace',
+  } as CSSProperties,
+};
 
 export function DevTools() {
   const [hmrStatus, setHmrStatus] = useState<HmrStatus>('connecting');
@@ -81,33 +193,49 @@ export function DevTools() {
     return null;
   }
 
-  if (!isVisible) {
-    const statusColor =
-      hmrStatus === 'connected'
-        ? 'bg-green-500'
-        : hmrStatus === 'updating'
-          ? 'bg-blue-500'
-          : 'bg-red-500';
+  const statusConfig = {
+    connected: {
+      bgColor: '#16a34a',
+      gradientFrom: '#16a34a',
+      gradientTo: '#059669',
+      textColor: '#86efac',
+      label: 'Connected',
+    },
+    updating: {
+      bgColor: '#2563eb',
+      gradientFrom: '#2563eb',
+      gradientTo: '#0891b2',
+      textColor: '#93c5fd',
+      label: 'Updating',
+    },
+    connecting: {
+      bgColor: '#ca8a04',
+      gradientFrom: '#ca8a04',
+      gradientTo: '#ea580c',
+      textColor: '#fde047',
+      label: 'Connecting',
+    },
+    disconnected: {
+      bgColor: '#dc2626',
+      gradientFrom: '#dc2626',
+      gradientTo: '#e11d48',
+      textColor: '#fca5a5',
+      label: 'Disconnected',
+    },
+  };
 
+  const config = statusConfig[hmrStatus];
+
+  if (!isVisible) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div style={styles.container}>
         <button
           onClick={() => setIsVisible(true)}
-          className={`group relative flex items-center gap-2 px-3 py-2 ${statusColor} text-white rounded-lg font-mono text-xs font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105`}
+          style={styles.minimizedButton(config.bgColor)}
           title={`HMR: ${hmrStatus}`}
         >
-          <span className="relative flex h-2 w-2">
-            <span
-              className={`absolute inline-flex h-full w-full rounded-full ${statusColor} ${hmrStatus === 'connected' || hmrStatus === 'updating' ? 'animate-pulse' : ''}`}
-            />
-            {hmrStatus === 'updating' && (
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-            )}
-          </span>
+          <span style={styles.dot(config.bgColor)} />
           Dev
-          <span className="hidden group-hover:inline text-[10px] ml-1">
-            ({hmrStatus})
-          </span>
         </button>
       </div>
     );
@@ -123,131 +251,96 @@ export function DevTools() {
     return `${Math.floor(seconds / 3600)}h ago`;
   };
 
-  const statusConfig = {
-    connected: {
-      color: 'from-green-600 to-emerald-600',
-      textColor: 'text-green-300',
-      dotColor: 'bg-green-400',
-      label: 'Connected',
-    },
-    updating: {
-      color: 'from-blue-600 to-cyan-600',
-      textColor: 'text-blue-300',
-      dotColor: 'bg-blue-400',
-      label: 'Updating',
-    },
-    connecting: {
-      color: 'from-yellow-600 to-orange-600',
-      textColor: 'text-yellow-300',
-      dotColor: 'bg-yellow-400',
-      label: 'Connecting',
-    },
-    disconnected: {
-      color: 'from-red-600 to-rose-600',
-      textColor: 'text-red-300',
-      dotColor: 'bg-red-400',
-      label: 'Disconnected',
-    },
-  };
-
-  const config = statusConfig[hmrStatus];
-
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-sm">
-      <div
-        className={`bg-gradient-to-br ${config.color} backdrop-blur-md rounded-xl shadow-2xl border border-white/10 overflow-hidden`}
-      >
-        <div className="p-4 text-white">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span
-                  className={`absolute inline-flex h-full w-full rounded-full ${config.dotColor} opacity-75 ${hmrStatus === 'connecting' || hmrStatus === 'updating' ? 'animate-pulse' : ''}`}
-                />
-                {(hmrStatus === 'connecting' || hmrStatus === 'updating') && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                )}
-              </span>
-              <h3 className="font-semibold text-sm">{config.label}</h3>
+    <div style={styles.container}>
+      <div style={styles.panel(config.gradientFrom, config.gradientTo)}>
+        <div style={styles.panelContent}>
+          {/* Header */}
+          <div style={styles.header}>
+            <div style={styles.headerLeft}>
+              <span style={styles.dot('#fff')} />
+              <h3 style={styles.statusLabel}>{config.label}</h3>
             </div>
             <button
               onClick={() => setIsVisible(false)}
-              className="text-white/60 hover:text-white/90 transition-colors"
+              style={styles.closeButton}
               title="Hide"
             >
               ×
             </button>
           </div>
 
-          <div className="space-y-3">
-            <div className="bg-white/10 rounded-lg p-3 space-y-2 text-xs">
-              <div className="flex items-start justify-between">
-                <span className="text-white/70 font-mono">Last Reload:</span>
-                <span className={`${config.textColor} font-semibold font-mono`}>
-                  {formatTime(timeSinceReload)}
-                </span>
-              </div>
-
-              <div className="flex items-start justify-between">
-                <span className="text-white/70 font-mono">Build Time:</span>
-                <span className="text-white/90 font-mono font-semibold">
-                  {buildDate.toLocaleTimeString()}
-                </span>
-              </div>
-
-              <div className="flex items-start justify-between">
-                <span className="text-white/70 font-mono">Mode:</span>
-                <span className="text-white/90 font-mono font-semibold">
-                  {import.meta.env.MODE}
-                </span>
-              </div>
+          {/* Info Section */}
+          <div style={styles.infoBox}>
+            <div style={styles.infoRow}>
+              <span style={styles.infoLabel}>Last Reload:</span>
+              <span style={styles.infoValue(config.textColor)}>
+                {formatTime(timeSinceReload)}
+              </span>
             </div>
+            <div style={{ ...styles.infoRow, marginBottom: '8px' }}>
+              <span style={styles.infoLabel}>Build Time:</span>
+              <span style={styles.infoValue('rgba(255,255,255,0.9)')}>
+                {buildDate.toLocaleTimeString()}
+              </span>
+            </div>
+            <div style={{ ...styles.infoRow, marginBottom: 0 }}>
+              <span style={styles.infoLabel}>Mode:</span>
+              <span style={styles.infoValue('rgba(255,255,255,0.9)')}>
+                {import.meta.env.MODE}
+              </span>
+            </div>
+          </div>
 
-            {reloadEvents.length > 0 && (
-              <div className="bg-white/10 rounded-lg p-3">
-                <div className="text-white/70 font-mono text-[10px] mb-2">
-                  Recent Reloads:
+          {/* Recent Reloads */}
+          {reloadEvents.length > 0 && (
+            <div style={styles.infoBox}>
+              <div style={{ ...styles.infoLabel, fontSize: '10px', marginBottom: '8px' }}>
+                Recent Reloads:
+              </div>
+              {reloadEvents.map((event, idx) => (
+                <div
+                  key={idx}
+                  style={{ ...styles.infoRow, fontSize: '10px', marginBottom: '4px' }}
+                >
+                  <span style={{ color: 'rgba(255,255,255,0.8)' }}>
+                    {idx === 0 ? '●' : '○'} {event.type.toUpperCase()}
+                  </span>
+                  <span style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    {formatTime(Math.floor((Date.now() - event.timestamp) / 1000))}
+                  </span>
                 </div>
-                <div className="space-y-1">
-                  {reloadEvents.map((event, idx) => (
-                    <div
-                      key={idx}
-                      className="text-[10px] text-white/80 font-mono flex items-center justify-between"
-                    >
-                      <span>
-                        {idx === 0 ? '●' : '○'} {event.type.toUpperCase()}
-                      </span>
-                      <span className="text-white/60">
-                        {formatTime(Math.floor((Date.now() - event.timestamp) / 1000))}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white/5 rounded-lg p-3 space-y-2">
-              <button
-                onClick={() => window.location.reload()}
-                className="w-full bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-200"
-              >
-                Hard Reload
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  window.location.reload();
-                }}
-                className="w-full bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-200"
-              >
-                Clear Storage
-              </button>
+              ))}
             </div>
+          )}
 
-            <div className="text-[10px] text-white/60 font-mono">
-              Cache: /tmp/vite-cache
-            </div>
+          {/* Action Buttons */}
+          <div>
+            <button
+              onClick={() => window.location.reload()}
+              style={styles.button}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)')}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)')}
+            >
+              Hard Reload
+            </button>
+            <button
+              onClick={() => {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+              }}
+              style={{ ...styles.button, marginBottom: 0 }}
+              onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)')}
+              onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)')}
+            >
+              Clear Storage
+            </button>
+          </div>
+
+          {/* Footer */}
+          <div style={{ ...styles.footer, marginTop: '12px' }}>
+            Cache: /tmp/vite-cache
           </div>
         </div>
       </div>

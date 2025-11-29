@@ -51,8 +51,8 @@ export default function LoginPage() {
     <div className="auth-wrapper">
       <div className="auth-container">
         <div className="row g-0 min-vh-100">
-          {/* Left Side - Branding */}
-          <div className="col-lg-6 d-none d-lg-flex">
+          {/* Left Side - Branding - Hidden on screens < 992px */}
+          <div className="col-lg-6 auth-cover-wrapper">
             <div className="auth-cover bg-primary">
               <div className="auth-cover-content">
                 <div className="text-center">

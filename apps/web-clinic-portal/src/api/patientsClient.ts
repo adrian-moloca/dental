@@ -21,8 +21,9 @@ export const patientsClient = {
   /**
    * POST /patients
    * Create a new patient
+   * Note: Response is auto-unwrapped by axios interceptor
    */
-  async create(data: CreatePatientDto): Promise<{ success: boolean; data: PatientDto; message: string }> {
+  async create(data: CreatePatientDto): Promise<PatientDto> {
     const response = await patientsApi.post('/patients', data);
     return response.data;
   },
@@ -30,8 +31,9 @@ export const patientsClient = {
   /**
    * GET /patients/:id
    * Get patient by ID
+   * Note: Response is auto-unwrapped by axios interceptor
    */
-  async getById(id: string): Promise<{ success: boolean; data: PatientDto }> {
+  async getById(id: string): Promise<PatientDto> {
     const response = await patientsApi.get(`/patients/${id}`);
     return response.data;
   },
@@ -39,8 +41,9 @@ export const patientsClient = {
   /**
    * PATCH /patients/:id
    * Update patient information
+   * Note: Response is auto-unwrapped by axios interceptor
    */
-  async update(id: string, data: UpdatePatientDto): Promise<{ success: boolean; data: PatientDto; message: string }> {
+  async update(id: string, data: UpdatePatientDto): Promise<PatientDto> {
     const response = await patientsApi.patch(`/patients/${id}`, data);
     return response.data;
   },
@@ -48,6 +51,7 @@ export const patientsClient = {
   /**
    * GET /patients
    * Search/list patients with filters
+   * Note: Response is auto-unwrapped by axios interceptor
    */
   async search(params: SearchPatientDto): Promise<PatientListResponse> {
     const response = await patientsApi.get('/patients', { params });
@@ -57,10 +61,10 @@ export const patientsClient = {
   /**
    * DELETE /patients/:id
    * Soft delete patient
+   * Note: Response is auto-unwrapped by axios interceptor
    */
-  async delete(id: string): Promise<{ success: boolean; message: string }> {
-    const response = await patientsApi.delete(`/patients/${id}`);
-    return response.data;
+  async delete(id: string): Promise<void> {
+    await patientsApi.delete(`/patients/${id}`);
   },
 
   /**

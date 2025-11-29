@@ -45,6 +45,7 @@ async function bootstrap() {
       'X-Correlation-ID',
       'X-Organization-ID',
       'X-Clinic-ID',
+      'X-Tenant-ID',
     ],
     exposedHeaders: ['X-Correlation-ID'],
   });

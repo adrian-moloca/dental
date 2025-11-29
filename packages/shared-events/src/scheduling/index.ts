@@ -63,3 +63,16 @@ export type {
   CancellationNotificationDetails,
   ResourceReleaseDetails,
 } from './appointment-canceled.event';
+
+// ============================================================================
+// Reminder Events
+// ============================================================================
+export type {
+  ReminderScheduledEvent,
+  ReminderSentEvent,
+  ReminderDeliveredEvent,
+  ReminderReadEvent,
+  ReminderFailedEvent,
+  PatientConfirmedViaReminderEvent,
+  PatientCancelledViaReminderEvent,
+} from './reminder-scheduled.event';

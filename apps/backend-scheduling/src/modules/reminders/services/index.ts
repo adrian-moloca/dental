@@ -1,2 +1,10 @@
 export { ReminderService } from './reminder.service';
 export type { ReminderResult, PendingReminder, ReminderStats } from './reminder.service';
+export { SmsService } from './sms.service';
+export { WhatsAppService } from './whatsapp.service';
+export { TemplateRendererService } from './template-renderer.service';
+export { ReminderSchedulerService } from './reminder-scheduler.service';
+export { PatientResponseHandlerService } from './patient-response-handler.service';
+export { NotificationService } from './notification.service';
+export type { TenantContext, PatientInfo } from './notification.service';
+export { NotificationEventHandlerService } from './notification-event-handler.service';

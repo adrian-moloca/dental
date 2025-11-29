@@ -483,3 +483,252 @@ textarea.form-control {
     }
   }
 }
+
+// =============================================================================
+// Patient Form Wizard Styles
+// =============================================================================
+
+.patient-form-wizard {
+  // Progress indicator
+  .wizard-progress {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 32px;
+  }
+
+  // Step content area with more spacing
+  .wizard-step-content {
+    .step-header {
+      margin-bottom: 24px;
+
+      h4 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--heading-color);
+      }
+
+      p {
+        font-size: 0.875rem;
+        margin-top: 4px;
+      }
+    }
+
+    // Better card spacing in wizard
+    .card {
+      margin-bottom: 24px;
+      border-radius: 12px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .card-header {
+        padding: 16px 20px;
+        background: var(--light-100);
+
+        h6 {
+          font-size: 0.9375rem;
+          font-weight: 600;
+          color: var(--heading-color);
+          margin-bottom: 0;
+        }
+      }
+
+      .card-body {
+        padding: 24px;
+      }
+    }
+
+    // Better row spacing in forms
+    .row.g-4 {
+      --bs-gutter-y: 1.5rem;
+      --bs-gutter-x: 1.5rem;
+    }
+  }
+
+  // Navigation area
+  .wizard-navigation {
+    padding-top: 32px;
+    margin-top: 32px;
+  }
+}
+
+// =============================================================================
+// Required Field Indicator
+// =============================================================================
+
+// Visual indicator for required fields
+.form-label {
+  &::after {
+    content: "";
+  }
+}
+
+// When input has required attribute, add asterisk to label
+.form-group:has(input[required], select[required], textarea[required]) {
+  .form-label::after {
+    content: " *";
+    color: var(--danger);
+    font-weight: 600;
+  }
+}
+
+// Optional badge for labels
+.label-optional {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--gray-600);
+  background: var(--light-900);
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// =============================================================================
+// Section Spacing Improvements
+// =============================================================================
+
+// Better vertical spacing for form sections
+.form-section {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--border-color);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    h5, h6 {
+      margin-bottom: 0;
+      font-weight: 600;
+    }
+
+    i {
+      font-size: 20px;
+      color: var(--primary);
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 4px 8px;
+    }
+  }
+}
+
+// Collapsible section with better spacing
+.collapsible-section {
+  margin-bottom: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--white);
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: var(--light-100);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 0;
+
+      i {
+        font-size: 20px;
+      }
+
+      h5, h6 {
+        margin-bottom: 0;
+        font-weight: 600;
+      }
+    }
+
+    .collapse-icon {
+      font-size: 20px;
+      color: var(--gray-500);
+      transition: transform 0.2s ease;
+    }
+
+    &.expanded .collapse-icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  .section-content {
+    padding: 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--white);
+  }
+
+  // Required section indicator
+  &.required {
+    border-color: var(--primary-transparent);
+
+    .section-header {
+      background: var(--primary-transparent);
+    }
+  }
+
+  // Warning section (like Medical Alerts)
+  &.warning {
+    border-color: var(--danger-transparent);
+
+    .section-header {
+      background: var(--danger-transparent);
+
+      .section-title i {
+        color: var(--danger);
+      }
+    }
+  }
+}
+
+// =============================================================================
+// Improved Form Action Buttons
+// =============================================================================
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid var(--border-color);
+
+  &.justify-between {
+    justify-content: space-between;
+  }
+
+  .btn-group-end {
+    display: flex;
+    gap: 12px;
+  }
+}

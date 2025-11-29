@@ -96,6 +96,54 @@ export interface TaxBreakdownEntry {
   exemptionReasonText?: string;
 }
 
+/**
+ * Payment terms enumeration
+ */
+export enum PaymentTerms {
+  DUE_ON_RECEIPT = 'due_on_receipt',
+  NET_15 = 'net_15',
+  NET_30 = 'net_30',
+}
+
+/**
+ * Invoice line item embedded document
+ * Used for quick access to line item data without separate queries
+ */
+export interface InvoiceLineItem {
+  lineNumber: number;
+  itemType: 'treatment' | 'product' | 'lab_service';
+  itemCode: string; // CDT code for treatments
+  description: string;
+  tooth?: string;
+  surfaces?: string[];
+  quantity: number;
+  unitPrice: number;
+  discountPercent?: number;
+  discountAmount: number;
+  taxRate: number; // 19% for Romania
+  taxAmount: number;
+  lineTotal: number;
+  // For commission calculation
+  providerId?: string;
+  commissionRate?: number;
+  // Reference to original item
+  referenceId?: string;
+}
+
+/**
+ * Customer information for invoice
+ */
+export interface CustomerInfo {
+  name: string;
+  address?: string;
+  city?: string;
+  county?: string;
+  postalCode?: string;
+  countryCode?: string;
+  phone?: string;
+  email?: string;
+}
+
 @Schema({ collection: 'invoices', timestamps: true })
 export class Invoice extends Document {
   @Prop({ type: String, required: true, unique: true })
@@ -112,6 +160,9 @@ export class Invoice extends Document {
 
   @Prop({ type: String, index: true })
   linkedProcedureId?: string;
+
+  @Prop({ type: String, index: true })
+  treatmentPlanId?: string;
 
   @Prop({
     type: String,
@@ -159,6 +210,95 @@ export class Invoice extends Document {
 
   @Prop({ type: String })
   terms?: string;
+
+  // ============================================
+  // Payment Terms
+  // ============================================
+
+  /**
+   * Payment terms for the invoice
+   */
+  @Prop({
+    type: String,
+    enum: Object.values(PaymentTerms),
+    default: PaymentTerms.DUE_ON_RECEIPT,
+  })
+  paymentTerms?: PaymentTerms;
+
+  // ============================================
+  // Customer Information
+  // ============================================
+
+  /**
+   * Customer name (from patient record)
+   */
+  @Prop({ type: String })
+  customerName?: string;
+
+  /**
+   * Customer address (from patient record)
+   */
+  @Prop({ type: String })
+  customerAddress?: string;
+
+  /**
+   * Customer tax ID (CUI for Romanian companies)
+   */
+  @Prop({ type: String })
+  customerTaxId?: string;
+
+  /**
+   * Full customer information object
+   */
+  @Prop(
+    raw({
+      name: { type: String },
+      address: { type: String },
+      city: { type: String },
+      county: { type: String },
+      postalCode: { type: String },
+      countryCode: { type: String },
+      phone: { type: String },
+      email: { type: String },
+    }),
+  )
+  customer?: CustomerInfo;
+
+  // ============================================
+  // Embedded Line Items (denormalized for performance)
+  // ============================================
+
+  /**
+   * Embedded line items for quick access
+   * These are a denormalized copy of the invoice items
+   */
+  @Prop(
+    raw([
+      {
+        lineNumber: { type: Number, required: true },
+        itemType: {
+          type: String,
+          enum: ['treatment', 'product', 'lab_service'],
+          required: true,
+        },
+        itemCode: { type: String, required: true },
+        description: { type: String, required: true },
+        tooth: { type: String },
+        surfaces: [{ type: String }],
+        quantity: { type: Number, required: true },
+        unitPrice: { type: Number, required: true },
+        discountPercent: { type: Number },
+        discountAmount: { type: Number, default: 0 },
+        taxRate: { type: Number, required: true },
+        taxAmount: { type: Number, required: true },
+        lineTotal: { type: Number, required: true },
+        providerId: { type: String },
+        commissionRate: { type: Number },
+        referenceId: { type: String },
+      },
+    ]),
+  )
+  lines?: InvoiceLineItem[];
 
   // ============================================
   // Invoice Series and Numbering (for E-Factura)
@@ -296,6 +436,56 @@ export class Invoice extends Document {
 
   @Prop({ type: String })
   voidReason?: string;
+
+  // ============================================
+  // Send Tracking
+  // ============================================
+
+  /**
+   * Timestamp when invoice was sent to patient
+   */
+  @Prop({ type: Date })
+  sentAt?: Date;
+
+  /**
+   * User who sent the invoice
+   */
+  @Prop({ type: String })
+  sentBy?: string;
+
+  /**
+   * Method used to send (email, print, etc.)
+   */
+  @Prop({ type: String })
+  sentMethod?: string;
+
+  /**
+   * Email address invoice was sent to
+   */
+  @Prop({ type: String })
+  sentToEmail?: string;
+
+  // ============================================
+  // Credit Note Reference
+  // ============================================
+
+  /**
+   * Reference to original invoice if this is a credit note
+   */
+  @Prop({ type: String })
+  originalInvoiceId?: string;
+
+  /**
+   * Whether this invoice is a credit note
+   */
+  @Prop({ type: Boolean, default: false })
+  isCreditNote?: boolean;
+
+  /**
+   * Credit note ID if this invoice was cancelled via credit note
+   */
+  @Prop({ type: String })
+  creditNoteId?: string;
 }
 
 export const InvoiceSchema = SchemaFactory.createForClass(Invoice);

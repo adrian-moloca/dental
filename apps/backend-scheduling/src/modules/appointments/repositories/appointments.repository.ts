@@ -274,4 +274,159 @@ export class AppointmentsRepository {
 
     return this.appointmentModel.countDocuments(filter).exec();
   }
+
+  /**
+   * Check for chair/room conflicts
+   * Returns appointments that use the same chair during the given time range
+   */
+  async findChairConflicts(
+    tenantId: string,
+    chairId: string,
+    start: Date,
+    end: Date,
+    excludeId?: string,
+  ): Promise<AppointmentDocument[]> {
+    const filter: FilterQuery<Appointment> = {
+      tenantId,
+      chairId,
+      status: { $nin: [AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW] },
+      $or: [
+        // New appointment starts during existing appointment
+        { start: { $lte: start }, end: { $gt: start } },
+        // New appointment ends during existing appointment
+        { start: { $lt: end }, end: { $gte: end } },
+        // New appointment completely contains existing appointment
+        { start: { $gte: start }, end: { $lte: end } },
+      ],
+    };
+
+    if (excludeId) {
+      filter.id = { $ne: excludeId };
+    }
+
+    return this.appointmentModel.find(filter).exec();
+  }
+
+  /**
+   * Find conflicts considering buffer times
+   * This is a more advanced conflict detection that includes buffer periods
+   */
+  async findConflictsWithBuffers(
+    tenantId: string,
+    providerId: string,
+    start: Date,
+    end: Date,
+    bufferBefore: number = 0,
+    bufferAfter: number = 0,
+    excludeId?: string,
+  ): Promise<AppointmentDocument[]> {
+    // Expand the time range to include buffers
+    const effectiveStart = new Date(start.getTime() - bufferBefore * 60000);
+    const effectiveEnd = new Date(end.getTime() + bufferAfter * 60000);
+
+    const filter: FilterQuery<Appointment> = {
+      tenantId,
+      providerId,
+      status: { $nin: [AppointmentStatus.CANCELLED, AppointmentStatus.NO_SHOW] },
+      $or: [
+        // Check if effective range overlaps with existing appointments (including their buffers)
+        {
+          $expr: {
+            $and: [
+              {
+                $lte: [
+                  {
+                    $subtract: [
+                      '$start',
+                      { $multiply: [{ $ifNull: ['$bufferBefore', 0] }, 60000] },
+                    ],
+                  },
+                  effectiveStart,
+                ],
+              },
+              {
+                $gt: [
+                  { $add: ['$end', { $multiply: [{ $ifNull: ['$bufferAfter', 0] }, 60000] }] },
+                  effectiveStart,
+                ],
+              },
+            ],
+          },
+        },
+        {
+          $expr: {
+            $and: [
+              {
+                $lt: [
+                  {
+                    $subtract: [
+                      '$start',
+                      { $multiply: [{ $ifNull: ['$bufferBefore', 0] }, 60000] },
+                    ],
+                  },
+                  effectiveEnd,
+                ],
+              },
+              {
+                $gte: [
+                  { $add: ['$end', { $multiply: [{ $ifNull: ['$bufferAfter', 0] }, 60000] }] },
+                  effectiveEnd,
+                ],
+              },
+            ],
+          },
+        },
+        // Simple overlap check as fallback
+        { start: { $lte: effectiveStart }, end: { $gt: effectiveStart } },
+        { start: { $lt: effectiveEnd }, end: { $gte: effectiveEnd } },
+        { start: { $gte: effectiveStart }, end: { $lte: effectiveEnd } },
+      ],
+    };
+
+    if (excludeId) {
+      filter.id = { $ne: excludeId };
+    }
+
+    return this.appointmentModel.find(filter).exec();
+  }
+
+  /**
+   * Find appointments by multiple criteria for batch operations
+   */
+  async findByIds(ids: string[], tenantId: string): Promise<AppointmentDocument[]> {
+    return this.appointmentModel
+      .find({
+        id: { $in: ids },
+        tenantId,
+      })
+      .exec();
+  }
+
+  /**
+   * Bulk update status for multiple appointments
+   * Useful for batch operations like marking all past unchecked appointments as no-shows
+   */
+  async bulkUpdateStatus(
+    tenantId: string,
+    ids: string[],
+    status: AppointmentStatus,
+    metadata?: Record<string, unknown>,
+  ): Promise<number> {
+    const result = await this.appointmentModel
+      .updateMany(
+        {
+          id: { $in: ids },
+          tenantId,
+        },
+        {
+          $set: {
+            status,
+            ...(metadata ? { bookingMetadata: metadata } : {}),
+          },
+        },
+      )
+      .exec();
+
+    return result.modifiedCount;
+  }
 }

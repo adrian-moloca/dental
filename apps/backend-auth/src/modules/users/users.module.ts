@@ -10,12 +10,9 @@
  * - UserCabinet entity: Many-to-many relationship between users and cabinets
  * - UserCabinetRepository: Data access for user-cabinet assignments
  * - UserCabinetService: Business logic for cabinet assignment management
+ * - UsersService: Business logic for user CRUD operations
+ * - UsersController: REST API endpoints for user management
  * - PasswordService: Argon2id-based password hashing
- *
- * TODO (AUTH-003): Implement additional features:
- * - Profile management
- * - Email verification
- * - Multi-factor authentication (MFA)
  *
  * @module modules/users
  */
@@ -29,12 +26,15 @@ import { UserCabinetRepository } from './repositories/user-cabinet.repository';
 import { PasswordService } from './services/password.service';
 import { UserCabinetService } from './services/user-cabinet.service';
 import { CabinetAssignmentService } from './services/cabinet-assignment.service';
+import { UsersService } from './services/users.service';
+import { UsersController } from './controllers/users.controller';
 import { AuthModule } from '../auth/auth.module';
+import { RBACModule } from '../rbac/rbac.module';
 
 /**
  * Users module
  *
- * Provides User entity, repository, and password service for user management.
+ * Provides User entity, repository, and services for user management.
  * Also provides UserCabinet entity and service for managing per-cabinet user assignments.
  * All queries are tenant-scoped for multi-tenant isolation.
  */
@@ -45,8 +45,13 @@ import { AuthModule } from '../auth/auth.module';
     // Import AuthModule to access SubscriptionClientService
     // Use forwardRef to handle circular dependency
     forwardRef(() => AuthModule),
+    // Import RBACModule for permission guards
+    forwardRef(() => RBACModule),
   ],
-  controllers: [],
+  controllers: [
+    // Users REST API controller
+    UsersController,
+  ],
   providers: [
     // User repository for data access
     UserRepository,
@@ -58,6 +63,8 @@ import { AuthModule } from '../auth/auth.module';
     UserCabinetService,
     // Cabinet assignment service for automatic cabinet assignment
     CabinetAssignmentService,
+    // Users service for user CRUD operations
+    UsersService,
   ],
   exports: [
     // Export repository for use in other modules
@@ -70,6 +77,8 @@ import { AuthModule } from '../auth/auth.module';
     UserCabinetService,
     // Export Cabinet assignment service for use in auth module
     CabinetAssignmentService,
+    // Export UsersService for use in other modules
+    UsersService,
   ],
 })
 export class UsersModule {}

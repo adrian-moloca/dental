@@ -33,3 +33,17 @@ export {
   VatTreatment,
   DentalProcedureCategory,
 } from './healthcare-vat.service';
+
+// XSD Validator Service
+export {
+  XsdValidatorService,
+  XsdValidationResult,
+  XsdValidationError,
+} from './xsd-validator.service';
+
+// E-Factura Configuration Service
+export {
+  EFacturaConfigService,
+  CreateEFacturaConfigDto,
+  UpdateEFacturaConfigDto,
+} from './e-factura-config.service';

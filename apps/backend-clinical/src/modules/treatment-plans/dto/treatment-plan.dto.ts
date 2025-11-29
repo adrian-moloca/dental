@@ -143,6 +143,25 @@ export const UpdateTreatmentPlanItemSchema = CreateTreatmentPlanItemSchema.parti
 
 export type UpdateTreatmentPlanItemDto = z.infer<typeof UpdateTreatmentPlanItemSchema>;
 
+export class UpdateTreatmentPlanItemDtoClass implements UpdateTreatmentPlanItemDto {
+  procedureCode?: string;
+  procedureName?: string;
+  teeth?: string[];
+  surfaces?: (typeof VALID_SURFACES)[number][];
+  quantity?: number;
+  unitPriceCents?: number;
+  discountCents?: number;
+  discountPercent?: number;
+  taxCents?: number;
+  providerId?: string;
+  providerName?: string;
+  materials?: MaterialRequirementDto[];
+  estimatedDurationMinutes?: number;
+  notes?: string;
+  sortOrder?: number;
+  status?: 'planned' | 'scheduled' | 'completed' | 'cancelled';
+}
+
 // ============================================================================
 // TREATMENT PHASE SCHEMAS
 // ============================================================================
@@ -558,3 +577,162 @@ export const PaginatedTreatmentPlansSchema = z.object({
 });
 
 export type PaginatedTreatmentPlansDto = z.infer<typeof PaginatedTreatmentPlansSchema>;
+
+// ============================================================================
+// DECLINE TREATMENT PLAN SCHEMA
+// ============================================================================
+
+/**
+ * Schema for declining a treatment plan
+ */
+export const DeclineTreatmentPlanSchema = z.object({
+  /** Reason for declining (required for tracking) */
+  reason: z.string().min(1, 'Decline reason is required').max(1000),
+  /** Additional feedback from patient */
+  feedback: z.string().max(2000).optional(),
+  /** Whether patient is interested in an alternative plan */
+  requestAlternative: z.boolean().default(false),
+  /** Specific concerns to address in alternative */
+  concerns: z.array(z.string().max(500)).default([]),
+});
+
+export type DeclineTreatmentPlanDto = z.infer<typeof DeclineTreatmentPlanSchema>;
+
+export class DeclineTreatmentPlanDtoClass implements DeclineTreatmentPlanDto {
+  reason!: string;
+  feedback?: string;
+  requestAlternative!: boolean;
+  concerns!: string[];
+}
+
+// ============================================================================
+// ADD PHASE SCHEMA
+// ============================================================================
+
+/**
+ * Schema for adding a new phase to a treatment plan
+ */
+export const AddPhaseSchema = CreateTreatmentPhaseSchema;
+
+export type AddPhaseDto = z.infer<typeof AddPhaseSchema>;
+
+export class AddPhaseDtoClass implements AddPhaseDto {
+  phaseNumber!: number;
+  name!: string;
+  description?: string;
+  sequenceRequired!: boolean;
+  items!: CreateTreatmentPlanItemDto[];
+  sortOrder!: number;
+}
+
+// ============================================================================
+// ADD ITEM TO PHASE SCHEMA
+// ============================================================================
+
+/**
+ * Schema for adding a new item to a phase
+ */
+export const AddItemToPhaseSchema = CreateTreatmentPlanItemSchema;
+
+export type AddItemToPhaseDto = z.infer<typeof AddItemToPhaseSchema>;
+
+export class AddItemToPhaseDtoClass implements AddItemToPhaseDto {
+  procedureCode!: string;
+  procedureName!: string;
+  teeth!: string[];
+  surfaces!: (typeof VALID_SURFACES)[number][];
+  quantity!: number;
+  unitPriceCents!: number;
+  discountCents!: number;
+  discountPercent!: number;
+  taxCents!: number;
+  providerId?: string;
+  providerName?: string;
+  materials!: MaterialRequirementDto[];
+  estimatedDurationMinutes?: number;
+  notes?: string;
+  sortOrder!: number;
+}
+
+// ============================================================================
+// SCHEDULE ITEM SCHEMA
+// ============================================================================
+
+/**
+ * Schema for scheduling a treatment item as an appointment
+ */
+export const ScheduleItemSchema = z.object({
+  /** Appointment ID to link (if already created) */
+  appointmentId: uuidSchema.optional(),
+  /** Proposed date/time if creating new appointment */
+  proposedDateTime: z.coerce.date().optional(),
+  /** Duration in minutes */
+  durationMinutes: z.number().int().positive().optional(),
+  /** Provider to schedule with */
+  providerId: uuidSchema.optional(),
+  /** Chair/room ID */
+  chairId: uuidSchema.optional(),
+  /** Notes for scheduling */
+  notes: z.string().max(500).optional(),
+});
+
+export type ScheduleItemDto = z.infer<typeof ScheduleItemSchema>;
+
+export class ScheduleItemDtoClass implements ScheduleItemDto {
+  appointmentId?: string;
+  proposedDateTime?: Date;
+  durationMinutes?: number;
+  providerId?: string;
+  chairId?: string;
+  notes?: string;
+}
+
+// ============================================================================
+// REVISE TREATMENT PLAN SCHEMA
+// ============================================================================
+
+/**
+ * Schema for creating a revision of an existing treatment plan
+ */
+export const ReviseTreatmentPlanSchema = z.object({
+  /** Reason for revision */
+  reason: z.string().min(1, 'Revision reason is required').max(1000),
+  /** Updated phases (optional - will copy from original if not provided) */
+  phases: z.array(CreateTreatmentPhaseSchema).optional(),
+  /** Updated alternatives */
+  alternatives: z.array(CreateTreatmentAlternativeSchema).optional(),
+  /** Updated financial overrides */
+  financialOverrides: FinancialOverrideSchema.optional(),
+  /** Additional notes */
+  notes: z.string().max(2000).optional(),
+});
+
+export type ReviseTreatmentPlanDto = z.infer<typeof ReviseTreatmentPlanSchema>;
+
+export class ReviseTreatmentPlanDtoClass implements ReviseTreatmentPlanDto {
+  reason!: string;
+  phases?: CreateTreatmentPhaseDto[];
+  alternatives?: CreateTreatmentAlternativeDto[];
+  financialOverrides?: FinancialOverrideDto;
+  notes?: string;
+}
+
+// ============================================================================
+// ADD ALTERNATIVE SCHEMA
+// ============================================================================
+
+/**
+ * Schema for adding an alternative to a treatment plan
+ */
+export const AddAlternativeSchema = CreateTreatmentAlternativeSchema;
+
+export type AddAlternativeDto = z.infer<typeof AddAlternativeSchema>;
+
+export class AddAlternativeDtoClass implements AddAlternativeDto {
+  name!: string;
+  description?: string;
+  phases!: CreateTreatmentPhaseDto[];
+  advantages!: string[];
+  disadvantages!: string[];
+  isRecommended!: boolean;
+}

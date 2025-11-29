@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Consimțământ Informat General</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DejaVu Sans', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #000;
+      padding: 20mm;
+    }
+
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #333;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+
+    .clinic-logo {
+      max-width: 150px;
+      max-height: 60px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 16pt;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    h2 {
+      font-size: 13pt;
+      font-weight: bold;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .patient-info {
+      background-color: #f5f5f5;
+      padding: 15px;
+      margin: 20px 0;
+      border-left: 4px solid #2196f3;
+    }
+
+    .patient-info p {
+      margin: 5px 0;
+    }
+
+    .section {
+      margin-bottom: 20px;
+    }
+
+    .consent-item {
+      margin: 15px 0;
+      padding: 10px;
+      background-color: #fafafa;
+      border-left: 3px solid #4caf50;
+    }
+
+    .consent-item strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #333;
+    }
+
+    .checkbox-list {
+      margin: 10px 0 10px 20px;
+    }
+
+    .checkbox-item {
+      margin: 8px 0;
+      display: flex;
+      align-items: flex-start;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      margin-right: 10px;
+      margin-top: 4px;
+      min-width: 16px;
+    }
+
+    .warning-box {
+      background-color: #fff3cd;
+      border: 2px solid #ffc107;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+
+    .warning-box strong {
+      color: #856404;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .info-box {
+      background-color: #e3f2fd;
+      border: 2px solid #2196f3;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+
+    .signature-section {
+      margin-top: 40px;
+      page-break-inside: avoid;
+    }
+
+    .signature-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    .signature-box {
+      width: 45%;
+      text-align: center;
+    }
+
+    .signature-line {
+      border-top: 2px solid #000;
+      margin-top: 40px;
+      padding-top: 8px;
+      font-size: 10pt;
+      font-weight: bold;
+    }
+
+    .signature-date {
+      font-size: 9pt;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .footer {
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #ccc;
+      font-size: 8pt;
+      color: #888;
+      text-align: center;
+    }
+
+    ul {
+      margin-left: 25px;
+      margin-top: 10px;
+    }
+
+    ul li {
+      margin: 5px 0;
+    }
+
+    @media print {
+      body {
+        padding: 10mm;
+      }
+
+      .page-break {
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    {{#clinicLogo}}
+    <img src="{{clinicLogo}}" alt="Logo Clinică" class="clinic-logo">
+    {{/clinicLogo}}
+    <h1>CONSIMȚĂMÂNT INFORMAT GENERAL</h1>
+    <h1>PENTRU TRATAMENT STOMATOLOGIC</h1>
+    <p style="margin-top: 10px; font-size: 10pt;">
+      <strong>{{clinicName}}</strong><br>
+      CUI: {{clinicCUI}} | Adresa: {{clinicAddress}}<br>
+      Tel: {{clinicPhone}} | Email: {{clinicEmail}}
+    </p>
+  </div>
+
+  <!-- Patient Information -->
+  <div class="patient-info">
+    <p><strong>Pacient:</strong> {{patientName}}</p>
+    <p><strong>CNP:</strong> {{cnp}}</p>
+    <p><strong>Data Nașterii:</strong> {{dateOfBirth}}</p>
+    <p><strong>Data Emiterii:</strong> {{issueDate}}</p>
+    <p><strong>Medic Stomatolog:</strong> {{providerName}}</p>
+  </div>
+
+  <!-- Introduction -->
+  <div class="section">
+    <p style="text-align: justify;">
+      Subsemnatul(a), <strong>{{patientName}}</strong>, CNP <strong>{{cnp}}</strong>,
+      declar că am fost informat(ă) complet și am înțeles următoarele aspecte legate de
+      tratamentul stomatologic propus:
+    </p>
+  </div>
+
+  <!-- Informed Consent Items -->
+  <h2>1. DIAGNOSTIC ȘI STAREA ACTUALĂ</h2>
+  <div class="consent-item">
+    <strong>Am fost informat(ă) despre:</strong>
+    <div class="checkbox-list">
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Diagnosticul stomatologic actual și gravitatea afecțiunii</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Necesitatea și urgența tratamentului propus</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Evoluția probabilă a afecțiunii în absența tratamentului</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>2. TRATAMENTUL PROPUS ȘI ALTERNATIVE</h2>
+  <div class="consent-item">
+    <strong>Am primit explicații detaliate despre:</strong>
+    <div class="checkbox-list">
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Natura și scopul tratamentului recomandat</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Procedurile care vor fi efectuate și durata estimată</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Alternativele de tratament disponibile și comparația beneficii/riscuri</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Consecințele refuzului sau amânării tratamentului</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Am avut posibilitatea de a solicita o a doua opinie medicală</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>3. RISCURI ȘI COMPLICAȚII POSIBILE</h2>
+  <div class="section">
+    <p style="text-align: justify; margin-bottom: 10px;">
+      Înțeleg că orice procedură medicală implică riscuri și posibile complicații, inclusiv dar
+      fără a se limita la:
+    </p>
+
+    <ul>
+      <li><strong>Durere și disconfort</strong> post-operator, care pot persista câteva zile</li>
+      <li><strong>Sângerare</strong> în timpul sau după procedură</li>
+      <li><strong>Umflături și vânătăi</strong> în zona tratată</li>
+      <li><strong>Infecții</strong> (deși rare când se respectă instrucțiunile post-operatorii)</li>
+      <li><strong>Reacții alergice</strong> la anestezice locale, medicamente sau materiale dentare</li>
+      <li><strong>Leziuni ale nervilor</strong> care pot cauza amorțeală temporară sau, în cazuri rare, permanentă</li>
+      <li><strong>Probleme cu articulația temporo-mandibulară (ATM)</strong></li>
+      <li><strong>Fracturi dentare</strong> sau ale restaurărilor existente în timpul tratamentului</li>
+      <li><strong>Necesitatea unor tratamente suplimentare</strong> neprevăzute inițial</li>
+      <li><strong>Eșecul tratamentului</strong> care ar putea necesita proceduri alternative</li>
+    </ul>
+
+    <div class="warning-box">
+      <strong>ATENȚIE - Situații de Urgență:</strong>
+      <p>Înțeleg că trebuie să contactez imediat cabinetul în cazul în care prezint:
+      durere severă necontrolată de analgezice, sângerare abundentă, febră peste 38°C,
+      umflături importante sau dificultăți de respirație/înghițire.</p>
+    </div>
+  </div>
+
+  <h2>4. ANESTEZIE LOCALĂ</h2>
+  <div class="consent-item">
+    <strong>Îmi exprim consimțământul pentru administrarea anesteziei locale și înțeleg că:</strong>
+    <div class="checkbox-list">
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Pot apărea reacții locale (durere la injectare, amorțeală prelungită)</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Există riscul rar de reacții alergice la anestezice</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Am informat medicul despre toate alergiile și afecțiunile medicale cunoscute</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page Break -->
+  <div class="page-break"></div>
+
+  <h2>5. PROGNOSTIC ȘI REZULTATE AȘTEPTATE</h2>
+  <div class="section">
+    <p style="text-align: justify; margin-bottom: 10px;">
+      Am fost informat(ă) despre rezultatele așteptate ale tratamentului, însă înțeleg că:
+    </p>
+    <ul>
+      <li>Medicina stomatologică nu este o știință exactă și <strong>nu există garanții absolute</strong> privind rezultatele</li>
+      <li>Rezultatele pot varia de la pacient la pacient în funcție de多 factori individuali</li>
+      <li>Succesul pe termen lung depinde și de <strong>respectarea instrucțiunilor post-operatorii</strong></li>
+      <li>Menținerea unei <strong>igiene orale corespunzătoare</strong> este esențială</li>
+      <li>Sunt necesare <strong>controale periodice</strong> conform recomandărilor medicului</li>
+    </ul>
+  </div>
+
+  <h2>6. COSTURI ESTIMATE</h2>
+  <div class="consent-item">
+    <div class="checkbox-list">
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Am primit un plan de tratament detaliat cu costurile estimate</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Înțeleg că pot apărea costuri suplimentare pentru proceduri neprevăzute</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox" checked disabled>
+        <span>Am fost informat(ă) despre opțiunile de plată și eventualele planuri în rate</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>7. CONSIMȚĂMÂNT GDPR - PRELUCRARE DATE PERSONALE</h2>
+  <div class="info-box">
+    <p style="margin-bottom: 10px;">
+      <strong>Conform GDPR (Regulamentul UE 2016/679)</strong>, vă informăm că datele dumneavoastră
+      vor fi prelucrate strict pentru:
+    </p>
+    <ul style="margin-left: 20px;">
+      <li>Acordarea serviciilor medicale stomatologice</li>
+      <li>Întocmirea dosarului medical (păstrat 10 ani conform Legii 95/2006)</li>
+      <li>Comunicări legate de tratament (programări, rezultate, urmărire post-tratament)</li>
+      <li>Îndeplinirea obligațiilor legale (fiscale, statistice)</li>
+    </ul>
+    <p style="margin-top: 10px;">
+      Aveți dreptul de acces, rectificare, ștergere (cu excepția datelor cu obligativitate legală),
+      opoziție și portabilitate. Pentru exercitarea drepturilor, contactați {{clinicEmail}}.
+    </p>
+  </div>
+
+  <div class="consent-item">
+    <div class="checkbox-list">
+      <div class="checkbox-item">
+        <input type="checkbox">
+        <span><strong>ACORD</strong> pentru prelucrarea datelor personale în scopurile menționate mai sus</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox">
+        <span><strong>ACORD</strong> pentru comunicări prin SMS/Email legate de programări și tratament</span>
+      </div>
+      <div class="checkbox-item">
+        <input type="checkbox">
+        <span>ACORD (opțional) pentru comunicări de marketing (promoții, oferte speciale)</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>8. DREPTURI ȘI RESPONSABILITĂȚI</h2>
+  <div class="section">
+    <p style="margin-bottom: 10px;"><strong>Am fost informat(ă) că am următoarele drepturi:</strong></p>
+    <ul>
+      <li><strong>Dreptul de a refuza</strong> sau de a întrerupe tratamentul în orice moment</li>
+      <li><strong>Dreptul de a pune întrebări</strong> și de a primi răspunsuri clare</li>
+      <li><strong>Dreptul de a consulta dosarul medical</strong> și de a primi copii</li>
+      <li><strong>Dreptul la confidențialitate</strong> și protecția datelor medicale</li>
+      <li><strong>Dreptul de a solicita o a doua opinie</strong> de la alt specialist</li>
+    </ul>
+
+    <p style="margin-top: 15px; margin-bottom: 10px;"><strong>Îmi asum următoarele responsabilități:</strong></p>
+    <ul>
+      <li>Să ofer informații <strong>complete și corecte</strong> despre istoricul meu medical</li>
+      <li>Să respect <strong>instrucțiunile post-operatorii</strong> și tratamentul prescris</li>
+      <li>Să particip la <strong>controalele programate</strong></li>
+      <li>Să <strong>informez medicul</strong> despre orice schimbare în starea de sănătate</li>
+      <li>Să plătesc serviciile medicale conform planului de tratament acceptat</li>
+    </ul>
+  </div>
+
+  <!-- Final Declaration -->
+  <h2>9. DECLARAȚIE FINALĂ</h2>
+  <div class="section">
+    <p style="text-align: justify; margin-bottom: 15px;">
+      <strong>Declar că:</strong>
+    </p>
+    <ul>
+      <li>Am citit și am înțeles toate informațiile din acest document</li>
+      <li>Am avut posibilitatea de a pune întrebări și am primit răspunsuri satisfăcătoare</li>
+      <li>Sunt conștient(ă) de riscurile și beneficiile tratamentului propus</li>
+      <li>Îmi exprim <strong>consimțământul liber și informat</strong> pentru tratamentul stomatologic</li>
+      <li>Înțeleg că pot retrage acest consimțământ în orice moment</li>
+    </ul>
+
+    <div class="warning-box" style="margin-top: 20px;">
+      <strong>IMPORTANT:</strong>
+      <p>Acest consimțământ general se aplică pentru consultații de rutină și proceduri non-invazive.
+      Pentru proceduri chirurgicale sau tratamente complexe, va fi necesar un consimțământ specific suplimentar.</p>
+    </div>
+  </div>
+
+  <!-- Signatures -->
+  <div class="signature-section">
+    <div class="signature-row">
+      <div class="signature-box">
+        <div class="signature-line">
+          Semnătura Pacientului
+        </div>
+        <div class="signature-date">
+          Nume: {{patientName}}<br>
+          Data: {{signatureDate}}
+        </div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-line">
+          Semnătura și Ștampila Medicului
+        </div>
+        <div class="signature-date">
+          Dr. {{providerName}}<br>
+          Data: {{signatureDate}}
+        </div>
+      </div>
+    </div>
+
+    {{#legalGuardian}}
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px dashed #ccc;">
+      <p style="font-size: 10pt; margin-bottom: 20px;">
+        <strong>Pentru pacienți minori (sub 18 ani) sau persoane aflate sub tutelă:</strong>
+      </p>
+      <div class="signature-row">
+        <div class="signature-box">
+          <div style="margin-bottom: 10px; text-align: left;">
+            <p><strong>Părinte/Tutore Legal:</strong> {{legalGuardianName}}</p>
+            <p><strong>CNP:</strong> {{legalGuardianCNP}}</p>
+            <p><strong>Relație:</strong> {{legalGuardianRelation}}</p>
+          </div>
+          <div class="signature-line">
+            Semnătura Părinte/Tutore
+          </div>
+        </div>
+        <div class="signature-box">
+          <div style="margin-bottom: 10px; text-align: left;">
+            <p><strong>Martor:</strong> ___________________</p>
+            <p><strong>CNP:</strong> ___________________</p>
+          </div>
+          <div class="signature-line">
+            Semnătura Martor
+          </div>
+        </div>
+      </div>
+    </div>
+    {{/legalGuardian}}
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p><strong>{{clinicName}}</strong></p>
+    <p>Document generat electronic | Data: {{generationDate}}</p>
+    <p>Acest document face parte integrantă din dosarul medical al pacientului și va fi păstrat conform legislației în vigoare (10 ani).</p>
+  </div>
+</body>
+</html>

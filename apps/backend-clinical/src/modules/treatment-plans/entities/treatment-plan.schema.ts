@@ -231,6 +231,12 @@ export class TreatmentPlanItem {
   appointmentId?: string;
 
   /**
+   * Scheduled date/time for this item
+   */
+  @Prop({ type: Date })
+  scheduledFor?: Date;
+
+  /**
    * Reference to completed procedure record (if completed)
    */
   @Prop({ type: String })
@@ -781,6 +787,24 @@ export class TreatmentPlan {
    */
   @Prop({ type: Number, default: 1 })
   schemaVersion!: number;
+
+  /**
+   * Reference to previous version of this plan (for revisions)
+   */
+  @Prop({ type: String })
+  previousVersionId?: string;
+
+  /**
+   * Revision number (1 for first revision, incremented for each subsequent revision)
+   */
+  @Prop({ type: Number })
+  revisionNumber?: number;
+
+  /**
+   * Reason for creating this revision
+   */
+  @Prop({ type: String, maxlength: 1000 })
+  revisionReason?: string;
 
   /**
    * Tags for categorization

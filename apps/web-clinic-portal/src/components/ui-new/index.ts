@@ -75,3 +75,42 @@ export type { ErrorStateProps } from './ErrorState';
 
 export { FloatingActionButton } from './FloatingActionButton';
 export type { FloatingActionButtonProps } from './FloatingActionButton';
+
+export { Select, SearchableSelect, MultiSelect } from './Select';
+export type {
+  SelectProps,
+  SelectOption,
+  SearchableSelectProps,
+  MultiSelectProps,
+} from './Select';
+
+export {
+  FilterDropdown,
+  FilterPanel,
+  FilterField,
+  QuickFilters,
+} from './FilterDropdown';
+export type {
+  FilterDropdownProps,
+  FilterOption,
+  FilterPanelProps,
+  FilterFieldProps,
+  QuickFilter,
+  QuickFiltersProps,
+} from './FilterDropdown';
+
+export {
+  ViewToggle,
+  SortDropdown,
+  ExportDropdown,
+  PageHeaderActions,
+} from './ViewToggle';
+export type {
+  ViewMode,
+  ViewToggleProps,
+  SortOption,
+  SortDropdownProps,
+  ExportOption,
+  ExportDropdownProps,
+  PageHeaderActionsProps,
+} from './ViewToggle';

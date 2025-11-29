@@ -7,3 +7,5 @@ export * from './create-patient.dto';
 export * from './update-patient.dto';
 export * from './search-patient.dto';
 export * from './merge-patients.dto';
+export * from './medical-alerts.dto';
+export * from './insurance.dto';

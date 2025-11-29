@@ -15,3 +15,6 @@ export { ConfirmationStatsWidget } from './ConfirmationStatsWidget';
 export { CompleteAppointmentModal } from './CompleteAppointmentModal';
 export { CompleteAppointmentWithConsumptionModal } from './CompleteAppointmentWithConsumptionModal';
 export type { SelectedProcedure } from './CompleteAppointmentWithConsumptionModal';
+export { QuickBookingModal } from './QuickBookingModal';
+export { RescheduleModal } from './RescheduleModal';
+export { CancelModal } from './CancelModal';

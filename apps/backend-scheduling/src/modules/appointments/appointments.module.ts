@@ -10,8 +10,10 @@ import type { RedisOptions } from 'ioredis';
 import { Appointment, AppointmentSchema } from './entities/appointment.schema';
 import { AppointmentsRepository } from './repositories/appointments.repository';
 import { AppointmentsService } from './services/appointments.service';
+import { StatusTransitionService } from './services/status-transition.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { AppointmentsController } from './controllers/appointments.controller';
+import { StatusTransitionController } from './controllers/status-transition.controller';
 import { AvailabilityController } from './controllers/availability.controller';
 import { WaitlistController } from './controllers/waitlist.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -59,16 +61,22 @@ import { ProcedureCompletedHandler } from './handlers/procedure-completed.handle
       inject: [ConfigService],
     }),
   ],
-  controllers: [AppointmentsController, AvailabilityController, WaitlistController],
+  controllers: [
+    AppointmentsController,
+    StatusTransitionController,
+    AvailabilityController,
+    WaitlistController,
+  ],
   providers: [
     AppointmentsRepository,
     AppointmentsService,
+    StatusTransitionService,
     AvailabilityService,
     JwtStrategy,
     PermissionsGuard,
     TenantIsolationGuard,
     ProcedureCompletedHandler,
   ],
-  exports: [AppointmentsService, AppointmentsRepository],
+  exports: [AppointmentsService, StatusTransitionService, AppointmentsRepository],
 })
 export class AppointmentsModule {}

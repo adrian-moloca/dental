@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Plan de Tratament</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 10pt; padding: 15mm; }
+    .header { text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; padding-bottom: 10px; }
+    h1 { font-size: 15pt; margin-bottom: 5px; }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    table th { background: #333; color: white; padding: 8px; text-align: left; }
+    table td { padding: 8px; border: 1px solid #ddd; }
+    .total-row { background: #f0f0f0; font-weight: bold; }
+    .financial-summary { background: #e3f2fd; padding: 15px; margin: 20px 0; border-left: 4px solid #2196f3; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>PLAN DE TRATAMENT STOMATOLOGIC</h1>
+    <p><strong>{{clinicName}}</strong> | CUI: {{clinicCUI}}<br>{{clinicAddress}} | Tel: {{clinicPhone}}</p>
+  </div>
+
+  <table style="margin-bottom: 20px;">
+    <tr><td style="width: 50%;"><strong>Pacient:</strong> {{patientName}}</td><td><strong>Plan Nr.:</strong> {{planNumber}}</td></tr>
+    <tr><td><strong>CNP:</strong> {{cnp}}</td><td><strong>Data:</strong> {{issueDate}}</td></tr>
+    <tr><td><strong>Medic:</strong> Dr. {{providerName}}</td><td><strong>Valabilitate:</strong> {{validityPeriod}} zile</td></tr>
+  </table>
+
+  <h2 style="border-bottom: 2px solid #333; padding-bottom: 5px;">DIAGNOSTIC SUMAR</h2>
+  <div style="padding: 10px; background: #f9f9f9; margin-bottom: 20px;">{{diagnosticSummary}}</div>
+
+  <h2 style="border-bottom: 2px solid #333; padding-bottom: 5px;">FAZE DE TRATAMENT</h2>
+
+  {{#phases}}
+  <h3 style="background: #f0f0f0; padding: 8px; margin-top: 15px;">{{phaseName}}</h3>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 5%;">Nr.</th>
+        <th style="width: 35%;">Descriere Procedură</th>
+        <th style="width: 10%;">Dinte</th>
+        <th style="width: 10%;">Timp Est.</th>
+        <th style="width: 13%;">Cost Unitar</th>
+        <th style="width: 7%;">Cant.</th>
+        <th style="width: 10%;">Discount</th>
+        <th style="width: 13%;">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#items}}
+      <tr>
+        <td>{{itemNumber}}</td>
+        <td>{{procedureName}}<br><small>{{procedureCode}}</small></td>
+        <td>{{tooth}}</td>
+        <td>{{estimatedTime}}</td>
+        <td>{{unitPrice}} RON</td>
+        <td>{{quantity}}</td>
+        <td>{{discount}}%</td>
+        <td><strong>{{total}} RON</strong></td>
+      </tr>
+      {{/items}}
+      <tr class="total-row">
+        <td colspan="7" style="text-align: right;">Subtotal Fază:</td>
+        <td><strong>{{phaseSubtotal}} RON</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  {{/phases}}
+
+  <div class="financial-summary">
+    <h2 style="margin-top: 0;">SUMAR FINANCIAR</h2>
+    <table>
+      <tr><td style="width: 70%;"><strong>Subtotal Proceduri:</strong></td><td style="text-align: right;">{{subtotal}} RON</td></tr>
+      <tr><td><strong>Discount Total:</strong></td><td style="text-align: right; color: green;">-{{discountTotal}} RON ({{discountPercent}}%)</td></tr>
+      <tr><td><strong>TVA (19%):</strong></td><td style="text-align: right;">{{taxTotal}} RON</td></tr>
+      <tr style="background: #fff; font-size: 12pt;"><td><strong>TOTAL DE PLATĂ:</strong></td><td style="text-align: right;"><strong>{{grandTotal}} RON</strong></td></tr>
+    </table>
+
+    {{#paymentPlan}}
+    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc;">
+      <p><strong>Plan de plată în rate:</strong></p>
+      <table>
+        <tr><td style="width: 70%;">Avans la începerea tratamentului:</td><td style="text-align: right;"><strong>{{downPayment}} RON</strong></td></tr>
+        <tr><td>Rest de plată ({{installmentCount}} rate lunare x {{installmentAmount}} RON):</td><td style="text-align: right;">{{remainingAmount}} RON</td></tr>
+      </table>
+    </div>
+    {{/paymentPlan}}
+
+    {{#insuranceCoverage}}
+    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; background: #e8f5e9;">
+      <p><strong>Acoperire Asigurare:</strong></p>
+      <table>
+        <tr><td style="width: 70%;">Asigurător: {{insuranceProvider}}</td><td style="text-align: right;">{{insuranceAmount}} RON</td></tr>
+        <tr><td><strong>Rest de plată pacient:</strong></td><td style="text-align: right;"><strong>{{patientResponsibility}} RON</strong></td></tr>
+      </table>
+    </div>
+    {{/insuranceCoverage}}
+  </div>
+
+  <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border: 1px solid #ffc107;">
+    <h3 style="margin-top: 0;">CONDIȚII ȘI TERMENI</h3>
+    <ul style="margin: 10px 0 10px 20px; font-size: 9pt;">
+      <li>Planul de tratament este valabil {{validityPeriod}} zile de la data emiterii</li>
+      <li>Costurile estimate pot varia în funcție de descoperiri clinice neprevăzute</li>
+      <li>Tratamentul se efectuează etapizat, conform programării convenite</li>
+      <li>Plata se efectuează conform graficului stabilit</li>
+      <li>Garanție: {{warrantyTerms}}</li>
+      <li>Anularea tratamentului cu mai puțin de 24h înaintea programării poate atrage taxe de anulare</li>
+    </ul>
+  </div>
+
+  <h2 style="border-bottom: 2px solid #333; padding-bottom: 5px; margin-top: 30px;">ACCEPTARE PLAN DE TRATAMENT</h2>
+  <p>Subsemnatul(a) <strong>{{patientName}}</strong>, CNP <strong>{{cnp}}</strong>, declar că:</p>
+  <ul style="margin-left: 25px;">
+    <li>Am înțeles diagnosticul și tratamentul propus</li>
+    <li>Am fost informat(ă) despre alternative și consecințe</li>
+    <li>Accept costurile și condițiile prezentate</li>
+    <li>Îmi exprim acordul pentru efectuarea tratamentului conform planului</li>
+  </ul>
+
+  <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+    <div style="width: 45%; text-align: center;">
+      <div style="border-top: 2px solid #000; padding-top: 5px; margin-top: 50px;">Semnătura Pacientului<br><small>Data: {{signatureDate}}</small></div>
+    </div>
+    <div style="width: 45%; text-align: center;">
+      <div style="border-top: 2px solid #000; padding-top: 5px; margin-top: 50px;">Semnătura și Ștampila Medicului<br><small>Dr. {{providerName}}<br>Data: {{signatureDate}}</small></div>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 8pt; text-align: center; color: #888;">
+    <p>{{clinicName}} | Plan generat electronic: {{generationDate}}</p>
+  </div>
+</body>
+</html>

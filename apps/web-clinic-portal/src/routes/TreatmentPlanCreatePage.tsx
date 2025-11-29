@@ -27,7 +27,17 @@ import {
   type BreadcrumbItem,
 } from '../components/ui-new';
 import { usePatient, usePatients } from '../hooks/usePatients';
-import { useProcedureCatalog, useCreateTreatmentPlan } from '../hooks/useClinical';
+import {
+  useProcedureCatalog,
+  useCreateTreatmentPlan,
+  usePresentTreatmentPlan,
+} from '../hooks/useClinical';
+import type {
+  CreateTreatmentPlanDto,
+  TreatmentPhaseDto,
+  TreatmentPlanItemDto,
+  TreatmentAlternativeDto,
+} from '../api/clinicalClient';
 import { useDebounce } from '../hooks/useDebounce';
 import OdontogramEditor from '../components/clinical/OdontogramEditor';
 import toast from 'react-hot-toast';
@@ -1325,6 +1335,7 @@ export default function TreatmentPlanCreatePage() {
 
   // Mutations
   const createPlanMutation = useCreateTreatmentPlan();
+  const presentPlanMutation = usePresentTreatmentPlan();
 
   // Calculate teeth in plan
   const _teethInPlan = useMemo(() => {
@@ -1499,76 +1510,144 @@ export default function TreatmentPlanCreatePage() {
     );
   }, []);
 
-  // Save handler
-  const handleSave = useCallback(async (status: 'draft' | 'pending' | 'approved') => {
-    if (!patientId) {
-      toast.error('Selecteaza un pacient');
-      return;
-    }
-
-    if (!planTitle.trim()) {
-      toast.error('Introdu un titlu pentru plan');
-      return;
-    }
-
-    const hasProcedures = phases.some((p) => p.procedures.length > 0);
-    if (!hasProcedures) {
-      toast.error('Adauga cel putin o procedura in plan');
-      return;
-    }
-
-    try {
-      // Transform to API format
-      const planData = {
-        title: planTitle,
-        status,
-        options: [
-          {
-            optionId: generateId(),
-            name: 'Plan Principal',
-            procedures: phases.flatMap((phase) =>
-              phase.procedures.map((proc) => ({
-                code: proc.code,
-                description: proc.name,
-                estimatedCost: proc.total,
-              }))
-            ),
-            totalEstimatedCost: calculateGrandTotal(phases),
-          },
-          ...alternatives.map((alt) => ({
-            optionId: alt.id,
-            name: alt.name,
-            procedures: alt.phases.flatMap((phase) =>
-              phase.procedures.map((proc) => ({
-                code: proc.code,
-                description: proc.name,
-                estimatedCost: proc.total,
-              }))
-            ),
-            totalEstimatedCost: alt.grandTotal,
-          })),
-        ],
-      };
-
-      await createPlanMutation.mutateAsync({
-        patientId,
-        data: planData,
-      });
-
-      toast.success(
-        status === 'draft'
-          ? 'Planul a fost salvat ca ciorna'
-          : status === 'pending'
-          ? 'Planul a fost prezentat pacientului'
-          : 'Planul a fost acceptat de pacient'
+  // Transform local phase to API TreatmentPhaseDto format
+  const transformPhaseToDto = useCallback(
+    (phase: Phase, phaseNumber: number): Omit<TreatmentPhaseDto, 'id' | 'subtotalCents' | 'estimatedDurationMinutes'> => {
+      const items: Omit<TreatmentPlanItemDto, 'id' | 'totalCents'>[] = phase.procedures.map(
+        (proc, idx) => ({
+          procedureCode: proc.code,
+          procedureName: proc.name,
+          teeth: proc.tooth ? [proc.tooth] : [],
+          surfaces: proc.surfaces || [],
+          quantity: proc.quantity || 1,
+          unitPriceCents: Math.round(proc.unitPrice * 100),
+          discountCents: Math.round((proc.discount || 0) * 100),
+          discountPercent: proc.discountPercent || 0,
+          taxCents: 0, // Tax calculated on backend
+          materials: [],
+          estimatedDurationMinutes: proc.duration,
+          notes: proc.notes,
+          status: 'planned' as const,
+          sortOrder: idx,
+        })
       );
 
-      navigate(`/clinical/${patientId}?tab=plans`);
-    } catch (error) {
-      console.error('Error saving plan:', error);
-      toast.error('Eroare la salvarea planului');
-    }
-  }, [patientId, planTitle, phases, alternatives, createPlanMutation, navigate]);
+      return {
+        phaseNumber,
+        name: phase.name,
+        description: phase.description,
+        sequenceRequired: phase.sequenceRequired ?? false,
+        items: items as TreatmentPlanItemDto[],
+        sortOrder: phaseNumber - 1,
+      };
+    },
+    []
+  );
+
+  // Transform alternatives to API format
+  const transformAlternativeToDto = useCallback(
+    (alt: AlternativePlan): Omit<TreatmentAlternativeDto, 'id' | 'totalCents'> => ({
+      name: alt.name,
+      description: alt.description,
+      phases: alt.phases.map((phase, idx) => transformPhaseToDto(phase, idx + 1)) as TreatmentPhaseDto[],
+      advantages: alt.advantages || [],
+      disadvantages: alt.disadvantages || [],
+      isRecommended: alt.isRecommended,
+    }),
+    [transformPhaseToDto]
+  );
+
+  // Save handler
+  const handleSave = useCallback(
+    async (action: 'draft' | 'present' | 'accept') => {
+      if (!patientId) {
+        toast.error('Selecteaza un pacient');
+        return;
+      }
+
+      if (!planTitle.trim()) {
+        toast.error('Introdu un titlu pentru plan');
+        return;
+      }
+
+      const hasProcedures = phases.some((p) => p.procedures.length > 0);
+      if (!hasProcedures) {
+        toast.error('Adauga cel putin o procedura in plan');
+        return;
+      }
+
+      try {
+        // Transform to backend API format
+        const planData: CreateTreatmentPlanDto = {
+          title: planTitle,
+          description: planNotes || undefined,
+          phases: phases.map((phase, idx) => transformPhaseToDto(phase, idx + 1)) as TreatmentPhaseDto[],
+          alternatives: alternatives.map(transformAlternativeToDto) as TreatmentAlternativeDto[],
+          financialOverrides: {
+            insuranceCoverageCents: insuranceCoverage
+              ? Math.round(insuranceCoverage * 100)
+              : undefined,
+            currency: 'RON',
+          },
+          priority: 'normal',
+          tags: [],
+        };
+
+        // Create the plan
+        const result = await createPlanMutation.mutateAsync({
+          patientId,
+          data: planData,
+        });
+
+        // If action is 'present', present the plan after creation
+        if (action === 'present' && result.data?.id) {
+          await presentPlanMutation.mutateAsync({
+            patientId,
+            planId: result.data.id,
+            data: {},
+          });
+        }
+
+        // If action is 'accept', accept the plan after creation and presentation
+        // Note: In a real flow, the patient would sign - this is for demo/quick accept
+        if (action === 'accept' && result.data?.id) {
+          await presentPlanMutation.mutateAsync({
+            patientId,
+            planId: result.data.id,
+            data: {},
+          });
+          // In a real flow, acceptance would be done separately with patient signature
+          // For now, we just save as presented
+        }
+
+        toast.success(
+          action === 'draft'
+            ? 'Planul a fost salvat ca ciorna'
+            : action === 'present'
+              ? 'Planul a fost prezentat pacientului'
+              : 'Planul a fost salvat si prezentat'
+        );
+
+        navigate(`/clinical/${patientId}?tab=plans`);
+      } catch (error) {
+        console.error('Error saving plan:', error);
+        toast.error('Eroare la salvarea planului');
+      }
+    },
+    [
+      patientId,
+      planTitle,
+      planNotes,
+      phases,
+      alternatives,
+      insuranceCoverage,
+      createPlanMutation,
+      presentPlanMutation,
+      navigate,
+      transformPhaseToDto,
+      transformAlternativeToDto,
+    ]
+  );
 
   // Grand total
   const grandTotal = calculateGrandTotal(phases);
@@ -1747,7 +1826,7 @@ export default function TreatmentPlanCreatePage() {
                   <Button
                     variant="outline-secondary"
                     onClick={() => handleSave('draft')}
-                    loading={createPlanMutation.isPending}
+                    loading={createPlanMutation.isPending || presentPlanMutation.isPending}
                   >
                     <i className="ti ti-device-floppy me-1"></i>
                     Salveaza Ciorna
@@ -1817,10 +1896,10 @@ export default function TreatmentPlanCreatePage() {
             <Button
               variant="info"
               onClick={() => {
-                handleSave('pending');
+                handleSave('present');
                 setShowPresentModal(false);
               }}
-              loading={createPlanMutation.isPending}
+              loading={createPlanMutation.isPending || presentPlanMutation.isPending}
             >
               <i className="ti ti-send me-1"></i>
               Prezinta
@@ -1873,10 +1952,10 @@ export default function TreatmentPlanCreatePage() {
             <Button
               variant="success"
               onClick={() => {
-                handleSave('approved');
+                handleSave('accept');
                 setShowAcceptModal(false);
               }}
-              loading={createPlanMutation.isPending}
+              loading={createPlanMutation.isPending || presentPlanMutation.isPending}
             >
               <i className="ti ti-check me-1"></i>
               Confirma Acceptare

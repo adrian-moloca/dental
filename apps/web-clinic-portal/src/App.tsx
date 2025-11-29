@@ -22,6 +22,7 @@ import SelectOrganizationPage from './routes/SelectOrganizationPage';
 import PatientsListPage from './routes/PatientsListPage';
 import PatientDetailsPage from './routes/PatientDetailsPage';
 import CreatePatientPage from './routes/CreatePatientPage';
+import PatientEditPage from './routes/PatientEditPage';
 import CreateAppointmentPage from './routes/CreateAppointmentPage';
 import AppointmentsListPage from './routes/AppointmentsListPage';
 import ReceptionQueuePage from './routes/ReceptionQueuePage';
@@ -129,6 +130,14 @@ function AppContent() {
                 element={
                   <ProtectedRoute>
                     <PatientDetailsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/patients/:id/edit"
+                element={
+                  <ProtectedRoute>
+                    <PatientEditPage />
                   </ProtectedRoute>
                 }
               />

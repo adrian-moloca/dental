@@ -1,0 +1,28 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": "../",
+  "testRegex": ".*\\.spec\\.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": "test/tsconfig.spec.json"
+      }
+    ]
+  },
+  "collectCoverageFrom": [
+    "src/**/*.(t|j)s",
+    "!src/main.ts"
+  ],
+  "coverageDirectory": "./coverage",
+  "testEnvironment": "node",
+  "roots": ["<rootDir>/test/unit/", "<rootDir>/src/"],
+  "moduleNameMapper": {
+    "^@dentalos/shared-domain$": "<rootDir>/../../packages/shared-domain/src",
+    "^@dentalos/shared-errors$": "<rootDir>/../../packages/shared-errors/src",
+    "^@dentalos/shared-validation$": "<rootDir>/../../packages/shared-validation/src",
+    "^@dentalos/shared-auth$": "<rootDir>/../../packages/shared-auth/src",
+    "^@dentalos/shared-types$": "<rootDir>/../../packages/shared-types/src",
+    "^@dentalos/shared-events$": "<rootDir>/../../packages/shared-events/src"
+  }
+}

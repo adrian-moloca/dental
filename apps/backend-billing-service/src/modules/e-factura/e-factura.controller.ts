@@ -22,6 +22,11 @@ import {
 
 import { EFacturaService } from './e-factura.service';
 import {
+  EFacturaConfigService,
+  CreateEFacturaConfigDto,
+  UpdateEFacturaConfigDto,
+} from './services/e-factura-config.service';
+import {
   SubmitInvoiceRequestDto,
   RetrySubmissionRequestDto,
   CancelSubmissionRequestDto,
@@ -36,6 +41,7 @@ import {
   EFacturaSubmission,
   EFacturaSubmissionStatus,
 } from './entities/e-factura-submission.schema';
+import { EFacturaConfig, EFacturaConfigStatus } from './entities/e-factura-config.schema';
 
 // Placeholder decorators - replace with actual auth decorators from shared-auth package
 // import { RequiresPermission } from '@dentalos/shared-auth';
@@ -82,7 +88,10 @@ function getTenantContext(req: any): TenantContext {
 export class EFacturaController {
   private readonly logger = new Logger(EFacturaController.name);
 
-  constructor(private readonly eFacturaService: EFacturaService) {}
+  constructor(
+    private readonly eFacturaService: EFacturaService,
+    private readonly configService: EFacturaConfigService,
+  ) {}
 
   /**
    * Submit an invoice to ANAF E-Factura system
@@ -456,6 +465,237 @@ export class EFacturaController {
     };
   }
 
+  // ============================================
+  // Configuration Endpoints
+  // ============================================
+
+  /**
+   * Create E-Factura configuration
+   */
+  @Post('e-factura/config')
+  @ApiOperation({
+    summary: 'Create E-Factura configuration',
+    description:
+      'Creates the E-Factura configuration for the current organization. ' +
+      'This includes company information, OAuth settings, and auto-submit preferences.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Configuration created successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid configuration data' })
+  @ApiResponse({ status: 409, description: 'Configuration already exists' })
+  async createConfig(
+    @Body() dto: CreateEFacturaConfigDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<EFacturaConfigResponseDto> {
+    const context = getTenantContext((res as any).req);
+
+    this.logger.log(`API: Creating E-Factura config for CUI ${dto.cui}`);
+
+    const config = await this.configService.create(dto, context);
+
+    res.status(HttpStatus.CREATED);
+    return this.mapConfigToResponse(config);
+  }
+
+  /**
+   * Get E-Factura configuration
+   */
+  @Get('e-factura/config')
+  @ApiOperation({
+    summary: 'Get E-Factura configuration',
+    description: 'Retrieves the E-Factura configuration for the current organization or clinic.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Configuration details',
+  })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
+  async getConfig(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<EFacturaConfigResponseDto | null> {
+    const context = getTenantContext((res as any).req);
+
+    const config = await this.configService.findOne(context);
+    if (!config) {
+      return null;
+    }
+    return this.mapConfigToResponse(config);
+  }
+
+  /**
+   * Update E-Factura configuration
+   */
+  @Post('e-factura/config/update')
+  @ApiOperation({
+    summary: 'Update E-Factura configuration',
+    description: 'Updates the E-Factura configuration for the current organization.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Configuration updated successfully',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid configuration data' })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
+  async updateConfig(
+    @Body() dto: UpdateEFacturaConfigDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<EFacturaConfigResponseDto> {
+    const context = getTenantContext((res as any).req);
+
+    this.logger.log(`API: Updating E-Factura config`);
+
+    const config = await this.configService.update(dto, context);
+    return this.mapConfigToResponse(config);
+  }
+
+  /**
+   * Enable E-Factura integration
+   */
+  @Post('e-factura/config/enable')
+  @ApiOperation({
+    summary: 'Enable E-Factura integration',
+    description: 'Enables the E-Factura integration. Requires valid OAuth tokens.',
+  })
+  @ApiResponse({ status: 200, description: 'E-Factura enabled' })
+  @ApiResponse({ status: 400, description: 'Cannot enable - OAuth required' })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
+  async enableEFactura(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ success: boolean; message: string }> {
+    const context = getTenantContext((res as any).req);
+
+    await this.configService.update({ enabled: true }, context);
+
+    return {
+      success: true,
+      message: 'E-Factura integration enabled',
+    };
+  }
+
+  /**
+   * Disable E-Factura integration
+   */
+  @Post('e-factura/config/disable')
+  @ApiOperation({
+    summary: 'Disable E-Factura integration',
+    description:
+      'Disables the E-Factura integration. Existing submissions will continue processing.',
+  })
+  @ApiResponse({ status: 200, description: 'E-Factura disabled' })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
+  async disableEFactura(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ success: boolean; message: string }> {
+    const context = getTenantContext((res as any).req);
+
+    await this.configService.update({ enabled: false }, context);
+
+    return {
+      success: true,
+      message: 'E-Factura integration disabled',
+    };
+  }
+
+  /**
+   * Store OAuth tokens after authorization
+   */
+  @Post('e-factura/config/oauth-callback')
+  @ApiOperation({
+    summary: 'Store OAuth tokens',
+    description:
+      'Stores OAuth tokens after completing the ANAF authorization flow. ' +
+      'This endpoint is typically called after the OAuth callback.',
+  })
+  @ApiResponse({ status: 200, description: 'OAuth tokens stored successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid token data' })
+  async storeOAuthTokens(
+    @Body()
+    dto: {
+      accessToken: string;
+      refreshToken?: string;
+      tokenType: string;
+      expiresIn: number;
+      scope?: string;
+    },
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ success: boolean; message: string; expiresAt: Date }> {
+    const context = getTenantContext((res as any).req);
+    const config = await this.configService.findOneOrFail(context);
+
+    await this.configService.storeOAuthTokens(config.cui, dto, context);
+
+    const expiresAt = new Date(Date.now() + dto.expiresIn * 1000);
+
+    return {
+      success: true,
+      message: 'OAuth tokens stored successfully',
+      expiresAt,
+    };
+  }
+
+  /**
+   * Get OAuth authorization URL
+   */
+  @Get('e-factura/config/oauth-url')
+  @ApiOperation({
+    summary: 'Get OAuth authorization URL',
+    description: 'Returns the URL to redirect users for ANAF OAuth authorization.',
+  })
+  @ApiResponse({ status: 200, description: 'Authorization URL' })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
+  async getOAuthUrl(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ authorizationUrl: string }> {
+    const context = getTenantContext((res as any).req);
+    const config = await this.configService.findOneOrFail(context);
+
+    // Build authorization URL
+    const baseUrl = 'https://logincert.anaf.ro/anaf-oauth2/v1/authorize';
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: config.oauthClientId || '',
+      redirect_uri: config.oauthRedirectUri || '',
+      scope: 'efactura',
+    });
+
+    return {
+      authorizationUrl: `${baseUrl}?${params.toString()}`,
+    };
+  }
+
+  /**
+   * Delete E-Factura configuration
+   */
+  @Post('e-factura/config/delete')
+  @ApiOperation({
+    summary: 'Delete E-Factura configuration',
+    description:
+      'Deletes the E-Factura configuration. This will disable the integration ' +
+      'and remove all OAuth tokens. Existing submissions are preserved.',
+  })
+  @ApiResponse({ status: 200, description: 'Configuration deleted' })
+  @ApiResponse({ status: 404, description: 'Configuration not found' })
+  async deleteConfig(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ success: boolean; message: string }> {
+    const context = getTenantContext((res as any).req);
+
+    this.logger.log(`API: Deleting E-Factura config`);
+
+    await this.configService.delete(context);
+
+    return {
+      success: true,
+      message: 'E-Factura configuration deleted',
+    };
+  }
+
+  // ============================================
+  // Private Helper Methods
+  // ============================================
+
   /**
    * Map EFacturaSubmission to response DTO
    */
@@ -480,4 +720,100 @@ export class EFacturaController {
       updatedAt: submission.updatedAt,
     };
   }
+
+  /**
+   * Map EFacturaConfig to response DTO
+   */
+  private mapConfigToResponse(config: EFacturaConfig): EFacturaConfigResponseDto {
+    return {
+      id: config._id.toString(),
+      tenantId: config.tenantId,
+      organizationId: config.organizationId,
+      clinicId: config.clinicId,
+      cui: config.cui,
+      companyName: config.companyName,
+      tradeName: config.tradeName,
+      registrationNumber: config.registrationNumber,
+      address: config.address,
+      contact: config.contact,
+      bankAccount: config.bankAccount,
+      enabled: config.enabled,
+      status: config.status,
+      useTestEnvironment: config.useTestEnvironment,
+      autoSubmit: config.autoSubmit,
+      notifications: config.notifications,
+      maxSubmissionsPerMinute: config.maxSubmissionsPerMinute,
+      maxStatusChecksPerMinute: config.maxStatusChecksPerMinute,
+      maxRetries: config.maxRetries,
+      tokenExpiresAt: config.oauthTokens?.expiresAt,
+      lastSubmissionAt: config.lastSubmissionAt,
+      lastErrorAt: config.lastErrorAt,
+      errorMessage: config.errorMessage,
+      totalSubmissions: config.totalSubmissions,
+      totalAccepted: config.totalAccepted,
+      totalRejected: config.totalRejected,
+      createdAt: config.createdAt,
+      updatedAt: config.updatedAt,
+    };
+  }
+}
+
+/**
+ * E-Factura Configuration Response DTO
+ */
+interface EFacturaConfigResponseDto {
+  id: string;
+  tenantId: string;
+  organizationId: string;
+  clinicId?: string;
+  cui: string;
+  companyName: string;
+  tradeName?: string;
+  registrationNumber?: string;
+  address: {
+    streetName: string;
+    additionalStreetName?: string;
+    city: string;
+    county?: string;
+    postalCode?: string;
+    countryCode: string;
+  };
+  contact?: {
+    name?: string;
+    phone?: string;
+    email?: string;
+  };
+  bankAccount?: {
+    iban?: string;
+    bankName?: string;
+    swift?: string;
+  };
+  enabled: boolean;
+  status: EFacturaConfigStatus;
+  useTestEnvironment: boolean;
+  autoSubmit: {
+    enabled: boolean;
+    b2bOnly: boolean;
+    delayMinutes: number;
+    maxRetries: number;
+    minAmount?: number;
+  };
+  notifications?: {
+    notifyOnAccepted: string[];
+    notifyOnRejected: string[];
+    notifyOnError: string[];
+    dailyDigest: boolean;
+  };
+  maxSubmissionsPerMinute: number;
+  maxStatusChecksPerMinute: number;
+  maxRetries: number;
+  tokenExpiresAt?: Date;
+  lastSubmissionAt?: Date;
+  lastErrorAt?: Date;
+  errorMessage?: string;
+  totalSubmissions: number;
+  totalAccepted: number;
+  totalRejected: number;
+  createdAt: Date;
+  updatedAt: Date;
 }

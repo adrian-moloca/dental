@@ -10,6 +10,7 @@ import {
   EFacturaSubmissionSchema,
 } from './entities/e-factura-submission.schema';
 import { EFacturaLog, EFacturaLogSchema } from './entities/e-factura-log.schema';
+import { EFacturaConfig, EFacturaConfigSchema } from './entities/e-factura-config.schema';
 import { Invoice, InvoiceSchema } from '../invoices/entities/invoice.entity';
 import { InvoiceItem, InvoiceItemSchema } from '../invoice-items/entities/invoice-item.entity';
 import eFacturaConfig from './config/e-factura.config';
@@ -20,6 +21,14 @@ import { AnafApiService } from './services/anaf-api.service';
 import { AnafOAuthService } from './services/anaf-oauth.service';
 import { ClinicFiscalService } from './services/clinic-fiscal.service';
 import { HealthcareVatService } from './services/healthcare-vat.service';
+
+// Phase 3 Services - XSD Validation and Scheduled Jobs
+import { XsdValidatorService } from './services/xsd-validator.service';
+import { EFacturaScheduler } from './scheduled/e-factura.scheduler';
+
+// Phase 4 Services - Configuration Management and Event Listeners
+import { EFacturaConfigService } from './services/e-factura-config.service';
+import { InvoiceIssuedListener } from './listeners/invoice-issued.listener';
 
 /**
  * E-Factura Module
@@ -42,7 +51,7 @@ import { HealthcareVatService } from './services/healthcare-vat.service';
  * - DTOs and validation
  * - Constants for UBL codes and ANAF endpoints
  *
- * Phase 2 (Current - Implemented):
+ * Phase 2 (Completed):
  * - XML generation (UBL 2.1 format)
  * - ANAF API integration with retry logic
  * - OAuth2 token management (stub for manual setup)
@@ -51,11 +60,14 @@ import { HealthcareVatService } from './services/healthcare-vat.service';
  * - REST API endpoints
  * - Custom exceptions
  *
+ * Phase 3 (Current - Implemented):
+ * - XSD validation service with CIUS-RO business rules
+ * - Scheduled jobs for pending submissions, status checking, retries
+ * - Deadline monitoring and stale submission cleanup
+ *
  * Future Enhancements:
- * - Scheduled retry jobs (cron-based)
- * - Event handlers for auto-submission
+ * - Event handlers for auto-submission on invoice.issued
  * - Full OAuth flow with ANAF SPV portal
- * - XML schema validation against XSD
  *
  * @module EFacturaModule
  */
@@ -80,6 +92,11 @@ import { HealthcareVatService } from './services/healthcare-vat.service';
       {
         name: EFacturaLog.name,
         schema: EFacturaLogSchema,
+      },
+      // E-Factura configuration per tenant
+      {
+        name: EFacturaConfig.name,
+        schema: EFacturaConfigSchema,
       },
       // Invoice schema needed for submission creation
       {
@@ -112,6 +129,14 @@ import { HealthcareVatService } from './services/healthcare-vat.service';
 
     // Healthcare VAT exemption mapping
     HealthcareVatService,
+
+    // Phase 3 services - XSD validation and scheduled jobs
+    XsdValidatorService,
+    EFacturaScheduler,
+
+    // Phase 4 services - Configuration and event listeners
+    EFacturaConfigService,
+    InvoiceIssuedListener,
   ],
   exports: [
     // Export main service for use by other modules
@@ -123,6 +148,13 @@ import { HealthcareVatService } from './services/healthcare-vat.service';
     AnafOAuthService,
     ClinicFiscalService,
     HealthcareVatService,
+
+    // Export Phase 3 services
+    XsdValidatorService,
+    EFacturaScheduler,
+
+    // Export Phase 4 services
+    EFacturaConfigService,
 
     // Export MongooseModule for other modules that need access to submissions
     MongooseModule,

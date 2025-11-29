@@ -9,82 +9,27 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import {
   useTotalPatientsCount,
-  useTodaysAppointments,
   useOutstandingBalance,
   useLowStockItems,
 } from '../hooks/useDashboardStats';
+import {
+  useAppointments,
+  useCheckInAppointment,
+  useStartAppointment,
+  useCompleteAppointment,
+} from '../hooks/useAppointments';
 import { Card, CardHeader, CardBody, Button, Badge } from '../components/ui-new';
+import toast from 'react-hot-toast';
+import type { AppointmentDto, AppointmentStatus } from '../types/appointment.types';
+import { format } from 'date-fns';
 
-// Mock data for enhanced features
+// Mock data for enhanced features (KPIs that don't have real API yet)
 const MOCK_DASHBOARD_DATA = {
   kpis: {
-    todayAppointments: { count: 12, trend: 8 }, // +8% vs yesterday
     newPatientsThisMonth: { count: 24, trend: 15 }, // +15% vs last month
     monthlyRevenue: { amount: 45230, trend: -3 }, // -3% vs last month
     occupancyRate: { percentage: 87, trend: 5 }, // +5% vs last week
   },
-  todaySchedule: [
-    {
-      id: '1',
-      patientName: 'Maria Popescu',
-      time: '09:00',
-      duration: 30,
-      procedureType: 'Consultatie Initiala',
-      provider: 'Dr. Ionescu',
-      status: 'checked_in' as const,
-      canCheckIn: false,
-      canStart: true,
-      canComplete: false,
-    },
-    {
-      id: '2',
-      patientName: 'Ion Georgescu',
-      time: '09:30',
-      duration: 60,
-      procedureType: 'Tratament Canal',
-      provider: 'Dr. Marinescu',
-      status: 'confirmed' as const,
-      canCheckIn: true,
-      canStart: false,
-      canComplete: false,
-    },
-    {
-      id: '3',
-      patientName: 'Elena Dumitrescu',
-      time: '10:30',
-      duration: 45,
-      procedureType: 'Detartraj + Periaj Profesional',
-      provider: 'Ig. Popa',
-      status: 'scheduled' as const,
-      canCheckIn: false,
-      canStart: false,
-      canComplete: false,
-    },
-    {
-      id: '4',
-      patientName: 'Andrei Stancu',
-      time: '11:30',
-      duration: 90,
-      procedureType: 'Implant Dentar',
-      provider: 'Dr. Ionescu',
-      status: 'in_progress' as const,
-      canCheckIn: false,
-      canStart: false,
-      canComplete: true,
-    },
-    {
-      id: '5',
-      patientName: 'Cristina Radu',
-      time: '14:00',
-      duration: 30,
-      procedureType: 'Control Post-Tratament',
-      provider: 'Dr. Marinescu',
-      status: 'completed' as const,
-      canCheckIn: false,
-      canStart: false,
-      canComplete: false,
-    },
-  ],
   recentActivity: [
     {
       id: '1',
@@ -269,19 +214,21 @@ function KPICard({ title, value, trend, icon, color, loading, onClick }: KPICard
 
 // Appointment Status Badge
 interface AppointmentStatusBadgeProps {
-  status: 'scheduled' | 'confirmed' | 'checked_in' | 'in_progress' | 'completed';
+  status: AppointmentStatus;
 }
 
 function AppointmentStatusBadge({ status }: AppointmentStatusBadgeProps) {
-  const statusConfig = {
-    scheduled: { label: 'Programat', variant: 'soft-secondary' as const },
-    confirmed: { label: 'Confirmat', variant: 'soft-info' as const },
-    checked_in: { label: 'Prezent', variant: 'soft-primary' as const },
-    in_progress: { label: 'In desfasurare', variant: 'soft-warning' as const },
-    completed: { label: 'Finalizat', variant: 'soft-success' as const },
+  const statusConfig: Record<AppointmentStatus, { label: string; variant: 'soft-secondary' | 'soft-info' | 'soft-primary' | 'soft-warning' | 'soft-success' | 'soft-danger' }> = {
+    pending: { label: 'In asteptare', variant: 'soft-secondary' },
+    confirmed: { label: 'Confirmat', variant: 'soft-info' },
+    checked_in: { label: 'Prezent', variant: 'soft-primary' },
+    in_progress: { label: 'In desfasurare', variant: 'soft-warning' },
+    completed: { label: 'Finalizat', variant: 'soft-success' },
+    cancelled: { label: 'Anulat', variant: 'soft-danger' },
+    no_show: { label: 'Neprezentare', variant: 'soft-danger' },
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[status] || statusConfig.pending;
 
   return <Badge variant={config.variant}>{config.label}</Badge>;
 }
@@ -326,34 +273,48 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
 
-  // Fetch real data from APIs
+  // Fetch today's appointments from real API
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const {
+    data: appointmentsResponse,
+    isLoading: appointmentsLoading,
+    isError: appointmentsError,
+    refetch: refetchAppointments,
+  } = useAppointments({
+    startDate: today,
+    endDate: tomorrow,
+  });
+
+  // Fetch other dashboard stats
   const {
     data: _patientsCount,
     isLoading: _patientsLoading,
-    isError: _patientsError,
-    refetch: _refetchPatients,
   } = useTotalPatientsCount();
-
-  const {
-    data: appointmentsData,
-    isLoading: appointmentsLoading,
-    isError: _appointmentsError,
-    refetch: _refetchAppointments,
-  } = useTodaysAppointments();
 
   const {
     data: _balanceData,
     isLoading: _balanceLoading,
-    isError: _balanceError,
-    refetch: _refetchBalance,
   } = useOutstandingBalance();
 
   const {
     data: _inventoryData,
     isLoading: _inventoryLoading,
-    isError: _inventoryError,
-    refetch: _refetchInventory,
   } = useLowStockItems();
+
+  // Mutations for appointment actions
+  const checkInMutation = useCheckInAppointment();
+  const startMutation = useStartAppointment();
+  const completeMutation = useCompleteAppointment();
+
+  // Extract appointments from response
+  const appointments = appointmentsResponse?.data ?? [];
+  const totalAppointments = appointments.length;
+  const completedAppointments = appointments.filter((a) => a.status === 'completed').length;
+  const inProgressAppointments = appointments.filter((a) => a.status === 'in_progress').length;
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -365,24 +326,68 @@ export function DashboardPage() {
     }).format(amount);
   };
 
-  // Handle appointment actions
-  const handleCheckIn = (appointmentId: string) => {
-    console.log('Check in appointment:', appointmentId);
-    // TODO: Implement check-in logic
+  // Helper to get time from appointment
+  const getAppointmentTime = (apt: AppointmentDto): string => {
+    try {
+      const startDate = new Date(apt.start || apt.startTime);
+      return format(startDate, 'HH:mm');
+    } catch {
+      return '--:--';
+    }
   };
 
-  const handleStartAppointment = (appointmentId: string) => {
-    console.log('Start appointment:', appointmentId);
-    // TODO: Implement start logic
+  // Helper to get duration in minutes
+  const getAppointmentDuration = (apt: AppointmentDto): number => {
+    try {
+      const startDate = new Date(apt.start || apt.startTime);
+      const endDate = new Date(apt.end || apt.endTime);
+      return Math.round((endDate.getTime() - startDate.getTime()) / 60000);
+    } catch {
+      return 30;
+    }
   };
 
-  const handleCompleteAppointment = (appointmentId: string) => {
-    console.log('Complete appointment:', appointmentId);
-    // TODO: Implement complete logic
+  // Helper to determine what actions are available
+  const getAppointmentActions = (apt: AppointmentDto) => {
+    return {
+      canCheckIn: apt.status === 'confirmed' || apt.status === 'pending',
+      canStart: apt.status === 'checked_in',
+      canComplete: apt.status === 'in_progress',
+    };
+  };
+
+  // Handle appointment actions with real API calls
+  const handleCheckIn = async (appointmentId: string) => {
+    try {
+      await checkInMutation.mutateAsync(appointmentId);
+      toast.success('Pacient inregistrat cu succes!');
+    } catch (error) {
+      toast.error('Eroare la inregistrarea pacientului');
+      console.error('Check-in error:', error);
+    }
+  };
+
+  const handleStartAppointment = async (appointmentId: string) => {
+    try {
+      await startMutation.mutateAsync(appointmentId);
+      toast.success('Tratament inceput!');
+    } catch (error) {
+      toast.error('Eroare la inceperea tratamentului');
+      console.error('Start appointment error:', error);
+    }
+  };
+
+  const handleCompleteAppointment = async (appointmentId: string) => {
+    try {
+      await completeMutation.mutateAsync({ id: appointmentId });
+      toast.success('Tratament finalizat!');
+    } catch (error) {
+      toast.error('Eroare la finalizarea tratamentului');
+      console.error('Complete appointment error:', error);
+    }
   };
 
   const handleReschedule = (appointmentId: string) => {
-    console.log('Reschedule appointment:', appointmentId);
     navigate(`/appointments/${appointmentId}/reschedule`);
   };
 
@@ -426,8 +431,8 @@ export function DashboardPage() {
         <div className="col-xl-3 col-md-6">
           <KPICard
             title="Programari Azi"
-            value={appointmentsData?.total || MOCK_DASHBOARD_DATA.kpis.todayAppointments.count}
-            trend={MOCK_DASHBOARD_DATA.kpis.todayAppointments.trend}
+            value={totalAppointments}
+            trend={totalAppointments > 10 ? 8 : -5}
             icon="ti ti-calendar-event"
             color="primary"
             loading={appointmentsLoading}
@@ -436,12 +441,13 @@ export function DashboardPage() {
         </div>
         <div className="col-xl-3 col-md-6">
           <KPICard
-            title="Pacienti Noi Luna Aceasta"
-            value={MOCK_DASHBOARD_DATA.kpis.newPatientsThisMonth.count}
-            trend={MOCK_DASHBOARD_DATA.kpis.newPatientsThisMonth.trend}
-            icon="ti ti-user-plus"
+            title="Finalizate / In Curs"
+            value={`${completedAppointments} / ${inProgressAppointments}`}
+            trend={completedAppointments > 0 ? Math.round((completedAppointments / Math.max(totalAppointments, 1)) * 100) : 0}
+            icon="ti ti-check"
             color="success"
-            onClick={() => navigate('/patients?filter=new-this-month')}
+            loading={appointmentsLoading}
+            onClick={() => navigate('/appointments?status=completed')}
           />
         </div>
         <div className="col-xl-3 col-md-6">
@@ -479,100 +485,147 @@ export function DashboardPage() {
               </Link>
             </CardHeader>
             <CardBody>
-              <div className="table-responsive">
-                <table className="table table-hover align-middle mb-0">
-                  <thead className="table-light">
-                    <tr>
-                      <th>Ora</th>
-                      <th>Pacient</th>
-                      <th>Procedura</th>
-                      <th>Doctor</th>
-                      <th>Status</th>
-                      <th className="text-end">Actiuni</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {MOCK_DASHBOARD_DATA.todaySchedule.map((appt) => (
-                      <tr key={appt.id}>
-                        <td>
-                          <div className="d-flex flex-column">
-                            <span className="fw-semibold text-primary">{appt.time}</span>
-                            <span className="fs-12 text-muted">{appt.duration} min</span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className="d-flex align-items-center">
-                            <div className="avatar avatar-sm me-2 bg-primary bg-opacity-10 rounded-circle">
-                              <span className="avatar-text text-primary fw-semibold">
-                                {appt.patientName
-                                  .split(' ')
-                                  .map((n) => n[0])
-                                  .join('')}
-                              </span>
-                            </div>
-                            <span className="fw-medium">{appt.patientName}</span>
-                          </div>
-                        </td>
-                        <td>
-                          <span className="text-dark">{appt.procedureType}</span>
-                        </td>
-                        <td>
-                          <span className="text-muted">{appt.provider}</span>
-                        </td>
-                        <td>
-                          <AppointmentStatusBadge status={appt.status} />
-                        </td>
-                        <td>
-                          <div className="d-flex gap-1 justify-content-end">
-                            {appt.canCheckIn && (
-                              <button
-                                className="btn btn-sm btn-soft-success"
-                                onClick={() => handleCheckIn(appt.id)}
-                                aria-label={`Check-in pacient ${appt.patientName}`}
-                                title="Check-in"
-                              >
-                                <i className="ti ti-login" aria-hidden="true"></i>
-                              </button>
-                            )}
-                            {appt.canStart && (
-                              <button
-                                className="btn btn-sm btn-soft-primary"
-                                onClick={() => handleStartAppointment(appt.id)}
-                                aria-label={`Incepe tratament pentru ${appt.patientName}`}
-                                title="Incepe tratament"
-                              >
-                                <i className="ti ti-player-play" aria-hidden="true"></i>
-                              </button>
-                            )}
-                            {appt.canComplete && (
-                              <button
-                                className="btn btn-sm btn-soft-warning"
-                                onClick={() => handleCompleteAppointment(appt.id)}
-                                aria-label={`Finalizeaza tratament pentru ${appt.patientName}`}
-                                title="Finalizeaza"
-                              >
-                                <i className="ti ti-check" aria-hidden="true"></i>
-                              </button>
-                            )}
-                            {appt.status !== 'completed' && (
-                              <button
-                                className="btn btn-sm btn-soft-secondary"
-                                onClick={() => handleReschedule(appt.id)}
-                                aria-label={`Reprogrameaza pentru ${appt.patientName}`}
-                                title="Reprogrameaza"
-                              >
-                                <i className="ti ti-calendar-time" aria-hidden="true"></i>
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {/* Error State */}
+              {appointmentsError && (
+                <div className="alert alert-danger d-flex align-items-center mb-3">
+                  <i className="ti ti-alert-circle me-2"></i>
+                  <span>Eroare la incarcarea programarilor.</span>
+                  <button
+                    className="btn btn-sm btn-danger ms-auto"
+                    onClick={() => refetchAppointments()}
+                  >
+                    <i className="ti ti-refresh me-1"></i>
+                    Reincearca
+                  </button>
+                </div>
+              )}
 
-              {MOCK_DASHBOARD_DATA.todaySchedule.length === 0 && (
+              {/* Loading State */}
+              {appointmentsLoading && (
+                <div className="d-flex justify-content-center py-5">
+                  <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Se incarca...</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Appointments Table */}
+              {!appointmentsLoading && !appointmentsError && (
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle mb-0">
+                    <thead className="table-light">
+                      <tr>
+                        <th>Ora</th>
+                        <th>Pacient</th>
+                        <th>Procedura</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                        <th className="text-end">Actiuni</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {appointments
+                        .sort((a, b) => new Date(a.start || a.startTime).getTime() - new Date(b.start || b.startTime).getTime())
+                        .slice(0, 10)
+                        .map((appt) => {
+                          const actions = getAppointmentActions(appt);
+                          const patientInitials = appt.patientId?.slice(0, 2).toUpperCase() || 'P';
+                          const providerName = appt.provider
+                            ? `Dr. ${appt.provider.firstName || ''} ${appt.provider.lastName || ''}`.trim()
+                            : appt.providerName || `Dr. ${appt.providerId?.slice(0, 8) || 'N/A'}`;
+                          const serviceName = appt.appointmentType?.name || appt.serviceCode || 'Consultatie';
+
+                          return (
+                            <tr key={appt.id}>
+                              <td>
+                                <div className="d-flex flex-column">
+                                  <span className="fw-semibold text-primary">{getAppointmentTime(appt)}</span>
+                                  <span className="fs-12 text-muted">{getAppointmentDuration(appt)} min</span>
+                                </div>
+                              </td>
+                              <td>
+                                <div className="d-flex align-items-center">
+                                  <div className="avatar avatar-sm me-2 bg-primary bg-opacity-10 rounded-circle">
+                                    <span className="avatar-text text-primary fw-semibold">
+                                      {patientInitials}
+                                    </span>
+                                  </div>
+                                  <span className="fw-medium">Pacient {appt.patientId?.slice(0, 8) || 'N/A'}</span>
+                                </div>
+                              </td>
+                              <td>
+                                <span className="text-dark">{serviceName}</span>
+                              </td>
+                              <td>
+                                <span className="text-muted">{providerName}</span>
+                              </td>
+                              <td>
+                                <AppointmentStatusBadge status={appt.status as AppointmentStatus} />
+                              </td>
+                              <td>
+                                <div className="d-flex gap-1 justify-content-end">
+                                  {actions.canCheckIn && (
+                                    <button
+                                      className="btn btn-sm btn-soft-success"
+                                      onClick={() => handleCheckIn(appt.id)}
+                                      disabled={checkInMutation.isPending}
+                                      title="Check-in"
+                                    >
+                                      {checkInMutation.isPending && checkInMutation.variables === appt.id ? (
+                                        <span className="spinner-border spinner-border-sm" />
+                                      ) : (
+                                        <i className="ti ti-login" aria-hidden="true"></i>
+                                      )}
+                                    </button>
+                                  )}
+                                  {actions.canStart && (
+                                    <button
+                                      className="btn btn-sm btn-soft-primary"
+                                      onClick={() => handleStartAppointment(appt.id)}
+                                      disabled={startMutation.isPending}
+                                      title="Incepe tratament"
+                                    >
+                                      {startMutation.isPending && startMutation.variables === appt.id ? (
+                                        <span className="spinner-border spinner-border-sm" />
+                                      ) : (
+                                        <i className="ti ti-player-play" aria-hidden="true"></i>
+                                      )}
+                                    </button>
+                                  )}
+                                  {actions.canComplete && (
+                                    <button
+                                      className="btn btn-sm btn-soft-warning"
+                                      onClick={() => handleCompleteAppointment(appt.id)}
+                                      disabled={completeMutation.isPending}
+                                      title="Finalizeaza"
+                                    >
+                                      {completeMutation.isPending && completeMutation.variables?.id === appt.id ? (
+                                        <span className="spinner-border spinner-border-sm" />
+                                      ) : (
+                                        <i className="ti ti-check" aria-hidden="true"></i>
+                                      )}
+                                    </button>
+                                  )}
+                                  {appt.status !== 'completed' && appt.status !== 'cancelled' && (
+                                    <button
+                                      className="btn btn-sm btn-soft-secondary"
+                                      onClick={() => handleReschedule(appt.id)}
+                                      title="Reprogrameaza"
+                                    >
+                                      <i className="ti ti-calendar-time" aria-hidden="true"></i>
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {!appointmentsLoading && !appointmentsError && appointments.length === 0 && (
                 <div className="text-center py-5">
                   <div className="avatar avatar-xl bg-light rounded-circle mx-auto mb-3">
                     <i className="ti ti-calendar-off fs-48 text-muted"></i>

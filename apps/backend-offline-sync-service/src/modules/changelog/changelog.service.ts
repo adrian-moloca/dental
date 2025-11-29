@@ -35,7 +35,9 @@ export class ChangeLogService {
     return ++this.sequenceCounter;
   }
 
-  async createChangeLog(change: Omit<OfflineChange, 'changeId' | 'sequenceNumber'>): Promise<OfflineChange> {
+  async createChangeLog(
+    change: Omit<OfflineChange, 'changeId' | 'sequenceNumber'>,
+  ): Promise<OfflineChange> {
     const changeId = uuidv4();
     const sequenceNumber = this.getNextSequence();
 

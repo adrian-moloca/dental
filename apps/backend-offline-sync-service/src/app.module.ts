@@ -20,7 +20,15 @@ import { EventConsumerModule } from './modules/event-consumer/event-consumer.mod
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [serverConfig, mongoConfig, rabbitmqConfig, jwtConfig, deviceConfig, encryptionConfig, corsConfig],
+      load: [
+        serverConfig,
+        mongoConfig,
+        rabbitmqConfig,
+        jwtConfig,
+        deviceConfig,
+        encryptionConfig,
+        corsConfig,
+      ],
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],

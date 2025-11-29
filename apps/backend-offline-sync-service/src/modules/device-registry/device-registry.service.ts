@@ -127,7 +127,10 @@ export class DeviceRegistryService {
     this.logger.log(`Device ${deviceId} revoked for tenant ${tenantId}`);
   }
 
-  async getActiveDevicesByUser(userId: string, tenantId: string): Promise<DeviceRegistryDocument[]> {
+  async getActiveDevicesByUser(
+    userId: string,
+    tenantId: string,
+  ): Promise<DeviceRegistryDocument[]> {
     return this.deviceModel
       .find({
         userId,
@@ -138,7 +141,10 @@ export class DeviceRegistryService {
       .exec();
   }
 
-  async verifyDeviceToken(deviceId: string, tenantId: string): Promise<DeviceRegistryDocument | null> {
+  async verifyDeviceToken(
+    deviceId: string,
+    tenantId: string,
+  ): Promise<DeviceRegistryDocument | null> {
     const device = await this.deviceModel.findOne({
       deviceId,
       tenantId,

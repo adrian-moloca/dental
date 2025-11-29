@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { CRDTEnvelope, CRDTMergeResult, CRDTConflict, CRDTResolutionStrategy } from '@dentalos/shared-domain';
+import {
+  CRDTEnvelope,
+  CRDTMergeResult,
+  CRDTConflict,
+  CRDTResolutionStrategy,
+} from '@dentalos/shared-domain';
 
 @Injectable()
 export class CRDTResolverService {
@@ -14,7 +19,7 @@ export class CRDTResolverService {
     strategy: CRDTResolutionStrategy = CRDTResolutionStrategy.LAST_WRITE_WINS,
   ): Promise<CRDTMergeResult> {
     const conflicts: CRDTConflict[] = [];
-    let merged: Record<string, any> = {};
+    const merged: Record<string, any> = {};
 
     const localFields = Object.keys(localPatch.patch);
     const remoteFields = Object.keys(remotePatch.patch);

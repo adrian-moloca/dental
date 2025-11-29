@@ -3,7 +3,7 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
-import { createHelmetConfig, createCorsConfigFromEnv } from '@dentalos/shared-security';
+import { createHelmetConfig } from '@dentalos/shared-security';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -24,20 +24,30 @@ async function bootstrap() {
     ),
   );
 
-  // Configure CORS (using shared-security)
-  const corsEnabled = configService.get<boolean>('CORS_ENABLED', true);
-  if (corsEnabled) {
-    const corsOrigins = configService.get<string>(
-      'CORS_ORIGINS',
-      'http://localhost:3000,http://localhost:4200',
-    );
-    app.enableCors(
-      createCorsConfigFromEnv({
-        CORS_ALLOWED_ORIGINS: corsOrigins,
-        CORS_ALLOW_CREDENTIALS: 'true',
-      }),
-    );
-  }
+  // Configure CORS
+  const corsOriginConfig = configService.get<string>(
+    'CORS_ORIGINS',
+    'http://localhost:3000,http://localhost:5173',
+  );
+  const corsOrigins =
+    typeof corsOriginConfig === 'string'
+      ? corsOriginConfig.split(',').map((o) => o.trim())
+      : corsOriginConfig;
+
+  app.enableCors({
+    origin: corsOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Correlation-ID',
+      'X-Organization-ID',
+      'X-Clinic-ID',
+      'X-Tenant-ID',
+    ],
+    exposedHeaders: ['X-Correlation-ID'],
+  });
 
   // Global prefix
   // All endpoints including health are under /api/v1

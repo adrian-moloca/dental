@@ -4,3 +4,4 @@ export * from './cancel-appointment.dto';
 export * from './query-appointments.dto';
 export * from './search-availability.dto';
 export * from './appointment-response.dto';
+export * from './status-transition.dto';

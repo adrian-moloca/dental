@@ -41,98 +41,103 @@ export class ProviderAbsence extends Document {
   /**
    * Unique absence identifier (UUID)
    */
-  @Prop({ required: true, unique: true, index: true })
+  @Prop({ type: String, required: true, unique: true, index: true })
   id!: string;
 
   /**
    * Tenant identifier for multi-tenant isolation
    */
-  @Prop({ required: true, index: true })
+  @Prop({ type: String, required: true, index: true })
   tenantId!: string;
 
   /**
    * Organization identifier
    */
-  @Prop({ required: true, index: true })
+  @Prop({ type: String, required: true, index: true })
   organizationId!: string;
 
   /**
    * Provider identifier this absence belongs to
    */
-  @Prop({ required: true, index: true })
+  @Prop({ type: String, required: true, index: true })
   providerId!: string;
 
   /**
    * Absence start date and time
    */
-  @Prop({ required: true, index: true })
+  @Prop({ type: Date, required: true, index: true })
   start!: Date;
 
   /**
    * Absence end date and time
    */
-  @Prop({ required: true, index: true })
+  @Prop({ type: Date, required: true, index: true })
   end!: Date;
 
   /**
    * Type of absence
    */
-  @Prop({ required: true, enum: Object.values(AbsenceType), index: true })
+  @Prop({ type: String, required: true, enum: Object.values(AbsenceType), index: true })
   type!: AbsenceType;
 
   /**
    * Absence status (for approval workflow)
    */
-  @Prop({ required: true, enum: Object.values(AbsenceStatus), default: AbsenceStatus.PENDING })
+  @Prop({
+    type: String,
+    required: true,
+    enum: Object.values(AbsenceStatus),
+    default: AbsenceStatus.PENDING,
+  })
   status!: AbsenceStatus;
 
   /**
    * Reason or description for the absence
    */
-  @Prop({ required: false })
+  @Prop({ type: String, required: false })
   reason?: string;
 
   /**
    * Whether this is an all-day absence
    */
-  @Prop({ required: true, default: true })
+  @Prop({ type: Boolean, required: true, default: true })
   isAllDay!: boolean;
 
   /**
    * Whether this absence repeats (for recurring absences)
    */
-  @Prop({ required: false, default: false })
+  @Prop({ type: Boolean, required: false, default: false })
   isRecurring!: boolean;
 
   /**
    * Recurrence pattern (if isRecurring = true)
    * Format: RRULE string (RFC 5545)
    */
-  @Prop({ required: false })
+  @Prop({ type: String, required: false })
   recurrenceRule?: string;
 
   /**
    * User who created this absence record
    */
-  @Prop({ required: false })
+  @Prop({ type: String, required: false })
   createdBy?: string;
 
   /**
    * User who approved/rejected this absence
    */
-  @Prop({ required: false })
+  @Prop({ type: String, required: false })
   approvedBy?: string;
 
   /**
    * Approval/rejection timestamp
    */
-  @Prop({ required: false })
+  @Prop({ type: Date, required: false })
   approvedAt?: Date;
 
   /**
    * Notes about approval/rejection
    */
-  @Prop({ required: false })
+  @Prop({ type: String, required: false })
   approvalNotes?: string;
 
   /**

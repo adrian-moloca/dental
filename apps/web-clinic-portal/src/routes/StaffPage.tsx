@@ -3,6 +3,7 @@
  *
  * Comprehensive staff/employee management with KPI cards,
  * filters, list/grid views, and CRUD operations.
+ * Integrated with real backend API.
  */
 
 import { useState, useMemo, useCallback } from 'react';
@@ -30,179 +31,29 @@ import {
 import { StaffCard } from '../components/staff/StaffCard';
 import { StaffFormModal } from '../components/staff/StaffFormModal';
 import { StaffDetailsDrawer } from '../components/staff/StaffDetailsDrawer';
-
-// Types
-export interface StaffMember {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  role: 'doctor' | 'asistent' | 'receptioner' | 'admin' | 'manager';
-  department: string;
-  specializations: string[];
-  status: 'activ' | 'inactiv' | 'concediu' | 'suspendat';
-  avatar?: string;
-  hireDate: string;
-  schedule?: {
-    monday?: string;
-    tuesday?: string;
-    wednesday?: string;
-    thursday?: string;
-    friday?: string;
-    saturday?: string;
-    sunday?: string;
-  };
-  patientsCount?: number;
-  lastActive?: string;
-}
-
-// Mock data with Romanian names
-const mockStaffData: StaffMember[] = [
-  {
-    id: '1',
-    firstName: 'Dr. Alexandru',
-    lastName: 'Popescu',
-    email: 'alexandru.popescu@clinica.ro',
-    phone: '+40 721 123 456',
-    role: 'doctor',
-    department: 'Stomatologie Generala',
-    specializations: ['Endodontie', 'Protetice'],
-    status: 'activ',
-    hireDate: '2020-03-15',
-    patientsCount: 145,
-    lastActive: '2025-11-27T09:30:00',
-  },
-  {
-    id: '2',
-    firstName: 'Dr. Maria',
-    lastName: 'Ionescu',
-    email: 'maria.ionescu@clinica.ro',
-    phone: '+40 722 234 567',
-    role: 'doctor',
-    department: 'Ortodontie',
-    specializations: ['Ortodontie', 'Pedodontie'],
-    status: 'activ',
-    hireDate: '2019-06-01',
-    patientsCount: 198,
-    lastActive: '2025-11-27T10:15:00',
-  },
-  {
-    id: '3',
-    firstName: 'Elena',
-    lastName: 'Dumitrescu',
-    email: 'elena.dumitrescu@clinica.ro',
-    phone: '+40 723 345 678',
-    role: 'asistent',
-    department: 'Stomatologie Generala',
-    specializations: ['Asistenta Dentara', 'Sterilizare'],
-    status: 'activ',
-    hireDate: '2021-09-01',
-    patientsCount: 0,
-    lastActive: '2025-11-27T08:45:00',
-  },
-  {
-    id: '4',
-    firstName: 'Andrei',
-    lastName: 'Stanescu',
-    email: 'andrei.stanescu@clinica.ro',
-    phone: '+40 724 456 789',
-    role: 'receptioner',
-    department: 'Receptie',
-    specializations: ['Programari', 'Relatii Pacienti'],
-    status: 'activ',
-    hireDate: '2022-01-10',
-    patientsCount: 0,
-    lastActive: '2025-11-27T07:00:00',
-  },
-  {
-    id: '5',
-    firstName: 'Dr. Cristian',
-    lastName: 'Gheorghiu',
-    email: 'cristian.gheorghiu@clinica.ro',
-    phone: '+40 725 567 890',
-    role: 'doctor',
-    department: 'Chirurgie Orala',
-    specializations: ['Chirurgie', 'Implantologie'],
-    status: 'concediu',
-    hireDate: '2018-02-20',
-    patientsCount: 89,
-    lastActive: '2025-11-20T16:00:00',
-  },
-  {
-    id: '6',
-    firstName: 'Ana',
-    lastName: 'Mihai',
-    email: 'ana.mihai@clinica.ro',
-    phone: '+40 726 678 901',
-    role: 'admin',
-    department: 'Administratie',
-    specializations: ['Management', 'Financiar'],
-    status: 'activ',
-    hireDate: '2017-05-15',
-    patientsCount: 0,
-    lastActive: '2025-11-27T09:00:00',
-  },
-  {
-    id: '7',
-    firstName: 'Dr. Ioana',
-    lastName: 'Vasile',
-    email: 'ioana.vasile@clinica.ro',
-    phone: '+40 727 789 012',
-    role: 'doctor',
-    department: 'Estetica Dentara',
-    specializations: ['Estetica', 'Albire'],
-    status: 'activ',
-    hireDate: '2021-03-01',
-    patientsCount: 112,
-    lastActive: '2025-11-27T11:00:00',
-  },
-  {
-    id: '8',
-    firstName: 'Mihaela',
-    lastName: 'Preda',
-    email: 'mihaela.preda@clinica.ro',
-    phone: '+40 728 890 123',
-    role: 'asistent',
-    department: 'Ortodontie',
-    specializations: ['Asistenta Dentara', 'Radiologie'],
-    status: 'inactiv',
-    hireDate: '2020-07-01',
-    patientsCount: 0,
-    lastActive: '2025-11-15T14:00:00',
-  },
-  {
-    id: '9',
-    firstName: 'Gabriel',
-    lastName: 'Constantinescu',
-    email: 'gabriel.constantinescu@clinica.ro',
-    phone: '+40 729 901 234',
-    role: 'manager',
-    department: 'Management',
-    specializations: ['Management Clinic', 'HR'],
-    status: 'activ',
-    hireDate: '2016-01-15',
-    patientsCount: 0,
-    lastActive: '2025-11-27T08:00:00',
-  },
-  {
-    id: '10',
-    firstName: 'Raluca',
-    lastName: 'Popa',
-    email: 'raluca.popa@clinica.ro',
-    phone: '+40 730 012 345',
-    role: 'receptioner',
-    department: 'Receptie',
-    specializations: ['Programari', 'Facturare'],
-    status: 'activ',
-    hireDate: '2023-06-01',
-    patientsCount: 0,
-    lastActive: '2025-11-27T07:30:00',
-  },
-];
+import {
+  useStaff,
+  useStaffStats,
+  useCreateStaff,
+  useUpdateStaff,
+  useBulkActivateStaff,
+  useBulkDeactivateStaff,
+} from '../hooks/useStaff';
+import {
+  staffDtoToMember,
+  mapDisplayRoleToApi,
+  mapDisplayStatusToUser,
+  type StaffMember,
+  type StaffRole,
+  type StaffDisplayStatus,
+  type CreateStaffDto,
+  type UpdateStaffDto,
+  type UserStatus,
+} from '../types/staff.types';
+import toast from 'react-hot-toast';
 
 // Role configuration
-const roleConfig: Record<StaffMember['role'], { label: string; color: string; icon: string }> = {
+const roleConfig: Record<StaffRole, { label: string; color: string; icon: string }> = {
   doctor: { label: 'Doctor', color: 'soft-primary', icon: 'ti ti-stethoscope' },
   asistent: { label: 'Asistent', color: 'soft-info', icon: 'ti ti-heart-handshake' },
   receptioner: { label: 'Receptioner', color: 'soft-warning', icon: 'ti ti-headset' },
@@ -211,18 +62,36 @@ const roleConfig: Record<StaffMember['role'], { label: string; color: string; ic
 };
 
 // Status configuration
-const statusConfig: Record<StaffMember['status'], { label: string; color: string }> = {
+const statusConfig: Record<StaffDisplayStatus, { label: string; color: string }> = {
   activ: { label: 'Activ', color: 'soft-success' },
   inactiv: { label: 'Inactiv', color: 'soft-secondary' },
   concediu: { label: 'In Concediu', color: 'soft-warning' },
   suspendat: { label: 'Suspendat', color: 'soft-danger' },
 };
 
+// Map display status to API status for filtering
+const displayStatusToApiStatus: Record<string, UserStatus | undefined> = {
+  all: undefined,
+  activ: 'ACTIVE',
+  inactiv: 'INACTIVE',
+  suspendat: 'BLOCKED',
+  concediu: 'INACTIVE', // No direct mapping
+};
+
+// Map display role to API role for filtering
+const displayRoleToApiRole: Record<string, string | undefined> = {
+  all: undefined,
+  doctor: 'DENTIST',
+  asistent: 'ASSISTANT',
+  receptioner: 'RECEPTIONIST',
+  admin: 'CLINIC_ADMIN',
+  manager: 'MANAGER',
+};
+
 type ViewMode = 'list' | 'grid';
 
 export function StaffPage() {
-  // State
-  const [staffData] = useState<StaffMember[]>(mockStaffData);
+  // Local UI state
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -237,73 +106,73 @@ export function StaffPage() {
 
   const pageSize = 10;
 
-  // Computed values
+  // Build API query params
+  const apiQuery = useMemo(() => ({
+    status: displayStatusToApiStatus[statusFilter],
+    role: displayRoleToApiRole[roleFilter],
+    search: searchQuery || undefined,
+    page: currentPage,
+    limit: pageSize,
+  }), [statusFilter, roleFilter, searchQuery, currentPage]);
+
+  // Fetch staff data
+  const { data: staffResponse, isLoading: staffLoading, error: staffError } = useStaff(apiQuery);
+  const { data: statsData } = useStaffStats();
+
+  // Mutations
+  const createMutation = useCreateStaff();
+  const updateMutation = useUpdateStaff();
+  const bulkActivateMutation = useBulkActivateStaff();
+  const bulkDeactivateMutation = useBulkDeactivateStaff();
+
+  // Transform API data to display format
+  const staffData = useMemo(() => {
+    if (!staffResponse?.data) return [];
+    return staffResponse.data.map(staffDtoToMember);
+  }, [staffResponse]);
+
+  // Apply client-side department filter (department not stored in API)
+  const filteredStaff = useMemo(() => {
+    if (departmentFilter === 'all') return staffData;
+    return staffData.filter((s) => s.department === departmentFilter);
+  }, [staffData, departmentFilter]);
+
+  // Get unique departments from current data
   const departments = useMemo(() => {
     const depts = new Set(staffData.map((s) => s.department));
     return Array.from(depts).sort();
   }, [staffData]);
 
-  // Filter staff data
-  const filteredStaff = useMemo(() => {
-    return staffData.filter((staff) => {
-      // Search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        const matchesSearch =
-          staff.firstName.toLowerCase().includes(query) ||
-          staff.lastName.toLowerCase().includes(query) ||
-          staff.email.toLowerCase().includes(query) ||
-          staff.phone.includes(query);
-        if (!matchesSearch) return false;
-      }
+  // Pagination info
+  const total = staffResponse?.total ?? 0;
+  const totalPages = staffResponse?.totalPages ?? 1;
 
-      // Role filter
-      if (roleFilter !== 'all' && staff.role !== roleFilter) {
-        return false;
-      }
-
-      // Status filter
-      if (statusFilter !== 'all' && staff.status !== statusFilter) {
-        return false;
-      }
-
-      // Department filter
-      if (departmentFilter !== 'all' && staff.department !== departmentFilter) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [staffData, searchQuery, roleFilter, statusFilter, departmentFilter]);
-
-  // Paginated data
-  const paginatedStaff = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return filteredStaff.slice(start, start + pageSize);
-  }, [filteredStaff, currentPage]);
-
-  const totalPages = Math.ceil(filteredStaff.length / pageSize);
-
-  // KPI calculations
+  // KPI calculations from stats endpoint or fallback to local calc
   const kpiData = useMemo(() => {
-    const total = staffData.length;
+    if (statsData) {
+      return {
+        total: statsData.total,
+        activeToday: statsData.active, // Approximation
+        onLeave: 0, // Not tracked in current API
+        newThisMonth: 0, // Would need date filter
+      };
+    }
+
+    // Fallback to local calculation
     const activeToday = staffData.filter(
       (s) =>
         s.status === 'activ' &&
         s.lastActive &&
         new Date(s.lastActive).toDateString() === new Date().toDateString()
     ).length;
-    const onLeave = staffData.filter((s) => s.status === 'concediu').length;
-    const newThisMonth = staffData.filter((s) => {
-      const hireDate = new Date(s.hireDate);
-      const now = new Date();
-      return (
-        hireDate.getMonth() === now.getMonth() && hireDate.getFullYear() === now.getFullYear()
-      );
-    }).length;
 
-    return { total, activeToday, onLeave, newThisMonth };
-  }, [staffData]);
+    return {
+      total,
+      activeToday,
+      onLeave: staffData.filter((s) => s.status === 'concediu').length,
+      newThisMonth: 0,
+    };
+  }, [statsData, staffData, total]);
 
   // Handlers
   const handleSearch = useCallback((value: string) => {
@@ -341,12 +210,12 @@ export function StaffPage() {
   const handleSelectAll = useCallback(
     (checked: boolean) => {
       if (checked) {
-        setSelectedStaff(new Set(paginatedStaff.map((s) => s.id)));
+        setSelectedStaff(new Set(filteredStaff.map((s) => s.id)));
       } else {
         setSelectedStaff(new Set());
       }
     },
-    [paginatedStaff]
+    [filteredStaff]
   );
 
   const handleViewStaff = useCallback((staff: StaffMember) => {
@@ -374,27 +243,100 @@ export function StaffPage() {
     setViewingStaff(null);
   }, []);
 
-  const handleFormSubmit = useCallback((data: Partial<StaffMember>) => {
-    console.log('Form submitted:', data);
-    // TODO: Implement API call
-    setIsFormModalOpen(false);
-    setEditingStaff(null);
-  }, []);
+  const handleFormSubmit = useCallback(
+    async (data: Partial<StaffMember>) => {
+      try {
+        if (editingStaff) {
+          // Update existing staff
+          const updateData: UpdateStaffDto = {
+            email: data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            roles: data.role ? mapDisplayRoleToApi(data.role) : undefined,
+            status: data.status ? mapDisplayStatusToUser(data.status) : undefined,
+          };
 
-  const handleBulkActivate = useCallback(() => {
-    console.log('Bulk activate:', Array.from(selectedStaff));
-    // TODO: Implement bulk activate
-  }, [selectedStaff]);
+          await updateMutation.mutateAsync({ id: editingStaff.id, data: updateData });
+          toast.success('Angajat actualizat cu succes!');
+        } else {
+          // Create new staff - need password for new users
+          if (!data.email || !data.firstName || !data.lastName) {
+            toast.error('Va rugam completati toate campurile obligatorii');
+            return;
+          }
 
-  const handleBulkDeactivate = useCallback(() => {
-    console.log('Bulk deactivate:', Array.from(selectedStaff));
-    // TODO: Implement bulk deactivate
-  }, [selectedStaff]);
+          const createData: CreateStaffDto = {
+            email: data.email,
+            password: 'TempPass123!', // Temporary password - user should reset
+            firstName: data.firstName,
+            lastName: data.lastName,
+            roles: data.role ? mapDisplayRoleToApi(data.role) : ['STAFF'],
+            status: data.status ? mapDisplayStatusToUser(data.status) : 'ACTIVE',
+          };
+
+          await createMutation.mutateAsync(createData);
+          toast.success('Angajat creat cu succes! Un email de activare a fost trimis.');
+        }
+
+        setIsFormModalOpen(false);
+        setEditingStaff(null);
+      } catch (error) {
+        console.error('Error saving staff:', error);
+        toast.error('Eroare la salvarea angajatului');
+      }
+    },
+    [editingStaff, updateMutation, createMutation]
+  );
+
+  const handleBulkActivate = useCallback(async () => {
+    if (selectedStaff.size === 0) return;
+
+    try {
+      await bulkActivateMutation.mutateAsync(Array.from(selectedStaff));
+      toast.success(`${selectedStaff.size} angajati activati cu succes!`);
+      setSelectedStaff(new Set());
+    } catch (error) {
+      console.error('Bulk activate error:', error);
+      toast.error('Eroare la activarea angajatilor');
+    }
+  }, [selectedStaff, bulkActivateMutation]);
+
+  const handleBulkDeactivate = useCallback(async () => {
+    if (selectedStaff.size === 0) return;
+
+    try {
+      await bulkDeactivateMutation.mutateAsync(Array.from(selectedStaff));
+      toast.success(`${selectedStaff.size} angajati dezactivati cu succes!`);
+      setSelectedStaff(new Set());
+    } catch (error) {
+      console.error('Bulk deactivate error:', error);
+      toast.error('Eroare la dezactivarea angajatilor');
+    }
+  }, [selectedStaff, bulkDeactivateMutation]);
 
   const handleExport = useCallback(() => {
-    console.log('Export staff data');
-    // TODO: Implement export
-  }, []);
+    // Export as CSV
+    const headers = ['Nume', 'Prenume', 'Email', 'Rol', 'Status', 'Data Angajare'];
+    const rows = staffData.map((s) => [
+      s.lastName,
+      s.firstName,
+      s.email,
+      roleConfig[s.role].label,
+      statusConfig[s.status].label,
+      s.hireDate,
+    ]);
+
+    const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `personal_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    toast.success('Export realizat cu succes!');
+  }, [staffData]);
 
   // Helper functions
   const getInitials = (firstName: string, lastName: string): string => {
@@ -410,8 +352,10 @@ export function StaffPage() {
   };
 
   const isAllSelected =
-    paginatedStaff.length > 0 && paginatedStaff.every((s) => selectedStaff.has(s.id));
+    filteredStaff.length > 0 && filteredStaff.every((s) => selectedStaff.has(s.id));
   const isSomeSelected = selectedStaff.size > 0;
+  const isLoading = staffLoading;
+  const isBulkActionPending = bulkActivateMutation.isPending || bulkDeactivateMutation.isPending;
 
   return (
     <AppShell
@@ -465,10 +409,10 @@ export function StaffPage() {
         {/* Data Table Header */}
         <DataTableHeader
           title="Lista Personal"
-          subtitle={`${filteredStaff.length} membri`}
+          subtitle={`${total} membri`}
           search={
             <SearchInput
-              placeholder="Cauta dupa nume, email, telefon..."
+              placeholder="Cauta dupa nume, email..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               onClear={() => handleSearch('')}
@@ -547,15 +491,19 @@ export function StaffPage() {
                     variant="outline-success"
                     size="sm"
                     onClick={handleBulkActivate}
+                    loading={bulkActivateMutation.isPending}
+                    disabled={isBulkActionPending}
                     title="Activeaza Selectate"
                   >
                     <i className="ti ti-check me-1"></i>
-                    Activeaza
+                    Activeaza ({selectedStaff.size})
                   </Button>
                   <Button
                     variant="outline-warning"
                     size="sm"
                     onClick={handleBulkDeactivate}
+                    loading={bulkDeactivateMutation.isPending}
+                    disabled={isBulkActionPending}
                     title="Dezactiveaza Selectate"
                   >
                     <i className="ti ti-x me-1"></i>
@@ -574,7 +522,34 @@ export function StaffPage() {
         />
 
         <CardBody className="p-0">
-          {filteredStaff.length === 0 ? (
+          {/* Loading State */}
+          {isLoading && (
+            <div className="d-flex justify-content-center align-items-center py-5">
+              <div className="spinner-border text-primary" role="status">
+                <span className="visually-hidden">Se incarca...</span>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {staffError && !isLoading && (
+            <div className="text-center py-5">
+              <div className="avatar avatar-lg bg-danger-transparent rounded-circle mx-auto mb-3">
+                <i className="ti ti-alert-circle fs-24 text-danger"></i>
+              </div>
+              <h6 className="text-danger mb-2">Eroare la incarcarea datelor</h6>
+              <p className="text-muted small mb-3">
+                Nu am putut incarca lista de personal. Verificati conexiunea.
+              </p>
+              <Button variant="outline-primary" size="sm" onClick={() => window.location.reload()}>
+                <i className="ti ti-refresh me-1"></i>
+                Reincarca
+              </Button>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && !staffError && filteredStaff.length === 0 && (
             <TableEmpty
               icon="ti ti-users-group"
               title={searchQuery ? 'Niciun rezultat gasit' : 'Niciun angajat inregistrat'}
@@ -592,8 +567,10 @@ export function StaffPage() {
                 )
               }
             />
-          ) : viewMode === 'list' ? (
-            /* List View */
+          )}
+
+          {/* List View */}
+          {!isLoading && !staffError && filteredStaff.length > 0 && viewMode === 'list' && (
             <Table hover>
               <TableHead>
                 <TableRow>
@@ -614,7 +591,7 @@ export function StaffPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {paginatedStaff.map((staff) => (
+                {filteredStaff.map((staff) => (
                   <TableRow
                     key={staff.id}
                     className="cursor-pointer"
@@ -676,10 +653,12 @@ export function StaffPage() {
                           <i className="ti ti-mail fs-14"></i>
                           <span className="small">{staff.email}</span>
                         </div>
-                        <div className="d-flex align-items-center gap-1 text-muted">
-                          <i className="ti ti-phone fs-14"></i>
-                          <span className="small">{staff.phone}</span>
-                        </div>
+                        {staff.phone && (
+                          <div className="d-flex align-items-center gap-1 text-muted">
+                            <i className="ti ti-phone fs-14"></i>
+                            <span className="small">{staff.phone}</span>
+                          </div>
+                        )}
                       </div>
                     </TableCell>
 
@@ -728,7 +707,7 @@ export function StaffPage() {
                           icon="ti ti-calendar"
                           actionType="default"
                           tooltip="Program Lucru"
-                          onClick={() => console.log('View schedule:', staff.id)}
+                          onClick={() => toast('Functionalitate in dezvoltare', { icon: '🚧' })}
                         />
                       </TableActions>
                     </TableCell>
@@ -736,11 +715,13 @@ export function StaffPage() {
                 ))}
               </TableBody>
             </Table>
-          ) : (
-            /* Grid View */
+          )}
+
+          {/* Grid View */}
+          {!isLoading && !staffError && filteredStaff.length > 0 && viewMode === 'grid' && (
             <div className="p-4">
               <div className="row g-4">
-                {paginatedStaff.map((staff) => (
+                {filteredStaff.map((staff) => (
                   <div key={staff.id} className="col-12 col-sm-6 col-lg-4 col-xl-3">
                     <StaffCard
                       staff={staff}
@@ -759,12 +740,12 @@ export function StaffPage() {
         </CardBody>
 
         {/* Pagination Footer */}
-        {totalPages > 1 && (
+        {!isLoading && !staffError && totalPages > 1 && (
           <DataTableFooter
             info={`Afisare ${(currentPage - 1) * pageSize + 1} - ${Math.min(
               currentPage * pageSize,
-              filteredStaff.length
-            )} din ${filteredStaff.length} angajati`}
+              total
+            )} din ${total} angajati`}
           >
             <Pagination
               currentPage={currentPage}
@@ -783,6 +764,7 @@ export function StaffPage() {
         staff={editingStaff}
         roleConfig={roleConfig}
         departments={departments}
+        isLoading={createMutation.isPending || updateMutation.isPending}
       />
 
       {/* Details Drawer */}

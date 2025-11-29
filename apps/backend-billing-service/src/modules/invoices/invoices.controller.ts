@@ -12,19 +12,35 @@ import {
   ParseIntPipe,
   DefaultValuePipe,
   Res,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiResponse,
+  ApiParam,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { InvoicesService } from './invoices.service';
 import {
   CreateInvoiceDto,
   UpdateInvoiceStatusDto,
   UpdateInvoiceDto,
+  CreateInvoiceFromAppointmentDto,
+  SendInvoiceDto,
+  CancelInvoiceDto,
+  InvoiceResponseDto,
+  InvoiceGenerationResultDto,
+  InvoiceCancellationResultDto,
 } from './dto/create-invoice.dto';
 import { InvoiceItemsService } from '../invoice-items/invoice-items.service';
 import { CreateInvoiceItemDto } from '../invoice-items/dto/create-invoice-item.dto';
 import { PaymentsService } from '../payments/payments.service';
 import { CreatePaymentDto } from '../payments/dto/create-payment.dto';
+import { InvoiceGenerationService } from './services/invoice-generation.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { TenantIsolationGuard } from '../auth/guards/tenant-isolation.guard';
 import { InvoiceStatus } from '../../common/types';
@@ -38,6 +54,7 @@ export class InvoicesController {
     private readonly invoicesService: InvoicesService,
     private readonly invoiceItemsService: InvoiceItemsService,
     private readonly paymentsService: PaymentsService,
+    private readonly invoiceGenerationService: InvoiceGenerationService,
   ) {}
 
   @Post()
@@ -171,5 +188,165 @@ export class InvoicesController {
       invoice: invoice,
       note: 'This is a placeholder. Integrate a PDF library like pdfmake or puppeteer',
     });
+  }
+
+  // ============================================
+  // Invoice Generation Endpoints
+  // ============================================
+
+  @Post('from-appointment/:appointmentId')
+  @ApiOperation({
+    summary: 'Create invoice from completed appointment',
+    description:
+      'Creates an invoice from a completed appointment with procedures. ' +
+      'Includes automatic VAT calculation (19% for Romania), invoice numbering, and ledger entries.',
+  })
+  @ApiParam({ name: 'appointmentId', description: 'The ID of the completed appointment' })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Invoice created successfully',
+    type: InvoiceGenerationResultDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid request or invoice already exists for this appointment',
+  })
+  @HttpCode(HttpStatus.CREATED)
+  async createFromAppointment(
+    @Param('appointmentId') appointmentId: string,
+    @Body() dto: CreateInvoiceFromAppointmentDto,
+    @Request() req: any,
+  ) {
+    const appointmentData = {
+      appointmentId,
+      patientId: dto.patientId,
+      patientName: dto.patientName,
+      providerId: dto.providerId,
+      providerName: dto.providerName,
+      completedAt: new Date().toISOString(),
+      procedures: dto.procedures.map((p) => ({
+        procedureId: p.procedureId,
+        procedureCode: p.procedureCode,
+        procedureName: p.procedureName,
+        tooth: p.tooth,
+        surfaces: p.surfaces,
+        quantity: p.quantity || 1,
+        unitPrice: p.unitPrice,
+        discountPercent: p.discountPercent,
+        providerId: p.providerId || dto.providerId,
+        commissionRate: p.commissionRate,
+        taxExempt: p.taxExempt,
+        taxExemptionReason: p.taxExemptionReason,
+      })),
+      treatmentPlanId: dto.treatmentPlanId,
+      customerName: dto.customerName,
+      customerAddress: dto.customerAddress,
+      customerTaxId: dto.customerTaxId,
+      customerEmail: dto.customerEmail,
+    };
+
+    const result = await this.invoiceGenerationService.createFromAppointment(
+      appointmentData,
+      {
+        series: dto.series,
+        paymentTerms: dto.paymentTerms,
+        dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
+        notes: dto.notes,
+        autoIssue: dto.autoIssue,
+        currency: dto.currency,
+      },
+      req.tenantContext,
+    );
+
+    return {
+      invoice: this.mapInvoiceToResponse(result.invoice),
+      itemCount: result.invoiceItems.length,
+      warnings: result.warnings,
+    };
+  }
+
+  @Post(':id/send')
+  @ApiOperation({
+    summary: 'Send invoice to patient',
+    description: 'Sends the invoice to the specified email address. Invoice must be issued first.',
+  })
+  @ApiParam({ name: 'id', description: 'Invoice ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Invoice sent successfully',
+    type: InvoiceResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Cannot send draft invoice',
+  })
+  @HttpCode(HttpStatus.OK)
+  async sendInvoice(@Param('id') id: string, @Body() dto: SendInvoiceDto, @Request() req: any) {
+    const invoice = await this.invoiceGenerationService.sendInvoice(
+      id,
+      dto.email,
+      req.tenantContext,
+    );
+    return this.mapInvoiceToResponse(invoice);
+  }
+
+  @Delete(':id')
+  @ApiOperation({
+    summary: 'Cancel invoice (creates credit note)',
+    description:
+      'Cancels an invoice by creating a credit note. ' +
+      'The original invoice is voided and a credit note is created to reverse it. ' +
+      'This ensures proper audit trail for accounting purposes.',
+  })
+  @ApiParam({ name: 'id', description: 'Invoice ID to cancel' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Invoice cancelled successfully',
+    type: InvoiceCancellationResultDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invoice is already voided or is a credit note',
+  })
+  @HttpCode(HttpStatus.OK)
+  async cancelInvoice(@Param('id') id: string, @Body() dto: CancelInvoiceDto, @Request() req: any) {
+    const result = await this.invoiceGenerationService.cancelInvoice(
+      id,
+      dto.reason,
+      req.tenantContext,
+    );
+
+    return {
+      originalInvoice: this.mapInvoiceToResponse(result.originalInvoice),
+      creditNote: this.mapInvoiceToResponse(result.creditNote),
+    };
+  }
+
+  // ============================================
+  // Helper Methods
+  // ============================================
+
+  /**
+   * Map invoice document to response DTO
+   */
+  private mapInvoiceToResponse(invoice: any): InvoiceResponseDto {
+    return {
+      id: invoice._id?.toString() || invoice.id,
+      invoiceNumber: invoice.invoiceNumber,
+      patientId: invoice.patientId,
+      providerId: invoice.providerId,
+      status: invoice.status,
+      issueDate: invoice.issueDate,
+      dueDate: invoice.dueDate,
+      subtotal: invoice.subtotal,
+      taxAmount: invoice.taxAmount,
+      discountAmount: invoice.discountAmount,
+      total: invoice.total,
+      amountPaid: invoice.amountPaid,
+      balance: invoice.balance,
+      currency: invoice.currency,
+      createdAt: invoice.createdAt,
+      updatedAt: invoice.updatedAt,
+    };
   }
 }

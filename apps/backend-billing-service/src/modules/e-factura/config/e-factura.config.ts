@@ -47,10 +47,16 @@ export default registerAs('efactura', () => {
       maxRetries: parseInt(process.env.EFACTURA_MAX_RETRIES || '3', 10),
 
       /**
-       * Delay between retry attempts in milliseconds
+       * Base delay between retry attempts in milliseconds
        * Default: 1 minute (60000ms)
        */
       retryDelayMs: parseInt(process.env.EFACTURA_RETRY_DELAY_MS || '60000', 10),
+
+      /**
+       * Maximum delay between retry attempts in milliseconds (for exponential backoff cap)
+       * Default: 1 hour (3600000ms)
+       */
+      maxRetryDelayMs: parseInt(process.env.EFACTURA_MAX_RETRY_DELAY_MS || '3600000', 10),
 
       /**
        * Interval for checking submission status in milliseconds
@@ -194,6 +200,7 @@ export interface EFacturaConfigType {
   submission: {
     maxRetries: number;
     retryDelayMs: number;
+    maxRetryDelayMs: number;
     statusCheckIntervalMs: number;
     deadlineHours: number;
     batchSize: number;

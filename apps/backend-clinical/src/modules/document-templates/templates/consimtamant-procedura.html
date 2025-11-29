@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Consimțământ Specific Pentru Proceduri</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.6; padding: 20mm; }
+    .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+    h1 { font-size: 16pt; margin-bottom: 10px; }
+    h2 { font-size: 13pt; margin-top: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+    .patient-info { background: #f5f5f5; padding: 15px; margin: 20px 0; }
+    .procedure-box { background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 15px 0; }
+    .warning { background: #fff3cd; border: 2px solid #ffc107; padding: 15px; margin: 15px 0; }
+    .signature-row { display: flex; justify-content: space-between; margin-top: 40px; }
+    .signature-box { width: 45%; text-align: center; }
+    .signature-line { border-top: 2px solid #000; margin-top: 40px; padding-top: 8px; }
+    ul { margin-left: 25px; }
+    table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+    table td { padding: 8px; border: 1px solid #ddd; }
+    table td.label { background: #f5f5f5; font-weight: bold; width: 40%; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>CONSIMȚĂMÂNT INFORMAT SPECIFIC</h1>
+    <h1>PENTRU PROCEDURĂ STOMATOLOGICĂ</h1>
+    <p><strong>{{clinicName}}</strong> | CUI: {{clinicCUI}}</p>
+  </div>
+
+  <div class="patient-info">
+    <p><strong>Pacient:</strong> {{patientName}} | <strong>CNP:</strong> {{cnp}}</p>
+    <p><strong>Data:</strong> {{issueDate}} | <strong>Medic:</strong> Dr. {{providerName}}</p>
+  </div>
+
+  <div class="procedure-box">
+    <h2>PROCEDURĂ PROPUSĂ</h2>
+    <table>
+      <tr><td class="label">Denumire Procedură</td><td>{{procedureName}}</td></tr>
+      <tr><td class="label">Cod CPT/CDT</td><td>{{procedureCode}}</td></tr>
+      <tr><td class="label">Dinte/Dinți Implicați</td><td>{{affectedTeeth}}</td></tr>
+      <tr><td class="label">Diagnostic (ICD-10)</td><td>{{diagnosis}} ({{icd10Code}})</td></tr>
+      <tr><td class="label">Durată Estimată</td><td>{{estimatedDuration}}</td></tr>
+      <tr><td class="label">Cost Estimat</td><td>{{estimatedCost}} RON</td></tr>
+    </table>
+  </div>
+
+  <h2>1. DESCRIEREA PROCEDURII</h2>
+  <div>
+    <p>{{procedureDescription}}</p>
+  </div>
+
+  <h2>2. RISCURI ȘI COMPLICAȚII SPECIFICE</h2>
+  <div class="warning">
+    <strong>IMPORTANT:</strong> Înțeleg că această procedură poate implica următoarele riscuri:
+    <ul>
+      <li>Durere post-operatorie și disconfort (2-7 zile)</li>
+      <li>Sângerare în timpul și după procedură</li>
+      <li>Umflături și vânătăi în zona tratată</li>
+      <li>Risc de infecție (necesită tratament antibiotic)</li>
+      <li>Leziuni ale nervilor adiacenți (amorțeală temporară sau permanentă)</li>
+      <li>Fracturarea dinților adiacenți sau a radăcinilor</li>
+      <li>{{specificRisks}}</li>
+    </ul>
+  </div>
+
+  <h2>3. ALTERNATIVE DE TRATAMENT</h2>
+  <div>
+    <p>Am fost informat(ă) despre următoarele alternative:</p>
+    <ul>
+      <li>{{alternative1}}</li>
+      <li>{{alternative2}}</li>
+      <li>Neefectuarea tratamentului (consecințe: {{noTreatmentConsequences}})</li>
+    </ul>
+  </div>
+
+  <h2>4. REZULTATE AȘTEPTATE ȘI PROGNOSTIC</h2>
+  <div>
+    <p>Rata de succes estimată: {{successRate}}%</p>
+    <p>Prognostic: {{prognosis}}</p>
+    <p>Înțeleg că rezultatele pot varia și nu există garanții absolute.</p>
+  </div>
+
+  <h2>5. INSTRUCȚIUNI POST-PROCEDURĂ</h2>
+  <div>
+    <ul>
+      <li>Repaus și evitarea efortului fizic intens pentru {{restPeriod}} ore</li>
+      <li>Aplicarea de gheață pentru reducerea umflăturii (primele 24h)</li>
+      <li>Administrarea medicamentelor prescrise conform indicațiilor</li>
+      <li>Evitarea alimentelor tari timp de {{softDietDays}} zile</li>
+      <li>Menținerea igienei orale (clătire cu apă sărată)</li>
+      <li>{{additionalInstructions}}</li>
+    </ul>
+  </div>
+
+  <h2>6. PRE-PROCEDURĂ CHECKLIST</h2>
+  <table>
+    <tr><td class="label">Am mâncat în ultimele 2 ore?</td><td>☐ DA ☐ NU</td></tr>
+    <tr><td class="label">Am luat medicamentele prescrise?</td><td>☐ DA ☐ NU ☐ N/A</td></tr>
+    <tr><td class="label">Am înștiințat medicul despre alergii?</td><td>☐ DA ☐ NU</td></tr>
+    <tr><td class="label">Am înțeles instrucțiunile post-procedură?</td><td>☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>7. DECLARAȚIE ȘI CONSIMȚĂMÂNT</h2>
+  <div>
+    <p>Subsemnatul(a) <strong>{{patientName}}</strong>, CNP <strong>{{cnp}}</strong>, declar că:</p>
+    <ul>
+      <li>Am citit și înțeles toate informațiile despre procedura <strong>{{procedureName}}</strong></li>
+      <li>Am avut posibilitatea să pun întrebări și am primit răspunsuri clare</li>
+      <li>Sunt conștient(ă) de riscurile și beneficiile acestei proceduri</li>
+      <li>Îmi exprim <strong>consimțământul liber și informat</strong> pentru efectuarea procedurii</li>
+      <li>Înțeleg că pot retrage acest consimțământ înainte de începerea procedurii</li>
+    </ul>
+  </div>
+
+  <div class="signature-row">
+    <div class="signature-box">
+      <div class="signature-line">Semnătura Pacientului</div>
+      <p style="font-size: 9pt; margin-top: 5px;">{{patientName}}<br>Data: {{signatureDate}}</p>
+    </div>
+    <div class="signature-box">
+      <div class="signature-line">Semnătura și Ștampila Medicului</div>
+      <p style="font-size: 9pt; margin-top: 5px;">Dr. {{providerName}}<br>Data: {{signatureDate}}</p>
+    </div>
+  </div>
+
+  <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 8pt; text-align: center; color: #888;">
+    <p>{{clinicName}} | Document generat electronic: {{generationDate}}</p>
+  </div>
+</body>
+</html>

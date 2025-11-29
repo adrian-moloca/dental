@@ -25,6 +25,8 @@ import { format } from 'date-fns';
 import { ro } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import { PatientContactActions } from '../components/clinical/PatientContactActions';
+import { PatientTimeline } from '../components/patients/PatientTimeline';
+import { PatientDocumentsTab } from '../components/patients/PatientDocuments';
 
 type TabType = 'overview' | 'timeline' | 'documents';
 
@@ -92,7 +94,7 @@ export default function PatientDetailsPage() {
   // Fetch patient data
   const { data: patientData, isLoading, error } = usePatient(id);
   const { data: balanceData } = usePatientBalance(id);
-  const { data: appointmentsData, isLoading: appointmentsLoading } = useAppointments({
+  const { data: appointmentsData } = useAppointments({
     patientId: id,
     limit: 10,
   });
@@ -732,116 +734,12 @@ export default function PatientDetailsPage() {
             </>
           )}
 
-          {activeTab === 'timeline' && (
-            <Card className="shadow-sm">
-              <CardHeader title="Istoric Vizite" icon="ti ti-timeline" />
-              <CardBody>
-                {appointmentsLoading ? (
-                  <div className="text-center py-4">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Se incarca...</span>
-                    </div>
-                  </div>
-                ) : appointmentsData?.data && appointmentsData.data.length > 0 ? (
-                  <div className="timeline">
-                    {appointmentsData.data.map((appointment: AppointmentItem) => (
-                      <div key={appointment.id} className="timeline-item">
-                        <div className="timeline-marker">
-                          <div
-                            className={`avatar avatar-sm rounded-circle ${
-                              appointment.status === 'completed'
-                                ? 'bg-success-transparent'
-                                : appointment.status === 'cancelled'
-                                ? 'bg-danger-transparent'
-                                : 'bg-primary-transparent'
-                            }`}
-                          >
-                            <i
-                              className={`ti ${
-                                appointment.status === 'completed'
-                                  ? 'ti-check'
-                                  : appointment.status === 'cancelled'
-                                  ? 'ti-x'
-                                  : 'ti-calendar'
-                              }`}
-                            ></i>
-                          </div>
-                        </div>
-                        <div className="timeline-content">
-                          <div className="d-flex justify-content-between align-items-start mb-2">
-                            <div>
-                              <h6 className="mb-1 fw-bold">
-                                {appointment.appointmentType?.name || 'Consultatie Generala'}
-                              </h6>
-                              <div className="text-muted small">
-                                <i className="ti ti-calendar me-1"></i>
-                                {format(new Date(appointment.startTime), 'dd MMMM yyyy, HH:mm', {
-                                  locale: ro,
-                                })}
-                                {(appointment.providerName || (appointment.provider?.firstName && appointment.provider?.lastName)) && (
-                                  <>
-                                    {' • '}
-                                    <i className="ti ti-user-md me-1"></i>
-                                    {appointment.providerName || `${appointment.provider?.firstName} ${appointment.provider?.lastName}`}
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                            {appointment.status === 'completed' ? (
-                              <StatusBadge status="completed">Finalizata</StatusBadge>
-                            ) : appointment.status === 'cancelled' ? (
-                              <StatusBadge status="cancelled">Anulata</StatusBadge>
-                            ) : appointment.status === 'confirmed' ? (
-                              <StatusBadge status="confirmed">Confirmata</StatusBadge>
-                            ) : (
-                              <StatusBadge status="scheduled">Programata</StatusBadge>
-                            )}
-                          </div>
-                          {appointment.notes && (
-                            <p className="mb-0 small text-muted">{appointment.notes}</p>
-                          )}
-                          {appointment.reasonForVisit && (
-                            <div className="mt-2 small">
-                              <span className="text-muted">Motiv: </span>
-                              {appointment.reasonForVisit}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-5">
-                    <i className="ti ti-calendar-off fs-48 text-muted"></i>
-                    <p className="text-muted mt-3 mb-0">Nicio vizita inregistrata</p>
-                  </div>
-                )}
-              </CardBody>
-            </Card>
+          {activeTab === 'timeline' && id && (
+            <PatientTimeline patientId={id} />
           )}
 
-          {activeTab === 'documents' && (
-            <Card className="shadow-sm">
-              <CardHeader
-                title="Documente"
-                icon="ti ti-file"
-                actions={
-                  <Button variant="soft-primary" size="sm">
-                    <i className="ti ti-upload me-1"></i>
-                    Incarca
-                  </Button>
-                }
-              />
-              <CardBody>
-                <div className="text-center py-5">
-                  <i className="ti ti-file-off fs-48 text-muted"></i>
-                  <p className="text-muted mt-3 mb-0">Niciun document disponibil</p>
-                  <p className="text-muted small">
-                    Urca documente cum ar fi consimtaminte, radiografii sau rapoarte
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
+          {activeTab === 'documents' && id && (
+            <PatientDocumentsTab patientId={id} />
           )}
         </div>
 

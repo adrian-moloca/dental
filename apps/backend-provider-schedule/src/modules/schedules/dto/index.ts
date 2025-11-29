@@ -3,3 +3,6 @@ export * from './update-schedule.dto';
 export * from './create-absence.dto';
 export * from './check-availability.dto';
 export * from './schedule-response.dto';
+export * from './schedule-exception.dto';
+export * from './absence-workflow.dto';
+export * from './availability.dto';

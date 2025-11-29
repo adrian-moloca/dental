@@ -8,6 +8,7 @@ import { RelationshipsModule } from './modules/relationships/relationships.modul
 import { TimelineModule } from './modules/timeline/timeline.module';
 import { GdprModule } from './modules/gdpr/gdpr.module';
 import { SearchModule } from './modules/search/search.module';
+import { DocumentsModule } from './modules/documents/documents.module';
 import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
 
@@ -47,6 +48,7 @@ import { MetricsModule } from './metrics/metrics.module';
     TimelineModule,
     GdprModule,
     SearchModule,
+    DocumentsModule,
   ],
 })
 export class AppModule {}

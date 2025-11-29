@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <title>Anamneză Medicală</title>
+  <style>
+    body { font-family: Arial, sans-serif; font-size: 10pt; padding: 15mm; }
+    .header { text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; padding-bottom: 10px; }
+    h1 { font-size: 14pt; }
+    h2 { font-size: 12pt; background: #f0f0f0; padding: 5px; margin-top: 15px; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    table td { padding: 5px; border: 1px solid #ccc; }
+    table td.question { width: 70%; }
+    table td.answer { width: 30%; text-align: center; }
+    .section { margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>CHESTIONAR DE ANAMNEZĂ MEDICALĂ</h1>
+    <p><strong>{{clinicName}}</strong> | {{clinicAddress}}</p>
+  </div>
+
+  <div style="background: #f5f5f5; padding: 10px; margin-bottom: 15px;">
+    <strong>Pacient:</strong> {{patientName}} | <strong>CNP:</strong> {{cnp}} | <strong>Data:</strong> {{completionDate}}
+  </div>
+
+  <p style="background: #fff3cd; padding: 10px; border: 1px solid #ffc107; margin-bottom: 15px;">
+    <strong>IMPORTANT:</strong> Vă rugăm să răspundeți cu DA sau NU la toate întrebările. Informațiile sunt confidențiale și necesare pentru siguranța tratamentului dumneavoastră.
+  </p>
+
+  <h2>1. AFECȚIUNI CARDIOVASCULARE</h2>
+  <table>
+    <tr><td class="question">Aveți hipertensiune arterială (tensiune crescută)?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Aveți boli de inimă (infarct, angină, insuficiență cardiacă)?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Purtați pacemaker sau aveți stenturi coronariene?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Luați medicamente anticoagulante (aspirină, sintrom)?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>2. AFECȚIUNI RESPIRATORII</h2>
+  <table>
+    <tr><td class="question">Suferiți de astm bronșic?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Aveți bronșită cronică sau BPOC?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Ați avut tuberculoză?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>3. AFECȚIUNI DIGESTIVE</h2>
+  <table>
+    <tr><td class="question">Aveți hepatită (A, B, C) sau boli hepatice?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Suferiți de ulcer gastric sau reflux?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>4. AFECȚIUNI ENDOCRINE</h2>
+  <table>
+    <tr><td class="question">Aveți diabet zaharat?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Aveți probleme cu tiroida?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>5. AFECȚIUNI RENALE ȘI UROLOGICE</h2>
+  <table>
+    <tr><td class="question">Aveți boli renale sau sunteți dializat(ă)?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Aveți pietre la rinichi?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>6. AFECȚIUNI NEUROLOGICE ȘI PSIHICE</h2>
+  <table>
+    <tr><td class="question">Aveți epilepsie sau crize convulsive?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Ați suferit accident vascular cerebral (AVC)?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Suferiți de depresie sau anxietate?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Luați medicamente psihiatrice (antidepresive, anxiolitice)?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>7. AFECȚIUNI ALE SÂNGELUI</h2>
+  <table>
+    <tr><td class="question">Aveți tulburări de coagulare (hemofilie)?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Sângerați ușor sau aveți vânătăi frecvente?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Aveți anemie?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>8. ALERGII</h2>
+  <table>
+    <tr><td class="question">Sunteți alergic(ă) la anestezice locale (Novocaină, Lidocaină)?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Sunteți alergic(ă) la penicilină sau alte antibiotice?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Sunteți alergic(ă) la latex (mănuși)?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Aveți alte alergii medicamentoase?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+  <p style="margin-left: 20px;"><strong>Dacă DA, specificați:</strong> _______________________________</p>
+
+  <h2>9. PENTRU FEMEI</h2>
+  <table>
+    <tr><td class="question">Sunteți însărcinată sau suspectați sarcina?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Alăptați?</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Luați contraceptive orale?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>10. OBICEIURI</h2>
+  <table>
+    <tr><td class="question">Fumați? (Dacă DA, câte țigări/zi: _____)</td><td class="answer">☐ DA ☐ NU</td></tr>
+    <tr><td class="question">Consumați alcool regulat?</td><td class="answer">☐ DA ☐ NU</td></tr>
+  </table>
+
+  <h2>11. MEDICAMENTE ACTUALE</h2>
+  <p style="margin-left: 20px;">Vă rugăm să listați toate medicamentele pe care le luați (inclusiv vitamine, suplimente):</p>
+  <div style="border: 1px solid #ccc; padding: 10px; min-height: 80px; margin: 10px 20px;"></div>
+
+  <h2>12. OBSERVAȚII MEDICALE (completat de medic)</h2>
+  <div style="border: 1px solid #ccc; padding: 10px; min-height: 100px; margin: 10px 20px; background: #f9f9f9;"></div>
+
+  <div style="margin-top: 30px;">
+    <p><strong>Declar că informațiile furnizate sunt corecte și complete:</strong></p>
+    <div style="display: flex; justify-content: space-between; margin-top: 30px;">
+      <div style="width: 45%; text-align: center;">
+        <div style="border-top: 2px solid #000; padding-top: 5px; margin-top: 40px;">Semnătura Pacientului<br><small>Data: {{completionDate}}</small></div>
+      </div>
+      <div style="width: 45%; text-align: center;">
+        <div style="border-top: 2px solid #000; padding-top: 5px; margin-top: 40px;">Semnătura Medicului<br><small>Data: {{completionDate}}</small></div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

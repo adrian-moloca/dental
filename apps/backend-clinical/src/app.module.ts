@@ -23,8 +23,10 @@ import { PerioChartModule } from './modules/perio-chart/perio-chart.module';
 import { ClinicalNotesModule } from './modules/clinical-notes/clinical-notes.module';
 import { TreatmentPlansModule } from './modules/treatment-plans/treatment-plans.module';
 import { ProceduresModule } from './modules/procedures/procedures.module';
+import { ProcedureCatalogModule } from './modules/procedure-catalog/procedure-catalog.module';
 import { ConsentsModule } from './modules/consents/consents.module';
 import { RetentionModule } from './modules/retention/retention.module';
+import { InterventionsModule } from './modules/interventions/interventions.module';
 
 // Common Modules
 import { CacheModule } from './common/cache/cache.module';
@@ -95,8 +97,10 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
     ClinicalNotesModule,
     TreatmentPlansModule,
     ProceduresModule,
+    ProcedureCatalogModule,
     ConsentsModule,
     RetentionModule, // Romanian medical records retention (10 years)
+    InterventionsModule, // Quick clinical interventions
   ],
   providers: [
     // Global JWT authentication

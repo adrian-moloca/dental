@@ -1,0 +1,30 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2021",
+    "esModuleInterop": true,
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "types": ["jest", "node"],
+    "typeRoots": [
+      "../../../node_modules/.pnpm/@types+jest@29.5.14/node_modules/@types",
+      "../../../node_modules/@types"
+    ],
+    "rootDir": "../../..",
+    "paths": {
+      "@dentalos/shared-types": ["../../../packages/shared-types/src"],
+      "@dentalos/shared-validation": ["../../../packages/shared-validation/src"],
+      "@dentalos/shared-domain": ["../../../packages/shared-domain/src"],
+      "@dentalos/shared-auth": ["../../../packages/shared-auth/src"],
+      "@dentalos/shared-infra": ["../../../packages/shared-infra/src"],
+      "@dentalos/shared-events": ["../../../packages/shared-events/src"],
+      "@dentalos/shared-errors": ["../../../packages/shared-errors/src"]
+    }
+  },
+  "include": [
+    "../test/**/*.ts",
+    "../src/**/*.ts"
+  ]
+}

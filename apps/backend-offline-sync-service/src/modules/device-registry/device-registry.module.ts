@@ -9,9 +9,7 @@ import { DeviceRegistryDoc, DeviceRegistrySchema } from './schemas/device-regist
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      { name: DeviceRegistryDoc.name, schema: DeviceRegistrySchema },
-    ]),
+    MongooseModule.forFeature([{ name: DeviceRegistryDoc.name, schema: DeviceRegistrySchema }]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

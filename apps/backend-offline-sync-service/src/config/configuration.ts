@@ -40,14 +40,14 @@ export const serverConfig = registerAs('server', () =>
   ServerConfigSchema.parse({
     port: process.env.PORT || 3019,
     nodeEnv: process.env.NODE_ENV || 'development',
-  })
+  }),
 );
 
 export const mongoConfig = registerAs('mongo', () =>
   MongoConfigSchema.parse({
     uri: process.env.MONGODB_URI,
     maxPoolSize: process.env.MONGODB_MAX_POOL_SIZE,
-  })
+  }),
 );
 
 export const rabbitmqConfig = registerAs('rabbitmq', () =>
@@ -55,32 +55,32 @@ export const rabbitmqConfig = registerAs('rabbitmq', () =>
     url: process.env.RABBITMQ_URL,
     exchange: process.env.RABBITMQ_EXCHANGE,
     queuePrefix: process.env.RABBITMQ_QUEUE_PREFIX,
-  })
+  }),
 );
 
 export const jwtConfig = registerAs('jwt', () =>
   JwtConfigSchema.parse({
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN,
-  })
+  }),
 );
 
 export const deviceConfig = registerAs('device', () =>
   DeviceConfigSchema.parse({
     tokenSecret: process.env.DEVICE_TOKEN_SECRET,
     tokenExpiresIn: process.env.DEVICE_TOKEN_EXPIRES_IN,
-  })
+  }),
 );
 
 export const encryptionConfig = registerAs('encryption', () =>
   EncryptionConfigSchema.parse({
     key: process.env.ENCRYPTION_KEY,
-  })
+  }),
 );
 
 export const corsConfig = registerAs('cors', () =>
   CorsConfigSchema.parse({
     origins: process.env.CORS_ORIGINS,
     credentials: process.env.CORS_CREDENTIALS,
-  })
+  }),
 );

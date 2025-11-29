@@ -21,7 +21,10 @@ import { RedisService } from '../../redis/redis.service';
 @WebSocketGateway({
   namespace: '/ws',
   cors: {
-    origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173', 'http://localhost:3000'],
+    origin: process.env.CORS_ALLOWED_ORIGINS?.split(',') || [
+      'http://localhost:5173',
+      'http://localhost:3000',
+    ],
     credentials: true,
   },
 })

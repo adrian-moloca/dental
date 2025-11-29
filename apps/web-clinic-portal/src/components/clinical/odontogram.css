@@ -1055,3 +1055,659 @@
     opacity: 1;
   }
 }
+
+/* ==========================================================================
+   Odontogram Connected Editor Styles
+   ========================================================================== */
+
+/* Loading State */
+.odontogram-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.odontogram-loading-content {
+  text-align: center;
+}
+
+/* Error State */
+.odontogram-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.odontogram-error-content {
+  text-align: center;
+}
+
+/* Toolbar */
+.odontogram-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--light);
+  border-radius: 8px;
+  border: 1px solid var(--odontogram-border);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.odontogram-toolbar-left,
+.odontogram-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Quick Select Indicator */
+.tooth-quick-select-indicator {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+}
+
+/* ==========================================================================
+   Condition Palette Styles
+   ========================================================================== */
+
+.condition-palette {
+  margin-bottom: 20px;
+}
+
+.condition-palette-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 12px;
+}
+
+.condition-palette-hint {
+  font-weight: 400;
+  color: var(--gray-500);
+  font-size: 0.75rem;
+}
+
+.condition-palette-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.condition-palette-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--white);
+  border: 2px solid var(--odontogram-border);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+  text-align: left;
+}
+
+.condition-palette-btn:hover {
+  border-color: var(--condition-color, var(--primary));
+  background: rgba(var(--primary-rgb), 0.05);
+}
+
+.condition-palette-btn-selected {
+  border-color: var(--condition-color, var(--primary));
+  background: var(--condition-color, var(--primary));
+  color: var(--white);
+}
+
+.condition-palette-btn-selected .condition-palette-dot {
+  border: 2px solid var(--white);
+}
+
+.condition-palette-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.condition-palette-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.condition-palette-kbd {
+  font-family: monospace;
+  font-size: 0.7rem;
+  padding: 2px 5px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 3px;
+  margin-right: 4px;
+}
+
+.condition-palette-btn-selected .condition-palette-kbd {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.condition-palette-desc {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: var(--gray-500);
+  margin-top: 2px;
+}
+
+.condition-palette-btn-selected .condition-palette-desc {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ==========================================================================
+   Surface Selector Styles
+   ========================================================================== */
+
+.surface-selector {
+  margin-bottom: 20px;
+}
+
+.surface-selector-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 12px;
+}
+
+.surface-selector-hint {
+  font-weight: 400;
+  color: var(--gray-500);
+  font-size: 0.75rem;
+}
+
+.surface-selector-grid {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.surface-btn {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  background: var(--white);
+  border: 2px solid var(--odontogram-border);
+  border-radius: 8px;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+}
+
+.surface-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.surface-btn-selected {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--white);
+}
+
+.surface-selector-legend {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+/* ==========================================================================
+   Material Selector Styles
+   ========================================================================== */
+
+.material-selector,
+.severity-selector {
+  margin-bottom: 16px;
+}
+
+.material-selector-label,
+.severity-selector-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+.severity-selector-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.severity-btn {
+  padding: 8px 16px;
+  background: var(--white);
+  border: 2px solid var(--odontogram-border);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all var(--transition-fast) ease;
+}
+
+.severity-btn:hover {
+  border-color: var(--severity-color, var(--primary));
+}
+
+.severity-btn-selected {
+  border-color: var(--severity-color, var(--primary));
+  background: var(--severity-color, var(--primary));
+  color: var(--white);
+}
+
+/* ==========================================================================
+   Condition Editor Actions
+   ========================================================================== */
+
+.condition-editor-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--odontogram-border);
+}
+
+/* ==========================================================================
+   Tooth Details Panel Styles
+   ========================================================================== */
+
+.tooth-details-panel {
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--odontogram-border);
+  box-shadow: var(--odontogram-shadow);
+  overflow: hidden;
+  animation: slideIn 0.3s ease;
+}
+
+.tooth-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--light);
+  border-bottom: 1px solid var(--odontogram-border);
+}
+
+.tooth-details-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--heading-color);
+}
+
+.tooth-details-number {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.tooth-details-type {
+  font-weight: 400;
+  color: var(--gray-600);
+}
+
+.tooth-details-arch {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--gray-500);
+  padding: 2px 8px;
+  background: var(--white);
+  border-radius: 4px;
+}
+
+.tooth-details-tabs {
+  border-bottom: 1px solid var(--odontogram-border);
+  padding: 0 16px;
+}
+
+.tooth-details-tabs .nav-link {
+  font-size: 0.85rem;
+  padding: 12px 16px;
+}
+
+.tooth-details-content {
+  padding: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* ==========================================================================
+   Condition Card Styles
+   ========================================================================== */
+
+.tooth-conditions-actions {
+  margin-bottom: 16px;
+}
+
+.tooth-conditions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tooth-conditions-empty {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: var(--light);
+  border: 1px dashed var(--odontogram-border);
+  border-radius: 8px;
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.condition-card {
+  background: var(--white);
+  border: 1px solid var(--odontogram-border);
+  border-left-width: 4px;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.condition-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.condition-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.condition-card-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.condition-card-name {
+  font-weight: 600;
+  color: var(--heading-color);
+}
+
+.condition-card-severity {
+  font-size: 0.7rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.condition-card-severity.severity-mild {
+  background: #FEF9C3;
+  color: #854D0E;
+}
+
+.condition-card-severity.severity-moderate {
+  background: #FED7AA;
+  color: #9A3412;
+}
+
+.condition-card-severity.severity-severe {
+  background: #FECACA;
+  color: #991B1B;
+}
+
+.condition-card-body {
+  font-size: 0.85rem;
+}
+
+.condition-card-surfaces,
+.condition-card-material,
+.condition-card-date,
+.condition-card-notes {
+  margin-bottom: 6px;
+  color: var(--gray-600);
+}
+
+.condition-card-label {
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-right: 8px;
+}
+
+.condition-card-surface-badges {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.surface-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: var(--light);
+  border: 1px solid var(--odontogram-border);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--gray-600);
+}
+
+.condition-card-remove-confirm {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--odontogram-border);
+}
+
+.condition-card-remove-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* ==========================================================================
+   History Timeline Styles (Enhanced)
+   ========================================================================== */
+
+.history-timeline-loading,
+.history-timeline-empty {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: var(--light);
+  border-radius: 8px;
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.history-entry {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.history-entry-latest .history-content {
+  background: var(--light);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.history-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.history-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.history-line {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: var(--odontogram-border);
+  margin-top: -4px;
+}
+
+.history-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.history-type {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--heading-color);
+}
+
+.history-date {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.history-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.history-condition-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+}
+
+.history-surfaces {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+}
+
+.history-reason {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   Tooth Properties Styles
+   ========================================================================== */
+
+.tooth-properties {
+  padding: 8px 0;
+}
+
+.tooth-properties-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--heading-color);
+}
+
+.tooth-property {
+  margin-bottom: 16px;
+}
+
+.tooth-property .form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 8px;
+}
+
+/* ==========================================================================
+   Responsive Enhancements for Connected Editor
+   ========================================================================== */
+
+@media (max-width: 992px) {
+  .odontogram-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .odontogram-toolbar-left,
+  .odontogram-toolbar-right {
+    justify-content: center;
+  }
+
+  .tooth-details-panel {
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .condition-palette-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .tooth-details-tabs .nav-link {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .condition-palette-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .tooth-details-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .tooth-details-title {
+    flex-wrap: wrap;
+  }
+}

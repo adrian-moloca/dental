@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheckService, EnhancedHealthStatus as HealthStatus } from '@dentalos/shared-infra';
 import { RedisService } from '../../redis/redis.service';
+import { EventConsumerService } from '../event-consumer/event-consumer.service';
 
 /**
  * Health check controller for Kubernetes readiness/liveness probes.
@@ -14,6 +15,7 @@ export class HealthController {
   constructor(
     private readonly healthCheck: HealthCheckService,
     private readonly redisService: RedisService,
+    private readonly eventConsumerService: EventConsumerService,
   ) {
     this.registerChecks();
   }
@@ -31,6 +33,17 @@ export class HealthController {
       return {
         status: HealthStatus.HEALTHY,
         message: 'WebSocket server is operational',
+      };
+    });
+
+    // RabbitMQ event consumer health check
+    this.healthCheck.register('rabbitmq', async () => {
+      const isHealthy = this.eventConsumerService.isHealthy();
+      return {
+        status: isHealthy ? HealthStatus.HEALTHY : HealthStatus.DEGRADED,
+        message: isHealthy
+          ? 'RabbitMQ event consumer connected'
+          : 'RabbitMQ event consumer disconnected (events not being consumed)',
       };
     });
   }

@@ -200,7 +200,239 @@ export class Demographics {
 }
 
 /**
+ * Allergy severity levels per clinical standards
+ * CRITICAL: Life-threatening allergies must always be displayed prominently
+ */
+export type AllergySeverity = 'mild' | 'moderate' | 'severe' | 'life_threatening';
+
+/**
+ * Allergy entry with clinical severity tracking
+ * Required for patient safety during treatment planning
+ */
+export class AllergyEntry {
+  @Prop({ required: true, type: String, trim: true })
+  allergen!: string;
+
+  @Prop({
+    required: true,
+    type: String,
+    enum: ['mild', 'moderate', 'severe', 'life_threatening'],
+    default: 'moderate',
+  })
+  severity!: AllergySeverity;
+
+  @Prop({ type: String, trim: true })
+  reaction?: string;
+
+  @Prop({ type: Date })
+  onsetDate?: Date;
+
+  @Prop({ type: Date })
+  verifiedDate?: Date;
+
+  @Prop({ type: String, trim: true })
+  verifiedBy?: string;
+
+  @Prop({ type: String, maxlength: 1000 })
+  notes?: string;
+
+  @Prop({ type: Boolean, default: true })
+  isActive!: boolean;
+}
+
+/**
+ * Medical condition status
+ */
+export type ConditionStatus = 'active' | 'resolved' | 'chronic' | 'in_remission';
+
+/**
+ * Medical condition entry with ICD-10 coding
+ * ICD-10 codes are required for proper clinical documentation and insurance claims
+ */
+export class MedicalConditionEntry {
+  @Prop({ required: true, type: String, trim: true })
+  name!: string;
+
+  /**
+   * ICD-10-CM code for the condition
+   * Format: Letter + 2 digits, optionally followed by decimal and additional digits
+   * Example: K02.51 (Dental caries on pit and fissure surface limited to enamel)
+   */
+  @Prop({ type: String, trim: true })
+  icd10Code?: string;
+
+  @Prop({
+    type: String,
+    enum: ['active', 'resolved', 'chronic', 'in_remission'],
+    default: 'active',
+  })
+  status!: ConditionStatus;
+
+  @Prop({
+    type: String,
+    enum: ['mild', 'moderate', 'severe', 'life_threatening'],
+  })
+  severity?: AllergySeverity;
+
+  @Prop({ type: Date })
+  diagnosedDate?: Date;
+
+  @Prop({ type: Date })
+  resolvedDate?: Date;
+
+  @Prop({ type: String, trim: true })
+  diagnosedBy?: string;
+
+  @Prop({ type: String, maxlength: 1000 })
+  notes?: string;
+
+  @Prop({ type: Boolean, default: true })
+  isActive!: boolean;
+}
+
+/**
+ * Medication entry with dosage and frequency
+ * Required for drug interaction checking and clinical safety
+ */
+export class MedicationEntry {
+  @Prop({ required: true, type: String, trim: true })
+  name!: string;
+
+  @Prop({ type: String, trim: true })
+  genericName?: string;
+
+  @Prop({ type: String, trim: true })
+  dosage?: string;
+
+  @Prop({ type: String, trim: true })
+  frequency?: string;
+
+  @Prop({ type: String, trim: true })
+  route?: string; // oral, topical, injection, etc.
+
+  @Prop({ type: Date })
+  startDate?: Date;
+
+  @Prop({ type: Date })
+  endDate?: Date;
+
+  @Prop({ type: String, trim: true })
+  prescribedBy?: string;
+
+  @Prop({ type: String, trim: true })
+  reason?: string;
+
+  @Prop({ type: String, maxlength: 1000 })
+  notes?: string;
+
+  @Prop({ type: Boolean, default: true })
+  isActive!: boolean;
+}
+
+/**
+ * Patient flags for clinical and administrative alerts
+ * These flags affect treatment workflow and patient interaction
+ */
+export type PatientFlagType =
+  | 'anxious'
+  | 'wheelchair'
+  | 'hearing_impaired'
+  | 'vision_impaired'
+  | 'requires_premedication'
+  | 'latex_allergy'
+  | 'needle_phobic'
+  | 'gag_reflex'
+  | 'special_needs'
+  | 'vip'
+  | 'staff_family'
+  | 'high_risk'
+  | 'language_barrier'
+  | 'payment_plan'
+  | 'collections'
+  | 'legal_guardian_required'
+  | 'do_not_contact'
+  | 'other';
+
+/**
+ * Patient flag entry
+ */
+export class PatientFlagEntry {
+  @Prop({
+    required: true,
+    type: String,
+    enum: [
+      'anxious',
+      'wheelchair',
+      'hearing_impaired',
+      'vision_impaired',
+      'requires_premedication',
+      'latex_allergy',
+      'needle_phobic',
+      'gag_reflex',
+      'special_needs',
+      'vip',
+      'staff_family',
+      'high_risk',
+      'language_barrier',
+      'payment_plan',
+      'collections',
+      'legal_guardian_required',
+      'do_not_contact',
+      'other',
+    ],
+  })
+  type!: PatientFlagType;
+
+  @Prop({ type: String, maxlength: 500 })
+  description?: string;
+
+  @Prop({ type: Date })
+  addedDate?: Date;
+
+  @Prop({ type: String, trim: true })
+  addedBy?: string;
+
+  @Prop({ type: Date })
+  expiresAt?: Date;
+
+  @Prop({ type: Boolean, default: true })
+  isActive!: boolean;
+}
+
+/**
+ * Medical alerts sub-document
+ * Contains all clinical alerts that affect patient care decisions
+ * CRITICAL: These alerts must be reviewed before any clinical procedure
+ */
+export class MedicalAlerts {
+  @Prop({ type: [AllergyEntry], default: [] })
+  allergies!: AllergyEntry[];
+
+  @Prop({ type: [MedicalConditionEntry], default: [] })
+  conditions!: MedicalConditionEntry[];
+
+  @Prop({ type: [MedicationEntry], default: [] })
+  medications!: MedicationEntry[];
+
+  @Prop({ type: [PatientFlagEntry], default: [] })
+  flags!: PatientFlagEntry[];
+
+  /**
+   * Timestamp of last medical history review
+   */
+  @Prop({ type: Date })
+  lastReviewedAt?: Date;
+
+  /**
+   * Provider who last reviewed the medical history
+   */
+  @Prop({ type: String, trim: true })
+  lastReviewedBy?: string;
+}
+
+/**
  * Medical information sub-document
+ * @deprecated Use medicalAlerts instead. Kept for backwards compatibility.
  */
 export class MedicalInfo {
   @Prop({ type: [String], default: [] })
@@ -217,7 +449,217 @@ export class MedicalInfo {
 }
 
 /**
+ * Insurance coverage details with financial tracking
+ * Essential for treatment planning and patient cost estimates
+ */
+export class InsuranceCoverage {
+  /**
+   * Annual maximum benefit amount in currency units
+   */
+  @Prop({ type: Number, min: 0 })
+  annualMax?: number;
+
+  /**
+   * Remaining benefit for current plan year
+   */
+  @Prop({ type: Number, min: 0 })
+  remaining?: number;
+
+  /**
+   * Deductible amount
+   */
+  @Prop({ type: Number, min: 0 })
+  deductible?: number;
+
+  /**
+   * Deductible amount already met
+   */
+  @Prop({ type: Number, min: 0 })
+  deductibleMet?: number;
+
+  /**
+   * Coinsurance percentage for preventive services (e.g., 100 = 100% coverage)
+   */
+  @Prop({ type: Number, min: 0, max: 100 })
+  preventivePercent?: number;
+
+  /**
+   * Coinsurance percentage for basic services (fillings, extractions)
+   */
+  @Prop({ type: Number, min: 0, max: 100 })
+  basicPercent?: number;
+
+  /**
+   * Coinsurance percentage for major services (crowns, bridges)
+   */
+  @Prop({ type: Number, min: 0, max: 100 })
+  majorPercent?: number;
+
+  /**
+   * Orthodontic coverage percentage
+   */
+  @Prop({ type: Number, min: 0, max: 100 })
+  orthoPercent?: number;
+
+  /**
+   * Orthodontic lifetime maximum
+   */
+  @Prop({ type: Number, min: 0 })
+  orthoLifetimeMax?: number;
+
+  /**
+   * Waiting period in months for basic services
+   */
+  @Prop({ type: Number, min: 0 })
+  basicWaitingPeriodMonths?: number;
+
+  /**
+   * Waiting period in months for major services
+   */
+  @Prop({ type: Number, min: 0 })
+  majorWaitingPeriodMonths?: number;
+
+  /**
+   * Plan year start date for benefit calculations
+   */
+  @Prop({ type: Date })
+  planYearStart?: Date;
+
+  /**
+   * Currency code (e.g., USD, RON, EUR)
+   */
+  @Prop({ type: String, default: 'RON', trim: true })
+  currency?: string;
+
+  /**
+   * Last time coverage was verified with insurance company
+   */
+  @Prop({ type: Date })
+  lastVerifiedAt?: Date;
+
+  /**
+   * Who verified the coverage
+   */
+  @Prop({ type: String, trim: true })
+  verifiedBy?: string;
+}
+
+/**
+ * Insurance provider contact information
+ */
+export class InsuranceProviderInfo {
+  @Prop({ required: true, type: String, trim: true })
+  name!: string;
+
+  @Prop({ type: String, trim: true })
+  phone?: string;
+
+  @Prop({ type: String, trim: true })
+  fax?: string;
+
+  @Prop({ type: String, trim: true })
+  email?: string;
+
+  @Prop({ type: String, trim: true })
+  website?: string;
+
+  @Prop({ type: String, trim: true })
+  claimsAddress?: string;
+
+  @Prop({ type: String, trim: true })
+  payerId?: string; // Electronic payer ID for claims submission
+}
+
+/**
+ * Insurance policy information sub-document
+ * Contains all insurance-related data for billing and verification
+ */
+export class InsurancePolicy {
+  /**
+   * Insurance provider details
+   */
+  @Prop({ required: true, type: InsuranceProviderInfo })
+  provider!: InsuranceProviderInfo;
+
+  @Prop({ required: true, type: String, trim: true })
+  policyNumber!: string;
+
+  @Prop({ type: String, trim: true })
+  groupNumber?: string;
+
+  @Prop({ type: String, trim: true })
+  groupName?: string;
+
+  @Prop({ type: String, trim: true })
+  planName?: string;
+
+  @Prop({ type: String, trim: true })
+  planType?: string; // PPO, HMO, DHMO, Indemnity, etc.
+
+  @Prop({ required: true, type: String, trim: true })
+  subscriberName!: string;
+
+  @Prop({ type: String, trim: true })
+  subscriberId?: string;
+
+  @Prop({
+    required: true,
+    type: String,
+    trim: true,
+    enum: ['self', 'spouse', 'child', 'parent', 'other'],
+    default: 'self',
+  })
+  subscriberRelationship!: string;
+
+  @Prop({ type: Date })
+  subscriberDateOfBirth?: Date;
+
+  @Prop({ type: Date })
+  effectiveDate?: Date;
+
+  @Prop({ type: Date })
+  expirationDate?: Date;
+
+  /**
+   * Coverage details with financial tracking
+   */
+  @Prop({ type: InsuranceCoverage })
+  coverage?: InsuranceCoverage;
+
+  /**
+   * Whether this is the primary insurance
+   */
+  @Prop({ type: Boolean, default: true })
+  isPrimary!: boolean;
+
+  /**
+   * Whether this policy is currently active
+   */
+  @Prop({ type: Boolean, default: true })
+  isActive!: boolean;
+
+  /**
+   * Whether eligibility has been verified
+   */
+  @Prop({ type: Boolean, default: false })
+  isVerified!: boolean;
+
+  /**
+   * Date eligibility was last verified
+   */
+  @Prop({ type: Date })
+  verifiedAt?: Date;
+
+  /**
+   * Notes about the insurance policy
+   */
+  @Prop({ type: String, maxlength: 1000 })
+  notes?: string;
+}
+
+/**
  * Insurance information sub-document
+ * @deprecated Use insurancePolicies array instead. Kept for backwards compatibility.
  */
 export class InsuranceInfo {
   @Prop({ required: true, type: String, trim: true })
@@ -410,14 +852,34 @@ export class Patient {
   @Prop({ type: Demographics })
   demographics?: Demographics;
 
+  /**
+   * @deprecated Use medicalAlerts instead. Kept for backwards compatibility.
+   */
   @Prop({ required: true, type: MedicalInfo })
   medical!: MedicalInfo;
 
+  /**
+   * Enhanced medical alerts with structured data for allergies, conditions, medications, and flags
+   * CRITICAL: These alerts must be reviewed before any clinical procedure
+   */
+  @Prop({ type: MedicalAlerts })
+  medicalAlerts?: MedicalAlerts;
+
+  /**
+   * @deprecated Use insurancePolicies instead. Kept for backwards compatibility.
+   */
   @Prop({ type: Object })
   insurance?: {
     primary?: InsuranceInfo;
     secondary?: InsuranceInfo;
   };
+
+  /**
+   * Multiple insurance policies with detailed coverage information
+   * Supports primary, secondary, and tertiary insurance
+   */
+  @Prop({ type: [InsurancePolicy], default: [] })
+  insurancePolicies!: InsurancePolicy[];
 
   @Prop({ type: [String], default: [], index: true })
   tags!: string[];
@@ -530,3 +992,14 @@ PatientSchema.index(
     name: 'patient_text_search',
   },
 );
+
+// Medical alerts indexes for clinical safety queries
+PatientSchema.index({ tenantId: 1, 'medicalAlerts.allergies.severity': 1 }, { sparse: true });
+PatientSchema.index({ tenantId: 1, 'medicalAlerts.allergies.allergen': 1 }, { sparse: true });
+PatientSchema.index({ tenantId: 1, 'medicalAlerts.conditions.icd10Code': 1 }, { sparse: true });
+PatientSchema.index({ tenantId: 1, 'medicalAlerts.flags.type': 1 }, { sparse: true });
+
+// Insurance policy indexes
+PatientSchema.index({ tenantId: 1, 'insurancePolicies.provider.payerId': 1 }, { sparse: true });
+PatientSchema.index({ tenantId: 1, 'insurancePolicies.policyNumber': 1 }, { sparse: true });
+PatientSchema.index({ tenantId: 1, 'insurancePolicies.expirationDate': 1 }, { sparse: true });

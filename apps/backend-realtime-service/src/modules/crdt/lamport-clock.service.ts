@@ -13,7 +13,11 @@ export class LamportClockService {
     return value ? parseInt(value, 10) : 0;
   }
 
-  async incrementAndGet(tenantId: string, resourceType: string, resourceId: string): Promise<number> {
+  async incrementAndGet(
+    tenantId: string,
+    resourceType: string,
+    resourceId: string,
+  ): Promise<number> {
     const key = this.buildKey(tenantId, resourceType, resourceId);
     const client = this.redisService.getClient();
     const newValue = await client.incr(key);

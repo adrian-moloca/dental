@@ -32,8 +32,12 @@ import {
   useTreatmentPlans,
   useProcedures,
   useOdontogram,
-  useUpdateOdontogram,
+  useBulkUpdateTeeth,
 } from '../hooks/useClinical';
+import type {
+  ToothConditionType,
+  ToothSurface,
+} from '../api/clinicalClient';
 import { usePatient } from '../hooks/usePatients';
 import { useAppointments } from '../hooks/useAppointments';
 import { OdontogramEditor } from '../components/clinical/OdontogramEditor';
@@ -127,8 +131,8 @@ export function ClinicalPage() {
   const { data: notes, isLoading: notesLoading } = useClinicalNotes(patientId!);
   const { data: treatments, isLoading: treatmentsLoading } = useTreatmentPlans(patientId!);
   const { data: procedures, isLoading: proceduresLoading } = useProcedures(patientId!);
-  const { data: odontogram, isLoading: odontogramLoading } = useOdontogram(patientId!);
-  const updateOdontogram = useUpdateOdontogram();
+  const { data: odontogram, isLoading: odontogramLoading } = useOdontogram(patientId);
+  const bulkUpdateTeeth = useBulkUpdateTeeth();
 
   // Fetch appointments for contact actions
   const { data: appointmentsData } = useAppointments({
@@ -140,19 +144,42 @@ export function ClinicalPage() {
     (a: { status: string }) => a.status === 'scheduled' || a.status === 'confirmed'
   );
 
+  /**
+   * Convert frontend ToothData format to backend BulkUpdateTeethDto format
+   */
   const handleSaveOdontogram = async (data: ToothData[]) => {
-    await updateOdontogram.mutateAsync({
+    // Transform frontend format to backend bulk update format
+    const teethUpdates = data.map((tooth) => ({
+      toothNumber: tooth.toothNumber.toString(),
+      conditions: tooth.conditions.map((c) => ({
+        condition: c.condition as ToothConditionType,
+        surfaces: (c.surfaces || []) as ToothSurface[],
+      })),
+    }));
+
+    await bulkUpdateTeeth.mutateAsync({
       patientId: patientId!,
       data: {
-        patientId: patientId!,
-        entries: [
-          {
-            chartedAt: new Date().toISOString(),
-            teeth: data,
-          },
-        ],
+        teeth: teethUpdates,
       },
     });
+  };
+
+  /**
+   * Convert backend odontogram data to frontend ToothData format
+   */
+  const mapOdontogramToToothData = (odontogramData: OdontogramDto | undefined): ToothData[] => {
+    if (!odontogramData?.teeth) return [];
+
+    return Object.entries(odontogramData.teeth).map(([toothNumber, tooth]) => ({
+      toothNumber: parseInt(toothNumber, 10),
+      conditions: (tooth.conditions || [])
+        .filter((c) => !c.deletedAt) // Only show active conditions
+        .map((c) => ({
+          condition: c.condition,
+          surfaces: c.surfaces || [],
+        })),
+    }));
   };
 
   const getPatientAge = () => {
@@ -394,7 +421,7 @@ export function ClinicalPage() {
                     ) : (
                       <OdontogramEditor
                         patientId={patientId!}
-                        data={(odontogram?.data?.entries?.[0]?.teeth as ToothData[]) || []}
+                        data={mapOdontogramToToothData(odontogram)}
                         onSave={handleSaveOdontogram}
                       />
                     )}

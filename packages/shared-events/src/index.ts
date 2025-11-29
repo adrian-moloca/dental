@@ -107,7 +107,11 @@ export {
   AppointmentBooked,
   AppointmentRescheduled,
   AppointmentCancelled,
+  AppointmentConfirmed,
+  AppointmentCheckedIn,
+  AppointmentStarted,
   AppointmentCompleted,
+  AppointmentNoShow,
 } from './contracts/appointment.events';
 
 // Scheduling Events (New Event Envelopes)
