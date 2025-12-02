@@ -42,24 +42,12 @@ export const useLocations = (clinicId: string | undefined) => {
 };
 
 /**
- * Hook to fetch providers for an organization
+ * Hook to fetch staff for a clinic
  */
-export const useProviders = (orgId: string | undefined) => {
-  return useQuery({
-    queryKey: ['providers', orgId],
-    queryFn: () => enterpriseClient.getProviders(orgId!),
-    enabled: !!orgId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-};
-
-/**
- * Hook to fetch providers for a specific clinic
- */
-export const useClinicProviders = (clinicId: string | undefined) => {
+export const useClinicStaff = (clinicId: string | undefined) => {
   return useQuery({
     queryKey: ['providers', 'clinic', clinicId],
-    queryFn: () => enterpriseClient.getClinicProviders(clinicId!),
+    queryFn: () => enterpriseClient.getClinicStaff(clinicId!),
     enabled: !!clinicId,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

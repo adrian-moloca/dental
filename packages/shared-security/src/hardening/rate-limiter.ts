@@ -92,8 +92,9 @@ export class RateLimiter implements NestMiddleware {
       // Intercept response to conditionally count
       if (this.config.skipSuccessfulRequests || this.config.skipFailedRequests) {
         const originalSend = res.send;
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
-        res.send = function (body: any) {
+        res.send = function (body: unknown) {
           const statusCode = res.statusCode;
           const shouldSkip =
             (self.config.skipSuccessfulRequests && statusCode < 400) ||

@@ -66,11 +66,23 @@ export function useUpdateProduct() {
 }
 
 // Stock Management
-export function useStock(params?: { locationId?: string; lowStock?: boolean }) {
+export function useStockByLocation(
+  locationId: string,
+  params?: { productId?: string; lowStock?: boolean; expiringSoon?: boolean }
+) {
   return useQuery({
-    queryKey: inventoryKeys.stock(params),
-    queryFn: () => inventoryClient.getStock(params),
+    queryKey: inventoryKeys.stock({ locationId, ...params }),
+    queryFn: () => inventoryClient.getStockByLocation(locationId, params),
     staleTime: 30_000,
+    enabled: !!locationId,
+  });
+}
+
+export function useExpiringItems(days: number = 30) {
+  return useQuery({
+    queryKey: [...inventoryKeys.all, 'expiring', days] as const,
+    queryFn: () => inventoryClient.getExpiringItems(days),
+    staleTime: 60_000,
   });
 }
 
@@ -78,8 +90,12 @@ export function useDeductStock() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ productId, quantity, reference }: { productId: string; quantity: number; reference?: string }) =>
-      inventoryClient.deductStock(productId, quantity, reference),
+    mutationFn: (data: {
+      items: Array<{ productId: string; quantity: number; locationId?: string }>;
+      reference?: string;
+      referenceType?: string;
+      referenceId?: string;
+    }) => inventoryClient.deductStock(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.stock() });
       queryClient.invalidateQueries({ queryKey: inventoryKeys.products() });
@@ -95,8 +111,15 @@ export function useRestockItem() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ productId, quantity, reference }: { productId: string; quantity: number; reference?: string }) =>
-      inventoryClient.restockItem(productId, quantity, reference),
+    mutationFn: (data: {
+      productId: string;
+      quantity: number;
+      locationId: string;
+      lotNumber?: string;
+      expirationDate?: string;
+      unitCost?: number;
+      reason?: string;
+    }) => inventoryClient.restockItem(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.stock() });
       queryClient.invalidateQueries({ queryKey: inventoryKeys.products() });
@@ -132,28 +155,40 @@ export function useCreatePurchaseOrder() {
   });
 }
 
-export function useUpdatePOStatus() {
+export function useApprovePurchaseOrder() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      inventoryClient.updatePOStatus(id, status),
+    mutationFn: (id: string) => inventoryClient.approvePurchaseOrder(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.purchaseOrders() });
-      toast.success('Purchase order status updated');
+      toast.success('Purchase order approved');
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Failed to update status');
+      toast.error(error?.response?.data?.message || 'Failed to approve purchase order');
     },
   });
 }
 
-export function useReceiveGoods() {
+export function useCreateGoodsReceipt() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, items }: { id: string; items: Array<{ productId: string; quantityReceived: number }> }) =>
-      inventoryClient.receiveGoods(id, items),
+    mutationFn: (data: {
+      purchaseOrderId?: string;
+      supplierId: string;
+      lines: Array<{
+        productId: string;
+        receivedQuantity: number;
+        unitCost: number;
+        lotNumber: string;
+        locationId: string;
+        expirationDate?: Date;
+        notes?: string;
+      }>;
+      deliveryNote?: string;
+      notes?: string;
+    }) => inventoryClient.createGoodsReceipt(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: inventoryKeys.all });
       toast.success('Goods received successfully');

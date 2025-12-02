@@ -14,12 +14,14 @@ import { BackupCodesDisplay } from '../components/security/BackupCodesDisplay';
 import { DisableMFAModal } from '../components/security/DisableMFAModal';
 import { authClient } from '../api/authClient';
 import type { MfaEnrollResponseDto } from '../types/auth.types';
+import { useAuth } from '../hooks/useAuth';
 
 /**
  * Security settings page with MFA configuration
  */
 export default function SettingsSecurityPage() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // State for modals
   const [showSetupModal, setShowSetupModal] = useState(false);
@@ -29,6 +31,9 @@ export default function SettingsSecurityPage() {
   // MFA enrollment data
   const [enrollmentData, setEnrollmentData] = useState<MfaEnrollResponseDto | null>(null);
   const [setupComplete, setSetupComplete] = useState(false);
+
+  // Get organizationId from user
+  const organizationId = user?.organizationId || '';
 
   // Fetch MFA status
   const {
@@ -48,13 +53,13 @@ export default function SettingsSecurityPage() {
     refetch: refetchBackupCodes,
   } = useQuery({
     queryKey: ['mfa', 'backup-codes'],
-    queryFn: () => authClient.getBackupCodes(),
+    queryFn: () => authClient.getBackupCodes(organizationId),
     enabled: false, // Only fetch when user requests
   });
 
   // Enroll MFA mutation
   const enrollMutation = useMutation({
-    mutationFn: () => authClient.enrollMfa(),
+    mutationFn: (params: { organizationId: string; factorName?: string }) => authClient.enrollMfa(params),
     onSuccess: (data) => {
       setEnrollmentData(data);
     },
@@ -66,7 +71,7 @@ export default function SettingsSecurityPage() {
 
   // Verify MFA mutation
   const verifyMutation = useMutation({
-    mutationFn: (code: string) => authClient.verifyMfa({ code }),
+    mutationFn: (params: { code: string; organizationId: string; factorId: string }) => authClient.verifyMfa(params),
     onSuccess: () => {
       setSetupComplete(true);
       toast.success('Two-factor authentication has been enabled');
@@ -79,7 +84,7 @@ export default function SettingsSecurityPage() {
 
   // Disable MFA mutation
   const disableMutation = useMutation({
-    mutationFn: (password: string) => authClient.disableMfa({ password }),
+    mutationFn: (params: { factorId: string; organizationId: string }) => authClient.disableMfa(params.factorId, params.organizationId),
     onSuccess: () => {
       toast.success('Two-factor authentication has been disabled');
       setShowDisableModal(false);
@@ -92,7 +97,7 @@ export default function SettingsSecurityPage() {
 
   // Regenerate backup codes mutation
   const regenerateBackupCodesMutation = useMutation({
-    mutationFn: () => authClient.regenerateBackupCodes(),
+    mutationFn: (organizationId: string) => authClient.regenerateBackupCodes(organizationId),
     onSuccess: (data) => {
       toast.success('New backup codes generated');
       queryClient.setQueryData(['mfa', 'backup-codes'], data);
@@ -107,7 +112,7 @@ export default function SettingsSecurityPage() {
     setShowSetupModal(true);
     setSetupComplete(false);
     setEnrollmentData(null);
-    enrollMutation.mutate();
+    enrollMutation.mutate({ organizationId, factorName: 'TOTP' });
   };
 
   // Handle close setup modal
@@ -137,17 +142,19 @@ export default function SettingsSecurityPage() {
 
   // Handle verify code
   const handleVerifyCode = (code: string) => {
-    verifyMutation.mutate(code);
+    const factorId = enrollmentData?.factorId || mfaStatus?.factorId || '';
+    verifyMutation.mutate({ code, organizationId, factorId });
   };
 
   // Handle disable confirm
   const handleConfirmDisable = (password: string) => {
-    disableMutation.mutate(password);
+    const factorId = mfaStatus?.factorId || '';
+    disableMutation.mutate({ factorId, organizationId });
   };
 
   // Handle regenerate backup codes
   const handleRegenerateBackupCodes = () => {
-    regenerateBackupCodesMutation.mutate();
+    regenerateBackupCodesMutation.mutate(organizationId);
   };
 
   // Error state

@@ -11,7 +11,7 @@
  * - Smart suggestions and warnings
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { AppShell } from '../components/layout/AppShell';
 import {
@@ -1359,15 +1359,14 @@ export default function TreatmentPlanCreatePage() {
     return set;
   }, [phases]);
 
-  // Recalculate subtotals when procedures change
-  useEffect(() => {
-    setPhases((prev) =>
-      prev.map((phase) => ({
-        ...phase,
-        subtotal: calculatePhaseSubtotal(phase.procedures),
-      }))
-    );
-  }, []);
+  // Compute phases with recalculated subtotals - use useMemo for derived state
+  const _phasesWithSubtotals = useMemo(() =>
+    phases.map((phase) => ({
+      ...phase,
+      subtotal: calculatePhaseSubtotal(phase.procedures),
+    })),
+    [phases]
+  );
 
   // Handlers
   const handleAddPhase = useCallback(() => {

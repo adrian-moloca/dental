@@ -19,6 +19,30 @@ interface PatientSearchSelectProps {
   disabled?: boolean;
 }
 
+/**
+ * Helper to get patient name - handles both flat and nested person structure
+ */
+function getPatientName(patient: PatientDto): { firstName: string; lastName: string } {
+  return {
+    firstName: patient.person?.firstName || patient.firstName || '',
+    lastName: patient.person?.lastName || patient.lastName || '',
+  };
+}
+
+/**
+ * Helper to get patient contact info - handles both flat and nested contacts structure
+ */
+function getPatientContacts(patient: PatientDto): { phone?: string; email?: string } {
+  // Try nested contacts first, then flat structure
+  const phones = (patient as any).contacts?.phones || patient.phones;
+  const emails = (patient as any).contacts?.emails || patient.emails;
+
+  return {
+    phone: phones?.find((p: any) => p.isPrimary)?.number || phones?.[0]?.number,
+    email: emails?.find((e: any) => e.isPrimary)?.address || emails?.[0]?.address,
+  };
+}
+
 export function PatientSearchSelect({
   value,
   onChange,
@@ -36,7 +60,7 @@ export function PatientSearchSelect({
   // Fetch patients based on search query
   const { data: patientsData, isLoading } = useQuery({
     queryKey: ['patients', 'search', searchQuery],
-    queryFn: () => patientsClient.search({ query: searchQuery, limit: 10 }),
+    queryFn: () => patientsClient.search({ search: searchQuery, limit: 10 }),
     enabled: searchQuery.length >= 2,
     staleTime: 30000, // 30 seconds
   });
@@ -119,12 +143,22 @@ export function PatientSearchSelect({
                 value={searchQuery}
                 onChange={handleInputChange}
                 onFocus={handleInputFocus}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setIsOpen(false);
+                    setSearchQuery('');
+                  }
+                }}
                 disabled={disabled}
                 placeholder="Cauta dupa nume, telefon sau email..."
                 className={`form-control ${error ? 'is-invalid' : ''}`}
                 style={{ paddingRight: '40px' }}
                 aria-invalid={error ? 'true' : 'false'}
                 aria-describedby={error ? 'patient-error' : undefined}
+                aria-autocomplete="list"
+                aria-controls="patient-search-results"
+                aria-expanded={isOpen}
+                role="combobox"
               />
               <div className="position-absolute end-0 top-50 translate-middle-y pe-3">
                 <i className="ti ti-search text-muted" aria-hidden="true"></i>
@@ -134,18 +168,21 @@ export function PatientSearchSelect({
             {/* Dropdown */}
             {isOpen && (
               <div
+                id="patient-search-results"
                 className="dropdown-menu show w-100 shadow-lg border mt-1"
                 style={{ maxHeight: '256px', overflowY: 'auto', position: 'absolute', zIndex: 1050 }}
+                role="listbox"
+                aria-label="Patient search results"
               >
                 {isLoading ? (
-                  <div className="p-4 text-center text-muted">
+                  <div className="p-4 text-center" style={{ color: 'var(--gray-600, #6b7280)' }}>
                     <div className="spinner-border spinner-border-sm mb-2" role="status">
                       <span className="visually-hidden">Se incarca...</span>
                     </div>
                     <div className="small">Se cauta...</div>
                   </div>
                 ) : patients.length === 0 ? (
-                  <div className="p-4 text-center text-muted">
+                  <div className="p-4 text-center" style={{ color: 'var(--gray-600, #6b7280)' }}>
                     {searchQuery.length < 2 ? (
                       <span className="small">Introdu cel putin 2 caractere pentru cautare</span>
                     ) : (
@@ -156,30 +193,54 @@ export function PatientSearchSelect({
                     )}
                   </div>
                 ) : (
-                  <ul role="listbox" className="list-unstyled mb-0">
-                    {patients.map((patient) => (
-                      <li key={patient.id}>
-                        <button
-                          type="button"
-                          onClick={() => handleSelectPatient(patient)}
-                          className="dropdown-item d-block w-100 text-start"
-                          role="option"
-                          aria-selected="false"
-                        >
-                          <div className="fw-medium">
-                            {patient.firstName} {patient.lastName}
-                          </div>
-                          <div className="small text-muted mt-1 d-flex gap-3">
-                            {patient.phones?.[0]?.number && (
-                              <span>{patient.phones[0].number}</span>
-                            )}
-                            {patient.emails?.[0]?.address && (
-                              <span>{patient.emails[0].address}</span>
-                            )}
-                          </div>
-                        </button>
-                      </li>
-                    ))}
+                  <ul className="list-unstyled mb-0">
+                    {patients.map((patient) => {
+                      const name = getPatientName(patient);
+                      const contacts = getPatientContacts(patient);
+                      const fullName = `${name.firstName} ${name.lastName}`.trim();
+
+                      return (
+                        <li key={patient.id}>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectPatient(patient)}
+                            className="dropdown-item d-block w-100 text-start py-2 px-3"
+                            role="option"
+                            aria-selected="false"
+                            aria-label={`Selecteaza ${fullName}`}
+                            style={{
+                              color: 'var(--gray-900, #111827)',
+                              backgroundColor: 'transparent',
+                              transition: 'background-color 0.15s ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = 'var(--gray-100, #f3f4f6)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
+                          >
+                            <div className="fw-medium" style={{ color: 'var(--gray-900, #111827)' }}>
+                              {fullName || 'Pacient fara nume'}
+                            </div>
+                            <div className="small mt-1 d-flex gap-3" style={{ color: 'var(--gray-600, #6b7280)' }}>
+                              {contacts.phone && (
+                                <span>
+                                  <i className="ti ti-phone me-1" aria-hidden="true"></i>
+                                  {contacts.phone}
+                                </span>
+                              )}
+                              {contacts.email && (
+                                <span>
+                                  <i className="ti ti-mail me-1" aria-hidden="true"></i>
+                                  {contacts.email}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
@@ -187,28 +248,52 @@ export function PatientSearchSelect({
           </>
         ) : (
           // Selected patient display
-          <div className={`d-flex align-items-center justify-content-between border rounded p-2 ${error ? 'border-danger' : ''}`}>
-            <div className="flex-grow-1">
-              <div className="fw-medium">
-                {selectedPatient.firstName} {selectedPatient.lastName}
-              </div>
-              <div className="small text-muted mt-1">
-                {selectedPatient.phones?.find(p => p.isPrimary)?.number ||
-                  selectedPatient.phones?.[0]?.number ||
-                  selectedPatient.emails?.[0]?.address}
-              </div>
-            </div>
-            {!disabled && (
-              <button
-                type="button"
-                onClick={handleClear}
-                className="btn btn-sm btn-ghost-secondary ms-2"
-                aria-label="Sterge selectia"
+          (() => {
+            const name = getPatientName(selectedPatient);
+            const contacts = getPatientContacts(selectedPatient);
+            const fullName = `${name.firstName} ${name.lastName}`.trim();
+
+            return (
+              <div
+                className={`d-flex align-items-center justify-content-between border rounded p-2 ${error ? 'border-danger' : ''}`}
+                style={{ backgroundColor: 'var(--bs-body-bg, #fff)' }}
               >
-                <i className="ti ti-x"></i>
-              </button>
-            )}
-          </div>
+                <div className="flex-grow-1">
+                  <div className="fw-medium" style={{ color: 'var(--bs-body-color, #212529)' }}>
+                    {fullName || 'Pacient selectat'}
+                  </div>
+                  <div className="small mt-1" style={{ color: 'var(--bs-secondary-color, #6c757d)' }}>
+                    {contacts.phone && (
+                      <span className="me-3">
+                        <i className="ti ti-phone me-1" aria-hidden="true"></i>
+                        {contacts.phone}
+                      </span>
+                    )}
+                    {contacts.email && (
+                      <span>
+                        <i className="ti ti-mail me-1" aria-hidden="true"></i>
+                        {contacts.email}
+                      </span>
+                    )}
+                    {!contacts.phone && !contacts.email && (
+                      <span>Fara informatii de contact</span>
+                    )}
+                  </div>
+                </div>
+                {!disabled && (
+                  <button
+                    type="button"
+                    onClick={handleClear}
+                    className="btn btn-sm btn-outline-secondary ms-2"
+                    aria-label="Sterge selectia pacientului"
+                    style={{ minWidth: '32px' }}
+                  >
+                    <i className="ti ti-x" aria-hidden="true"></i>
+                  </button>
+                )}
+              </div>
+            );
+          })()
         )}
       </div>
 

@@ -75,10 +75,15 @@ export function ProcedureSelector({ onSelect, disabled }: ProcedureSelectorProps
         <div
           id="procedure-listbox"
           role="listbox"
-          className="absolute z-50 mt-1 w-full rounded-lg border border-[var(--border)] bg-[#1F1F2D] shadow-lg max-h-64 overflow-y-auto"
+          aria-label="Procedure search results"
+          className="absolute z-50 mt-1 w-full rounded-lg border shadow-lg max-h-64 overflow-y-auto"
+          style={{
+            borderColor: 'var(--border-color, #e7e8eb)',
+            backgroundColor: 'var(--white, #ffffff)'
+          }}
         >
           {isLoading && (
-            <div className="p-4 text-center text-slate-400 text-sm">
+            <div className="p-4 text-center text-sm" style={{ color: 'var(--gray-600, #6b7280)' }}>
               Searching procedures...
             </div>
           )}
@@ -89,37 +94,62 @@ export function ProcedureSelector({ onSelect, disabled }: ProcedureSelectorProps
               type="button"
               role="option"
               aria-selected="false"
+              aria-label={`${procedure.code} - ${procedure.name}`}
               onClick={() => handleSelect(procedure)}
               disabled={disabled}
-              className="w-full text-left px-4 py-3 hover:bg-white/5 border-b border-white/5 last:border-b-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:bg-white/10"
+              className="w-full text-left px-4 py-3 border-b last:border-b-0 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+              style={{
+                borderColor: 'var(--border-color, #e7e8eb)',
+                backgroundColor: 'transparent',
+                color: disabled ? 'var(--gray-400, #9ca3af)' : 'var(--gray-900, #111827)'
+              }}
+              onMouseEnter={(e) => {
+                if (!disabled) {
+                  e.currentTarget.style.backgroundColor = 'var(--gray-100, #f3f4f6)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+              onFocus={(e) => {
+                if (!disabled) {
+                  e.currentTarget.style.backgroundColor = 'var(--primary-transparent, #ECEDF7)';
+                  e.currentTarget.style.outline = '2px solid var(--primary, #2E37A4)';
+                  e.currentTarget.style.outlineOffset = '-2px';
+                }
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.outline = 'none';
+              }}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-2">
-                    <span className="font-mono text-xs text-[var(--brand)] font-semibold">
+                    <span className="font-mono text-xs font-semibold" style={{ color: 'var(--primary, #2E37A4)' }}>
                       {procedure.code}
                     </span>
-                    <span className="text-sm text-white truncate">
+                    <span className="text-sm truncate" style={{ color: 'var(--gray-900, #111827)' }}>
                       {procedure.name}
                     </span>
                   </div>
                   {procedure.description && (
-                    <p className="text-xs text-slate-400 mt-1 line-clamp-1">
+                    <p className="text-xs mt-1 line-clamp-1" style={{ color: 'var(--gray-600, #6b7280)' }}>
                       {procedure.description}
                     </p>
                   )}
                   {procedure.category && (
-                    <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded bg-white/5 text-slate-300">
+                    <span className="inline-block mt-1 px-2 py-0.5 text-xs rounded" style={{ backgroundColor: 'var(--gray-100, #f3f4f6)', color: 'var(--gray-700, #374151)' }}>
                       {procedure.category}
                     </span>
                   )}
                 </div>
                 <div className="flex-shrink-0 text-right">
-                  <div className="text-sm font-semibold text-emerald-400">
+                  <div className="text-sm font-semibold" style={{ color: 'var(--success, #27AE60)' }}>
                     ${procedure.defaultPrice.toFixed(2)}
                   </div>
                   {procedure.estimatedDuration && (
-                    <div className="text-xs text-slate-400 mt-0.5">
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--gray-600, #6b7280)' }}>
                       {procedure.estimatedDuration}min
                     </div>
                   )}
@@ -132,12 +162,16 @@ export function ProcedureSelector({ onSelect, disabled }: ProcedureSelectorProps
 
       {showNoResults && (
         <div
-          className="absolute z-50 mt-1 w-full rounded-lg border border-[var(--border)] bg-[#1F1F2D] shadow-lg p-4"
+          className="absolute z-50 mt-1 w-full rounded-lg border shadow-lg p-4"
+          style={{
+            borderColor: 'var(--border-color, #e7e8eb)',
+            backgroundColor: 'var(--white, #ffffff)'
+          }}
         >
-          <p className="text-center text-slate-400 text-sm">
+          <p className="text-center text-sm" style={{ color: 'var(--gray-600, #6b7280)' }}>
             No procedures found for "{search}"
           </p>
-          <p className="text-center text-slate-500 text-xs mt-1">
+          <p className="text-center text-xs mt-1" style={{ color: 'var(--gray-500, #6b7280)' }}>
             Try searching by CDT code or procedure name
           </p>
         </div>

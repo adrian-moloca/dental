@@ -86,7 +86,7 @@ export class TreatmentPlansController {
   /**
    * Create a new treatment plan for a patient
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans')
+  @Post('clinical/patients/:patientId/treatment-plans')
   @RequirePermissions('clinical:treatment-plans:create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -123,7 +123,7 @@ export class TreatmentPlansController {
   /**
    * List all treatment plans for a patient
    */
-  @Get('api/v1/clinical/patients/:patientId/treatment-plans')
+  @Get('clinical/patients/:patientId/treatment-plans')
   @RequirePermissions('clinical:treatment-plans:read')
   @ApiOperation({
     summary: 'List treatment plans',
@@ -157,7 +157,7 @@ export class TreatmentPlansController {
   /**
    * Get patient's current active treatment plan
    */
-  @Get('api/v1/clinical/patients/:patientId/treatment-plans/active')
+  @Get('clinical/patients/:patientId/treatment-plans/active')
   @RequirePermissions('clinical:treatment-plans:read')
   @ApiOperation({
     summary: 'Get active treatment plan',
@@ -179,7 +179,7 @@ export class TreatmentPlansController {
   /**
    * Get a specific treatment plan
    */
-  @Get('api/v1/clinical/patients/:patientId/treatment-plans/:planId')
+  @Get('clinical/patients/:patientId/treatment-plans/:planId')
   @RequirePermissions('clinical:treatment-plans:read')
   @ApiOperation({
     summary: 'Get treatment plan',
@@ -204,7 +204,7 @@ export class TreatmentPlansController {
   /**
    * Update a treatment plan (draft status only)
    */
-  @Put('api/v1/clinical/patients/:patientId/treatment-plans/:planId')
+  @Put('clinical/patients/:patientId/treatment-plans/:planId')
   @RequirePermissions('clinical:treatment-plans:update')
   @ApiOperation({
     summary: 'Update treatment plan',
@@ -252,7 +252,7 @@ export class TreatmentPlansController {
   /**
    * Present treatment plan to patient
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/present')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/present')
   @RequirePermissions('clinical:treatment-plans:present')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -292,7 +292,7 @@ export class TreatmentPlansController {
   /**
    * Patient accepts treatment plan
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/accept')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/accept')
   @RequirePermissions('clinical:treatment-plans:accept')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -337,7 +337,7 @@ export class TreatmentPlansController {
   /**
    * Start treatment (explicit transition to in_progress)
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/start')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/start')
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -375,7 +375,7 @@ export class TreatmentPlansController {
    * CRITICAL: This endpoint triggers billing and inventory events.
    */
   @Post(
-    'api/v1/clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items/:itemId/complete',
+    'clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items/:itemId/complete',
   )
   @RequirePermissions('clinical:procedures:complete')
   @HttpCode(HttpStatus.OK)
@@ -426,7 +426,7 @@ export class TreatmentPlansController {
   /**
    * Cancel a treatment plan
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/cancel')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/cancel')
   @RequirePermissions('clinical:treatment-plans:cancel')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -465,7 +465,7 @@ export class TreatmentPlansController {
   /**
    * Delete a treatment plan (soft delete)
    */
-  @Delete('api/v1/clinical/patients/:patientId/treatment-plans/:planId')
+  @Delete('clinical/patients/:patientId/treatment-plans/:planId')
   @RequirePermissions('clinical:treatment-plans:delete')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -507,7 +507,7 @@ export class TreatmentPlansController {
   /**
    * Get treatment plan history
    */
-  @Get('api/v1/clinical/patients/:patientId/treatment-plans/:planId/history')
+  @Get('clinical/patients/:patientId/treatment-plans/:planId/history')
   @RequirePermissions('clinical:treatment-plans:read')
   @ApiOperation({
     summary: 'Get treatment plan history',
@@ -543,7 +543,7 @@ export class TreatmentPlansController {
   /**
    * Recalculate financials
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/recalculate')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/recalculate')
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -581,7 +581,7 @@ export class TreatmentPlansController {
   /**
    * Patient declines treatment plan
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/decline')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/decline')
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -621,7 +621,7 @@ export class TreatmentPlansController {
   /**
    * Create revision of a treatment plan
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/revise')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/revise')
   @RequirePermissions('clinical:treatment-plans:create')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -665,7 +665,7 @@ export class TreatmentPlansController {
   /**
    * Add a phase to a treatment plan
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/phases')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/phases')
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -700,7 +700,7 @@ export class TreatmentPlansController {
   /**
    * Remove a phase from a treatment plan
    */
-  @Delete('api/v1/clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId')
+  @Delete('clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId')
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -741,7 +741,7 @@ export class TreatmentPlansController {
   /**
    * Add an item to a phase
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items')
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -783,7 +783,7 @@ export class TreatmentPlansController {
   /**
    * Update an item in a phase
    */
-  @Put('api/v1/clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items/:itemId')
+  @Put('clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items/:itemId')
   @RequirePermissions('clinical:treatment-plans:update')
   @ApiOperation({
     summary: 'Update item',
@@ -827,9 +827,7 @@ export class TreatmentPlansController {
   /**
    * Remove an item from a phase
    */
-  @Delete(
-    'api/v1/clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items/:itemId',
-  )
+  @Delete('clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items/:itemId')
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -869,7 +867,7 @@ export class TreatmentPlansController {
    * Schedule an item as an appointment
    */
   @Post(
-    'api/v1/clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items/:itemId/schedule',
+    'clinical/patients/:patientId/treatment-plans/:planId/phases/:phaseId/items/:itemId/schedule',
   )
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.OK)
@@ -920,7 +918,7 @@ export class TreatmentPlansController {
   /**
    * Add an alternative to a treatment plan
    */
-  @Post('api/v1/clinical/patients/:patientId/treatment-plans/:planId/alternatives')
+  @Post('clinical/patients/:patientId/treatment-plans/:planId/alternatives')
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
@@ -955,7 +953,7 @@ export class TreatmentPlansController {
   /**
    * Remove an alternative from a treatment plan
    */
-  @Delete('api/v1/clinical/patients/:patientId/treatment-plans/:planId/alternatives/:altId')
+  @Delete('clinical/patients/:patientId/treatment-plans/:planId/alternatives/:altId')
   @RequirePermissions('clinical:treatment-plans:update')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -995,7 +993,7 @@ export class TreatmentPlansController {
   /**
    * Get treatment plan counts by status (for dashboard)
    */
-  @Get('api/v1/clinical/treatment-plans/stats/by-status')
+  @Get('clinical/treatment-plans/stats/by-status')
   @RequirePermissions('clinical:treatment-plans:read')
   @ApiOperation({
     summary: 'Get plan counts by status',

@@ -148,8 +148,9 @@ function SidebarMenuItem({ item, isExpanded, onToggle, level: _level = 0 }: Side
             e.preventDefault();
             handleClick();
           }}
+          aria-expanded={isExpanded}
         >
-          <i className={item.icon}></i>
+          <i className={item.icon} aria-hidden="true"></i>
           <span>{item.title}</span>
           {item.shortcut && (
             <span className="menu-shortcut" title={`Scurtatura: Ctrl+${item.shortcut}`}>
@@ -161,7 +162,7 @@ function SidebarMenuItem({ item, isExpanded, onToggle, level: _level = 0 }: Side
               {item.badge}
             </span>
           )}
-          <span className="menu-arrow"></span>
+          <span className="menu-arrow" aria-hidden="true"></span>
         </a>
         {isExpanded && (
           <ul>
@@ -189,7 +190,7 @@ function SidebarMenuItem({ item, isExpanded, onToggle, level: _level = 0 }: Side
         className={({ isActive }) => clsx({ active: isActive })}
         onClick={handleClick}
       >
-        <i className={item.icon}></i>
+        <i className={item.icon} aria-hidden="true"></i>
         <span>{item.title}</span>
         {item.shortcut && (
           <span className="menu-shortcut" title={`Scurtatura: Ctrl+${item.shortcut}`}>
@@ -259,8 +260,9 @@ export function Sidebar() {
             type="button"
             className="sidebar-close"
             onClick={closeMobileSidebar}
+            aria-label="Inchide meniul"
           >
-            <i className="ti ti-x"></i>
+            <i className="ti ti-x" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -270,13 +272,13 @@ export function Sidebar() {
           <div className="sidebar-top">
             <div className="d-flex gap-3">
               <div className="avatar">
-                <i className="ti ti-building-hospital text-primary"></i>
+                <i className="ti ti-building-hospital text-primary" aria-hidden="true"></i>
               </div>
               <div className="flex-1 min-w-0">
                 <h6 className="text-truncate mb-0">Clinica Demo</h6>
                 <p className="text-truncate mb-0">Sediu Principal</p>
               </div>
-              <i className="ti ti-selector"></i>
+              <i className="ti ti-selector" aria-hidden="true"></i>
             </div>
           </div>
 
@@ -305,22 +307,22 @@ export function Sidebar() {
         </div>
 
         {/* Footer */}
-        <div className="sidebar-footer">
+        {/* <div className="sidebar-footer">
           <div className="trial-item">
-            <a href="#" className="close-icon">
-              <i className="ti ti-x"></i>
+            <a href="#" className="close-icon" aria-label="Inchide mesajul">
+              <i className="ti ti-x" aria-hidden="true"></i>
             </a>
             <div className="trial-item-icon d-flex align-items-center justify-content-center mx-auto mb-3">
-              <i className="ti ti-sparkles text-primary fs-3xl"></i>
+              <i className="ti ti-sparkles text-primary fs-3xl" aria-hidden="true"></i>
             </div>
             <h6>Extinde Clinica</h6>
             <p>Descopera module premium pentru clinica ta</p>
             <NavLink to="/modules" className="btn btn-primary btn-sm mt-3 w-100" onClick={closeMobileSidebar}>
-              <i className="ti ti-apps me-1"></i>
+              <i className="ti ti-apps me-1" aria-hidden="true"></i>
               Vezi Module
             </NavLink>
           </div>
-        </div>
+        </div> */}
       </aside>
     </>
   );

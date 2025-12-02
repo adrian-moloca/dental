@@ -158,7 +158,7 @@ export class Invoice extends Document {
   @Prop({ type: String, index: true })
   appointmentId?: string;
 
-  @Prop({ type: String, index: true })
+  @Prop({ type: String })
   linkedProcedureId?: string;
 
   @Prop({ type: String, index: true })

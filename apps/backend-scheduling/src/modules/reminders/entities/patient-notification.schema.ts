@@ -221,7 +221,7 @@ export class PatientNotification extends Document {
   /**
    * External provider message ID (Twilio SID, SendGrid ID, etc.)
    */
-  @Prop({ type: String, required: false, index: true })
+  @Prop({ type: String, required: false })
   externalId?: string;
 
   /**

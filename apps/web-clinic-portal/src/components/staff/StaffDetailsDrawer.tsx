@@ -7,7 +7,7 @@
  */
 
 import { Modal, Button, Badge } from '../ui-new';
-import type { StaffMember } from '../../routes/StaffPage';
+import type { StaffMember } from '../../types/staff.types';
 
 interface RoleConfig {
   label: string;
@@ -270,7 +270,7 @@ export function StaffDetailsDrawer({
             Specializari
           </h6>
           <div className="d-flex flex-wrap gap-2">
-            {staff.specializations.map((spec, idx) => (
+            {staff.specializations.map((spec: string, idx: number) => (
               <Badge key={idx} variant="soft-primary">
                 {spec}
               </Badge>
@@ -289,13 +289,13 @@ export function StaffDetailsDrawer({
           <div className="card-body py-2 px-3">
             {staff.schedule ? (
               <ul className="list-unstyled mb-0">
-                {Object.entries(staff.schedule).map(([day, hours]) => (
+                {Object.entries(staff.schedule).map(([day, hours]: [string, string]) => (
                   <li
                     key={day}
                     className="d-flex justify-content-between py-1 border-bottom last-no-border"
                   >
                     <span className="text-capitalize">{day}</span>
-                    <span className="text-muted">{hours}</span>
+                    <span className="text-muted">{hours as React.ReactNode}</span>
                   </li>
                 ))}
               </ul>

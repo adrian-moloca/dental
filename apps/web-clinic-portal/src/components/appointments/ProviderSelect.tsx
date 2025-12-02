@@ -5,7 +5,7 @@
  * Fetches providers from the enterprise service.
  */
 
-import { useClinicProviders } from '../../hooks/useEnterprise';
+import { useClinicStaff } from '../../hooks/useEnterprise';
 
 interface ProviderSelectProps {
   value?: string;
@@ -26,7 +26,7 @@ export function ProviderSelect({
   required,
   disabled,
 }: ProviderSelectProps) {
-  const { data: providers, isLoading, isError } = useClinicProviders(clinicId);
+  const { data: providers, isLoading, isError } = useClinicStaff(clinicId);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     onChange(e.target.value);
@@ -61,7 +61,7 @@ export function ProviderSelect({
               ? 'Eroare la incarcarea medicilor'
               : 'Selecteaza un medic'}
           </option>
-          {providers?.map((provider) => (
+          {providers?.map((provider: any) => (
             <option key={provider.id} value={provider.id}>
               {provider.firstName} {provider.lastName}
               {provider.specialization && ` - ${provider.specialization}`}

@@ -8,7 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Modal, Button, Badge } from '../ui-new';
-import type { StaffMember } from '../../routes/StaffPage';
+import type { StaffMember } from '../../types/staff.types';
 
 interface RoleConfig {
   label: string;
@@ -180,9 +180,9 @@ export function StaffFormModal({
           firstName: staff.firstName,
           lastName: staff.lastName,
           email: staff.email,
-          phone: staff.phone,
+          phone: staff.phone || '',
           role: staff.role,
-          department: staff.department,
+          department: staff.department || '',
           specializations: staff.specializations,
           status: staff.status,
           hireDate: staff.hireDate,

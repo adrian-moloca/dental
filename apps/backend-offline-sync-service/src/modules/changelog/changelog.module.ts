@@ -5,9 +5,7 @@ import { ChangeLogService } from './changelog.service';
 import { ChangeLogDoc, ChangeLogSchema } from './schemas/changelog.schema';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: ChangeLogDoc.name, schema: ChangeLogSchema }]),
-  ],
+  imports: [MongooseModule.forFeature([{ name: ChangeLogDoc.name, schema: ChangeLogSchema }])],
   controllers: [ChangeLogController],
   providers: [ChangeLogService],
   exports: [ChangeLogService],

@@ -124,7 +124,7 @@ export class ClinicalNotesController {
    *
    * POST /api/v1/clinical/patients/:patientId/notes
    */
-  @Post('api/v1/clinical/patients/:patientId/notes')
+  @Post('clinical/patients/:patientId/notes')
   @HttpCode(HttpStatus.CREATED)
   @RequirePermissions('clinical:notes:create')
   @ApiOperation({ summary: 'Create a new clinical note' })
@@ -168,7 +168,7 @@ export class ClinicalNotesController {
    *
    * GET /api/v1/clinical/patients/:patientId/notes
    */
-  @Get('api/v1/clinical/patients/:patientId/notes')
+  @Get('clinical/patients/:patientId/notes')
   @RequirePermissions('clinical:notes:read')
   @ApiOperation({ summary: 'Get all clinical notes for a patient' })
   @ApiParam({ name: 'patientId', description: 'Patient UUID' })
@@ -217,7 +217,7 @@ export class ClinicalNotesController {
    *
    * GET /api/v1/clinical/patients/:patientId/notes/:noteId
    */
-  @Get('api/v1/clinical/patients/:patientId/notes/:noteId')
+  @Get('clinical/patients/:patientId/notes/:noteId')
   @RequirePermissions('clinical:notes:read')
   @ApiOperation({ summary: 'Get a specific clinical note' })
   @ApiParam({ name: 'patientId', description: 'Patient UUID' })
@@ -316,7 +316,7 @@ export class ClinicalNotesController {
    *
    * PUT /api/v1/clinical/patients/:patientId/notes/:noteId
    */
-  @Put('api/v1/clinical/patients/:patientId/notes/:noteId')
+  @Put('clinical/patients/:patientId/notes/:noteId')
   @RequirePermissions('clinical:notes:update')
   @ApiOperation({ summary: 'Update a draft clinical note' })
   @ApiParam({ name: 'patientId', description: 'Patient UUID' })
@@ -366,7 +366,7 @@ export class ClinicalNotesController {
    *
    * POST /api/v1/clinical/patients/:patientId/notes/:noteId/sign
    */
-  @Post('api/v1/clinical/patients/:patientId/notes/:noteId/sign')
+  @Post('clinical/patients/:patientId/notes/:noteId/sign')
   @HttpCode(HttpStatus.OK)
   @RequirePermissions('clinical:notes:sign')
   @ApiOperation({ summary: 'Sign a clinical note (digitally finalize)' })
@@ -413,7 +413,7 @@ export class ClinicalNotesController {
    *
    * POST /api/v1/clinical/patients/:patientId/notes/:noteId/amend
    */
-  @Post('api/v1/clinical/patients/:patientId/notes/:noteId/amend')
+  @Post('clinical/patients/:patientId/notes/:noteId/amend')
   @HttpCode(HttpStatus.CREATED)
   @RequirePermissions('clinical:notes:amend')
   @ApiOperation({ summary: 'Create an amendment to a signed clinical note' })
@@ -461,7 +461,7 @@ export class ClinicalNotesController {
    *
    * GET /api/v1/clinical/patients/:patientId/notes/:noteId/versions
    */
-  @Get('api/v1/clinical/patients/:patientId/notes/:noteId/versions')
+  @Get('clinical/patients/:patientId/notes/:noteId/versions')
   @RequirePermissions('clinical:notes:read')
   @ApiOperation({ summary: 'Get version history for a clinical note' })
   @ApiParam({ name: 'patientId', description: 'Patient UUID' })
@@ -505,7 +505,7 @@ export class ClinicalNotesController {
    *
    * GET /api/v1/clinical/patients/:patientId/notes/:noteId/history
    */
-  @Get('api/v1/clinical/patients/:patientId/notes/:noteId/history')
+  @Get('clinical/patients/:patientId/notes/:noteId/history')
   @RequirePermissions('clinical:notes:audit')
   @ApiOperation({ summary: 'Get audit history for a clinical note' })
   @ApiParam({ name: 'patientId', description: 'Patient UUID' })
@@ -553,7 +553,7 @@ export class ClinicalNotesController {
    *
    * POST /api/v1/clinical/patients/:patientId/notes/:noteId/attachments
    */
-  @Post('api/v1/clinical/patients/:patientId/notes/:noteId/attachments')
+  @Post('clinical/patients/:patientId/notes/:noteId/attachments')
   @HttpCode(HttpStatus.CREATED)
   @RequirePermissions('clinical:notes:update')
   @ApiOperation({ summary: 'Add an attachment to a clinical note' })
@@ -600,7 +600,7 @@ export class ClinicalNotesController {
    *
    * POST /api/v1/clinical/patients/:patientId/notes/:noteId/diagnoses
    */
-  @Post('api/v1/clinical/patients/:patientId/notes/:noteId/diagnoses')
+  @Post('clinical/patients/:patientId/notes/:noteId/diagnoses')
   @HttpCode(HttpStatus.CREATED)
   @RequirePermissions('clinical:notes:update')
   @ApiOperation({ summary: 'Add a diagnosis to a clinical note' })
@@ -647,7 +647,7 @@ export class ClinicalNotesController {
    *
    * POST /api/v1/clinical/patients/:patientId/notes/:noteId/procedures
    */
-  @Post('api/v1/clinical/patients/:patientId/notes/:noteId/procedures')
+  @Post('clinical/patients/:patientId/notes/:noteId/procedures')
   @HttpCode(HttpStatus.CREATED)
   @RequirePermissions('clinical:notes:update')
   @ApiOperation({ summary: 'Add a procedure to a clinical note' })
@@ -691,7 +691,7 @@ export class ClinicalNotesController {
    *
    * POST /api/v1/clinical/patients/:patientId/notes/:noteId/procedures/:procedureId/complete
    */
-  @Post('api/v1/clinical/patients/:patientId/notes/:noteId/procedures/:procedureId/complete')
+  @Post('clinical/patients/:patientId/notes/:noteId/procedures/:procedureId/complete')
   @HttpCode(HttpStatus.OK)
   @RequirePermissions('clinical:notes:update')
   @ApiOperation({ summary: 'Mark a procedure as completed' })
@@ -745,7 +745,7 @@ export class ClinicalNotesController {
    *
    * DELETE /api/v1/clinical/patients/:patientId/notes/:noteId
    */
-  @Delete('api/v1/clinical/patients/:patientId/notes/:noteId')
+  @Delete('clinical/patients/:patientId/notes/:noteId')
   @HttpCode(HttpStatus.OK)
   @RequirePermissions('clinical:notes:delete')
   @ApiOperation({ summary: 'Soft delete a clinical note (draft notes only)' })
@@ -783,7 +783,7 @@ export class ClinicalNotesController {
    *
    * GET /api/v1/clinical/notes/unsigned-drafts
    */
-  @Get('api/v1/clinical/notes/unsigned-drafts')
+  @Get('clinical/notes/unsigned-drafts')
   @RequirePermissions('clinical:notes:read')
   @ApiOperation({ summary: 'Get unsigned draft notes for the current user' })
   async getUnsignedDrafts(@GetCurrentUser() user: CurrentUser) {
@@ -817,7 +817,7 @@ export class ClinicalNotesController {
    *
    * GET /api/v1/clinical/notes/status-counts
    */
-  @Get('api/v1/clinical/notes/status-counts')
+  @Get('clinical/notes/status-counts')
   @RequirePermissions('clinical:notes:read')
   @ApiOperation({ summary: 'Get clinical note status counts for dashboard' })
   async getStatusCounts(@GetCurrentUser() user: CurrentUser) {

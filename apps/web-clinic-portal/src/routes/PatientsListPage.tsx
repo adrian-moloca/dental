@@ -153,7 +153,7 @@ export default function PatientsListPage() {
         breadcrumbs={breadcrumbs}
         actions={
           <Button variant="primary" onClick={() => navigate('/patients/new')}>
-            <i className="ti ti-plus me-1"></i>
+            <i className="ti ti-plus me-1" aria-hidden="true"></i>
             Adauga Pacient
           </Button>
         }
@@ -182,7 +182,7 @@ export default function PatientsListPage() {
               message={(error as Error).message || 'Nu am putut incarca lista de pacienti. Va rugam incercati din nou.'}
               actions={
                 <Button variant="primary" onClick={() => refetch()}>
-                  <i className="ti ti-refresh me-1"></i>
+                  <i className="ti ti-refresh me-1" aria-hidden="true"></i>
                   Reincearca
                 </Button>
               }
@@ -205,7 +205,7 @@ export default function PatientsListPage() {
           <ExportDropdown onSelect={handleExport} />
           <ViewToggle value={viewMode} onChange={setViewMode} />
           <Button variant="primary" onClick={() => navigate('/patients/new')}>
-            <i className="ti ti-plus me-1"></i>
+            <i className="ti ti-plus me-1" aria-hidden="true"></i>
             Pacient Nou
           </Button>
         </div>
@@ -240,8 +240,9 @@ export default function PatientsListPage() {
                 size="sm"
                 onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
                 className="d-flex align-items-center"
+                aria-expanded={showAdvancedFilters}
               >
-                <i className="ti ti-filter me-1"></i>
+                <i className="ti ti-filter me-1" aria-hidden="true"></i>
                 Filtre
                 {hasActiveFilters && (
                   <span className="badge bg-primary ms-1">{filters.status.length + filters.gender.length}</span>
@@ -337,7 +338,7 @@ export default function PatientsListPage() {
               action={
                 !searchQuery && (
                   <Button variant="primary" onClick={() => navigate('/patients/new')}>
-                    <i className="ti ti-plus me-1"></i>
+                    <i className="ti ti-plus me-1" aria-hidden="true"></i>
                     Adauga Pacient
                   </Button>
                 )
@@ -385,13 +386,13 @@ export default function PatientsListPage() {
                     <TableCell>
                       <div>
                         <div className="d-flex align-items-center gap-1 text-muted">
-                          <i className="ti ti-mail fs-14"></i>
+                          <i className="ti ti-mail fs-14" aria-hidden="true"></i>
                           <span className="small">
                             {patient.emails?.[0]?.address || 'Fara email'}
                           </span>
                         </div>
                         <div className="d-flex align-items-center gap-1 text-muted">
-                          <i className="ti ti-phone fs-14"></i>
+                          <i className="ti ti-phone fs-14" aria-hidden="true"></i>
                           <span className="small">
                             {patient.phones?.[0]?.number || 'Fara telefon'}
                           </span>
@@ -441,7 +442,7 @@ export default function PatientsListPage() {
                           icon="ti ti-dental"
                           actionType="default"
                           tooltip="Date Clinice"
-                          onClick={() => navigate(`/clinical/charting?patientId=${patient.id}`)}
+                          onClick={() => navigate(`/clinical/${patient.id}`)}
                         />
                         <ActionButton
                           icon="ti ti-calendar-plus"
@@ -482,31 +483,37 @@ export default function PatientsListPage() {
                         <Badge variant="soft-success" className="mb-3">Activ</Badge>
                         <div className="d-flex justify-content-center gap-2">
                           <button
+                            type="button"
                             className="btn btn-sm btn-outline-primary"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/patients/${patient.id}`);
                             }}
+                            aria-label="Vezi detalii pacient"
                           >
-                            <i className="ti ti-eye"></i>
+                            <i className="ti ti-eye" aria-hidden="true"></i>
                           </button>
                           <button
+                            type="button"
                             className="btn btn-sm btn-outline-secondary"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/patients/${patient.id}/edit`);
                             }}
+                            aria-label="Editeaza pacient"
                           >
-                            <i className="ti ti-edit"></i>
+                            <i className="ti ti-edit" aria-hidden="true"></i>
                           </button>
                           <button
+                            type="button"
                             className="btn btn-sm btn-outline-secondary"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/appointments/create?patientId=${patient.id}`);
                             }}
+                            aria-label="Programeaza pacient"
                           >
-                            <i className="ti ti-calendar-plus"></i>
+                            <i className="ti ti-calendar-plus" aria-hidden="true"></i>
                           </button>
                         </div>
                       </div>

@@ -11,4 +11,5 @@ export * from './clinicalClient';
 export * from './inventoryClient';
 export * from './imagingClient';
 export * from './enterpriseClient';
+export * from './preferencesClient';
 export * from './axiosInstance';

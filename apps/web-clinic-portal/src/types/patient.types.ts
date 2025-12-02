@@ -204,10 +204,8 @@ export interface PatientDto {
 }
 
 export interface SearchPatientDto {
-  /** Search term for name, email, or phone (backend field name is 'search') */
+  /** Search term for name, email, or phone */
   search?: string;
-  /** Alias for search - for backward compatibility */
-  query?: string;
   firstName?: string;
   lastName?: string;
   email?: string;

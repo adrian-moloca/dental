@@ -61,7 +61,7 @@ import { CurrentUser } from '@dentalos/shared-auth';
 
 @ApiTags('Clinical - Interventions')
 @ApiBearerAuth()
-@Controller('api/v1/clinical/patients/:patientId/interventions')
+@Controller('clinical/patients/:patientId/interventions')
 @UseGuards(JwtAuthGuard, TenantIsolationGuard, PermissionsGuard)
 export class PatientInterventionsController {
   constructor(private readonly interventionsService: InterventionsService) {}
@@ -208,7 +208,7 @@ export class PatientInterventionsController {
 
 @ApiTags('Clinical - Interventions')
 @ApiBearerAuth()
-@Controller('api/v1/clinical/interventions')
+@Controller('clinical/interventions')
 @UseGuards(JwtAuthGuard, TenantIsolationGuard, PermissionsGuard)
 export class InterventionsController {
   constructor(private readonly interventionsService: InterventionsService) {}
@@ -409,7 +409,7 @@ export class InterventionsController {
 
 @ApiTags('Clinical - Interventions')
 @ApiBearerAuth()
-@Controller('api/v1/clinical/appointments/:appointmentId/interventions')
+@Controller('clinical/appointments/:appointmentId/interventions')
 @UseGuards(JwtAuthGuard, TenantIsolationGuard, PermissionsGuard)
 export class AppointmentInterventionsController {
   constructor(private readonly interventionsService: InterventionsService) {}
@@ -498,7 +498,7 @@ export class AppointmentInterventionsController {
 
 @ApiTags('Clinical - Interventions')
 @ApiBearerAuth()
-@Controller('api/v1/clinical/patients/:patientId/teeth/:toothNumber/interventions')
+@Controller('clinical/patients/:patientId/teeth/:toothNumber/interventions')
 @UseGuards(JwtAuthGuard, TenantIsolationGuard, PermissionsGuard)
 export class ToothInterventionsController {
   constructor(private readonly interventionsService: InterventionsService) {}

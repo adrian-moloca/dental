@@ -16,8 +16,12 @@ export class TenantIsolationGuard implements CanActivate {
       throw new ForbiddenException('User context not found');
     }
 
+    // tenantId may be stored as organizationId in JWT
+    const tenantId = user.tenantId || user.organizationId;
+    const organizationId = user.organizationId || user.tenantId;
+
     // Validate tenant context exists
-    if (!user.tenantId || !user.organizationId) {
+    if (!tenantId) {
       throw new ForbiddenException('Invalid tenant context');
     }
 
@@ -25,10 +29,11 @@ export class TenantIsolationGuard implements CanActivate {
     const patientId = request.params.patientId;
 
     // Store tenant context in request for easy access
+    // clinicId may be null for org-level admins - use 'default' as fallback
     request.tenantContext = {
-      tenantId: user.tenantId,
-      organizationId: user.organizationId,
-      clinicId: user.clinicId,
+      tenantId,
+      organizationId,
+      clinicId: user.clinicId || 'default',
     };
 
     // Add patient validation metadata

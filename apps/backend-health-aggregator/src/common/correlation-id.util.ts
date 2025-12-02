@@ -41,8 +41,6 @@ export function generateRequestId(): string {
  */
 export function extractCorrelationId(request: Request): string {
   return (
-    request.get('x-correlation-id') ||
-    request.get('X-Correlation-ID') ||
-    generateCorrelationId()
+    request.get('x-correlation-id') || request.get('X-Correlation-ID') || generateCorrelationId()
   );
 }

@@ -163,7 +163,7 @@ export const useConfirmAppointment = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, method }: { id: string; method: 'phone' | 'sms' | 'email' | 'portal' }) =>
+    mutationFn: ({ id, method }: { id: string; method: 'phone' | 'sms' | 'email' | 'patient_portal' }) =>
       schedulingClient.confirm(id, method),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['appointments', variables.id] });
@@ -181,7 +181,7 @@ export const useBulkConfirmAppointments = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ ids, method }: { ids: string[]; method: 'phone' | 'sms' | 'email' | 'portal' }) =>
+    mutationFn: ({ ids, method }: { ids: string[]; method: 'phone' | 'sms' | 'email' | 'patient_portal' }) =>
       schedulingClient.bulkConfirm(ids, method),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
@@ -191,7 +191,7 @@ export const useBulkConfirmAppointments = () => {
       if (failed === 0) {
         toast.success(`${confirmed} programari confirmate cu succes`);
       } else {
-        toast.warning(`${confirmed} confirmate, ${failed} esuate`);
+        toast.error(`${confirmed} confirmate, ${failed} esuate`);
       }
     },
     onError: () => {

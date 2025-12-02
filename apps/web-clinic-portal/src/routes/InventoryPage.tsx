@@ -186,12 +186,15 @@ export function InventoryPage() {
         await restockItem.mutateAsync({
           productId: selectedProduct.id,
           quantity: qty,
-          reference: adjustmentNotes || undefined,
+          locationId: 'default',
+          reason: adjustmentNotes || undefined,
         });
       } else {
         await deductStock.mutateAsync({
-          productId: selectedProduct.id,
-          quantity: qty,
+          items: [{
+            productId: selectedProduct.id,
+            quantity: qty,
+          }],
           reference: adjustmentNotes || undefined,
         });
       }

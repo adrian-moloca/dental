@@ -255,9 +255,22 @@ export class PatientsRepository {
       }
     }
 
-    // Text search
+    // Text search with partial matching support
     if (criteria.search && criteria.search.trim()) {
-      query.$text = { $search: criteria.search.trim() };
+      const searchTerm = criteria.search.trim();
+      // Use regex for partial matching on name, email, and phone
+      // Escape special regex characters
+      const escapedSearch = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(escapedSearch, 'i');
+
+      query.$or = [
+        { 'person.firstName': searchRegex },
+        { 'person.lastName': searchRegex },
+        { 'person.preferredName': searchRegex },
+        { 'contacts.phones.number': searchRegex },
+        { 'contacts.emails.address': searchRegex },
+        { patientNumber: searchRegex },
+      ];
     }
 
     // Calculate skip

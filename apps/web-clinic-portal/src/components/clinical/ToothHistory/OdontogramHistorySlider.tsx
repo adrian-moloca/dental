@@ -156,22 +156,24 @@ export function OdontogramHistorySlider({ patientId }: OdontogramHistorySliderPr
                     return (
                       <div key={toothNumber} className="text-center">
                         <ToothSVG
-                          toothNumber={toothNumber}
+                          toothNumber={parseInt(toothNumber, 10)}
                           toothData={{
                             toothNumber,
                             isPresent: toothData?.condition !== 'missing',
                             conditions: toothData
                               ? [
                                   {
-                                    id: `${toothNumber}-${currentSnapshot?.timestamp || 'current'}`,
+                                    id: `${toothNumber}-${currentSnapshot?.date || 'current'}`,
                                     condition: toothData.condition,
                                     surfaces: toothData.surfaces || [],
-                                    recordedAt: currentSnapshot?.timestamp || new Date().toISOString(),
+                                    recordedAt: currentSnapshot?.date || new Date().toISOString(),
                                     recordedBy: 'system',
                                   },
                                 ]
                               : [],
-                          }}
+                          } as any}
+                          selected={false}
+                          hovered={false}
                           size="sm"
                           readOnly
                         />
@@ -193,22 +195,24 @@ export function OdontogramHistorySlider({ patientId }: OdontogramHistorySliderPr
                     return (
                       <div key={toothNumber} className="text-center">
                         <ToothSVG
-                          toothNumber={toothNumber}
+                          toothNumber={parseInt(toothNumber, 10)}
                           toothData={{
                             toothNumber,
                             isPresent: toothData?.condition !== 'missing',
                             conditions: toothData
                               ? [
                                   {
-                                    id: `${toothNumber}-${currentSnapshot?.timestamp || 'current'}`,
+                                    id: `${toothNumber}-${currentSnapshot?.date || 'current'}`,
                                     condition: toothData.condition,
                                     surfaces: toothData.surfaces || [],
-                                    recordedAt: currentSnapshot?.timestamp || new Date().toISOString(),
+                                    recordedAt: currentSnapshot?.date || new Date().toISOString(),
                                     recordedBy: 'system',
                                   },
                                 ]
                               : [],
-                          }}
+                          } as any}
+                          selected={false}
+                          hovered={false}
                           size="sm"
                           readOnly
                         />

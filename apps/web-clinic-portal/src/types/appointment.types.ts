@@ -41,7 +41,7 @@ export interface CancelAppointmentDto {
   cancelledBy: string;
 }
 
-export type ConfirmationMethod = 'phone' | 'sms' | 'email' | 'portal';
+export type ConfirmationMethod = 'phone' | 'sms' | 'email' | 'patient_portal';
 
 export interface QueryAppointmentsDto {
   patientId?: string;

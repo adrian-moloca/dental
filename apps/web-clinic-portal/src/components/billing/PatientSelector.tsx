@@ -18,7 +18,7 @@ export function PatientSelector({ selectedPatientId, onSelect }: PatientSelector
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
-  const { data, isLoading } = usePatients({ query: debouncedQuery, limit: 10 });
+  const { data, isLoading } = usePatients({ search: debouncedQuery, limit: 10 });
   const patients = data?.data || [];
 
   // Debounce search input

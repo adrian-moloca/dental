@@ -689,19 +689,19 @@ export interface ProcedureCatalogResponse {
 export const clinicalClient = {
   // Clinical Notes
   createNote: (data: Partial<ClinicalNoteDto>) =>
-    client.post<ClinicalNoteDto>(`/clinical/patients/${data.patientId}/clinical-notes`, data),
+    client.post<ClinicalNoteDto>(`/clinical/patients/${data.patientId}/notes`, data),
 
   getNotes: (patientId: string) =>
-    client.get<ClinicalNoteDto[]>(`/clinical/patients/${patientId}/clinical-notes`),
+    client.get<ClinicalNoteDto[]>(`/clinical/patients/${patientId}/notes`),
 
-  getNote: (id: string) =>
-    client.get<ClinicalNoteDto>(`/clinical/notes/${id}`),
+  getNote: (patientId: string, noteId: string) =>
+    client.get<ClinicalNoteDto>(`/clinical/patients/${patientId}/notes/${noteId}`),
 
-  signNote: (noteId: string, data: SignNoteRequest) =>
-    client.post<SignNoteResponse>(`/clinical-notes/${noteId}/sign`, data),
+  signNote: (patientId: string, noteId: string, data: SignNoteRequest) =>
+    client.post<SignNoteResponse>(`/clinical/patients/${patientId}/notes/${noteId}/sign`, data),
 
-  amendNote: (noteId: string, data: AmendNoteRequest) =>
-    client.post<AmendNoteResponse>(`/clinical-notes/${noteId}/amend`, data),
+  amendNote: (patientId: string, noteId: string, data: AmendNoteRequest) =>
+    client.post<AmendNoteResponse>(`/clinical/patients/${patientId}/notes/${noteId}/amend`, data),
 
   // ============================================================================
   // TREATMENT PLANS - Full API surface aligned with backend
@@ -710,27 +710,27 @@ export const clinicalClient = {
   // Create a new treatment plan
   createTreatmentPlan: (patientId: string, data: CreateTreatmentPlanDto) =>
     client.post<TreatmentPlanDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans`,
+      `/clinical/patients/${patientId}/treatment-plans`,
       data
     ),
 
   // List all treatment plans for a patient
   getTreatmentPlans: (patientId: string, query?: TreatmentPlanQueryDto) =>
     client.get<PaginatedTreatmentPlansDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans`,
+      `/clinical/patients/${patientId}/treatment-plans`,
       { params: query }
     ),
 
   // Get patient's active treatment plan
   getActiveTreatmentPlan: (patientId: string) =>
     client.get<TreatmentPlanDto | null>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/active`
+      `/clinical/patients/${patientId}/treatment-plans/active`
     ),
 
   // Get a specific treatment plan
   getTreatmentPlan: (patientId: string, planId: string) =>
     client.get<TreatmentPlanDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}`
+      `/clinical/patients/${patientId}/treatment-plans/${planId}`
     ),
 
   // Update a treatment plan (draft status only)
@@ -741,7 +741,7 @@ export const clinicalClient = {
     expectedVersion?: number
   ) =>
     client.put<TreatmentPlanDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}`,
+      `/clinical/patients/${patientId}/treatment-plans/${planId}`,
       data,
       {
         headers: expectedVersion
@@ -753,21 +753,21 @@ export const clinicalClient = {
   // Present treatment plan to patient
   presentTreatmentPlan: (patientId: string, planId: string, data: PresentTreatmentPlanDto) =>
     client.post<TreatmentPlanDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}/present`,
+      `/clinical/patients/${patientId}/treatment-plans/${planId}/present`,
       data
     ),
 
   // Accept treatment plan (patient consent)
   acceptTreatmentPlan: (patientId: string, planId: string, data: AcceptTreatmentPlanDto) =>
     client.post<TreatmentPlanDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}/accept`,
+      `/clinical/patients/${patientId}/treatment-plans/${planId}/accept`,
       data
     ),
 
   // Start treatment (transition to in_progress)
   startTreatment: (patientId: string, planId: string) =>
     client.post<TreatmentPlanDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}/start`
+      `/clinical/patients/${patientId}/treatment-plans/${planId}/start`
     ),
 
   // Complete a procedure item
@@ -779,21 +779,21 @@ export const clinicalClient = {
     data: CompleteProcedureItemDto
   ) =>
     client.post<TreatmentPlanDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}/phases/${phaseId}/items/${itemId}/complete`,
+      `/clinical/patients/${patientId}/treatment-plans/${planId}/phases/${phaseId}/items/${itemId}/complete`,
       data
     ),
 
   // Cancel a treatment plan
   cancelTreatmentPlan: (patientId: string, planId: string, data: CancelTreatmentPlanDto) =>
     client.post<TreatmentPlanDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}/cancel`,
+      `/clinical/patients/${patientId}/treatment-plans/${planId}/cancel`,
       data
     ),
 
   // Delete a treatment plan (soft delete)
   deleteTreatmentPlan: (patientId: string, planId: string, reason: string) =>
     client.delete<void>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}`,
+      `/clinical/patients/${patientId}/treatment-plans/${planId}`,
       { data: { reason } }
     ),
 
@@ -804,20 +804,20 @@ export const clinicalClient = {
     params?: { limit?: number; offset?: number }
   ) =>
     client.get<TreatmentPlanHistoryResponse>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}/history`,
+      `/clinical/patients/${patientId}/treatment-plans/${planId}/history`,
       { params }
     ),
 
   // Recalculate financials
   recalculateTreatmentPlanFinancials: (patientId: string, planId: string) =>
     client.post<TreatmentPlanDto>(
-      `/api/v1/clinical/patients/${patientId}/treatment-plans/${planId}/recalculate`
+      `/clinical/patients/${patientId}/treatment-plans/${planId}/recalculate`
     ),
 
   // Get treatment plan status counts (dashboard)
   getTreatmentPlanStatusCounts: () =>
     client.get<TreatmentPlanStatusCountsDto>(
-      `/api/v1/clinical/treatment-plans/stats/by-status`
+      `/clinical/treatment-plans/stats/by-status`
     ),
 
   // Procedures
@@ -836,20 +836,20 @@ export const clinicalClient = {
 
   // Odontogram - Full API surface aligned with backend
   getOdontogram: (patientId: string) =>
-    client.get<OdontogramDto>(`/api/v1/clinical/patients/${patientId}/odontogram`),
+    client.get<OdontogramDto>(`/clinical/patients/${patientId}/odontogram`),
 
   getTooth: (patientId: string, toothNumber: string) =>
-    client.get<ToothDataDto>(`/api/v1/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}`),
+    client.get<ToothDataDto>(`/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}`),
 
   updateTooth: (patientId: string, toothNumber: string, data: UpdateToothDto) =>
     client.put<OdontogramDto>(
-      `/api/v1/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}`,
+      `/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}`,
       data
     ),
 
   addCondition: (patientId: string, toothNumber: string, data: AddConditionDto) =>
     client.post<{ odontogram: OdontogramDto; conditionId: string }>(
-      `/api/v1/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}/conditions`,
+      `/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}/conditions`,
       data
     ),
 
@@ -860,7 +860,7 @@ export const clinicalClient = {
     data: RemoveConditionDto
   ) =>
     client.delete<OdontogramDto>(
-      `/api/v1/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}/conditions/${conditionId}`,
+      `/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}/conditions/${conditionId}`,
       { data }
     ),
 
@@ -870,13 +870,13 @@ export const clinicalClient = {
     query?: GetToothHistoryQueryDto
   ) =>
     client.get<ToothHistoryResponse>(
-      `/api/v1/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}/history`,
+      `/clinical/patients/${patientId}/odontogram/teeth/${toothNumber}/history`,
       { params: query }
     ),
 
   bulkUpdateTeeth: (patientId: string, data: BulkUpdateTeethDto) =>
     client.put<OdontogramDto>(
-      `/api/v1/clinical/patients/${patientId}/odontogram/bulk`,
+      `/clinical/patients/${patientId}/odontogram/bulk`,
       data
     ),
 };

@@ -83,8 +83,8 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
 
   const combinedStyles: React.CSSProperties = {
     ...baseStyles,
-    ...sizeStyles[size],
-    ...variantStyles[variant],
+    ...sizeStyles[size as Size],
+    ...variantStyles[variant as Variant],
     ...(fullWidth ? { width: '100%' } : {}),
   };
 

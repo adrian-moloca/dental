@@ -25,12 +25,14 @@ import { PatientSummaryCard } from '../components/appointments/PatientSummaryCar
 import { AppointmentTypeSelect } from '../components/appointments/AppointmentTypeSelect';
 import toast from 'react-hot-toast';
 import { format, addHours } from 'date-fns';
+import { useAuth } from '../hooks/useAuth';
 
 export default function CreateAppointmentPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const createAppointment = useCreateAppointment();
+  const { user } = useAuth();
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -44,8 +46,8 @@ export default function CreateAppointmentPage() {
   const initialPatientId = searchParams.get('patientId') || location.state?.patientId || '';
   const isEditing = !!searchParams.get('edit');
 
-  // TODO: Get clinicId from user context
-  const clinicId = 'temp-clinic-id';
+  // Get clinicId from user context
+  const clinicId = user?.clinicId || '';
 
   const [selectedPatient, setSelectedPatient] = useState<PatientDto | undefined>();
   const [formData, setFormData] = useState<Partial<CreateAppointmentDto>>({

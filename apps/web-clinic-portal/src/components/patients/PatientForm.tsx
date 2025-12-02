@@ -400,23 +400,27 @@ export function PatientForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Personal Information Section */}
       <div className="card">
-        <div
-          className="card-header cursor-pointer"
+        <button
+          type="button"
+          className="card-header cursor-pointer w-100 border-0 bg-transparent text-start"
           onClick={() => toggleSection('personal')}
+          aria-expanded={expandedSections.personal}
+          aria-controls="personal-section"
           style={{ cursor: 'pointer' }}
         >
           <div className="d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center gap-2">
-              <i className="ti ti-user fs-20 text-primary"></i>
+              <i className="ti ti-user fs-20 text-primary" aria-hidden="true"></i>
               <h5 className="mb-0">Informatii Personale</h5>
             </div>
             <i
               className={`ti ti-chevron-${expandedSections.personal ? 'up' : 'down'} fs-20`}
+              aria-hidden="true"
             ></i>
           </div>
-        </div>
+        </button>
         {expandedSections.personal && (
-          <div className="card-body">
+          <div id="personal-section" className="card-body">
             <div className="row g-3">
               <div className="col-md-6">
                 <Input
@@ -535,23 +539,27 @@ export function PatientForm({
 
       {/* Contact Information Section */}
       <div className="card">
-        <div
-          className="card-header cursor-pointer"
+        <button
+          type="button"
+          className="card-header cursor-pointer w-100 border-0 bg-transparent text-start"
           onClick={() => toggleSection('contact')}
+          aria-expanded={expandedSections.contact}
+          aria-controls="contact-section"
           style={{ cursor: 'pointer' }}
         >
           <div className="d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center gap-2">
-              <i className="ti ti-phone fs-20 text-primary"></i>
+              <i className="ti ti-phone fs-20 text-primary" aria-hidden="true"></i>
               <h5 className="mb-0">Informatii Contact</h5>
             </div>
             <i
               className={`ti ti-chevron-${expandedSections.contact ? 'up' : 'down'} fs-20`}
+              aria-hidden="true"
             ></i>
           </div>
-        </div>
+        </button>
         {expandedSections.contact && (
-          <div className="card-body">
+          <div id="contact-section" className="card-body">
             <div className="row g-3">
               <div className="col-md-6">
                 <Input
@@ -796,8 +804,9 @@ export function PatientForm({
                       size="sm"
                       onClick={() => removeAllergy(index)}
                       className="text-danger"
+                      aria-label="Remove allergy"
                     >
-                      <i className="ti ti-trash"></i>
+                      <i className="ti ti-trash" aria-hidden="true"></i>
                     </Button>
                   </div>
                 </div>
@@ -858,8 +867,9 @@ export function PatientForm({
                       size="sm"
                       onClick={() => removeMedicalCondition(index)}
                       className="text-danger"
+                      aria-label="Remove medical condition"
                     >
-                      <i className="ti ti-trash"></i>
+                      <i className="ti ti-trash" aria-hidden="true"></i>
                     </Button>
                   </div>
                 </div>
@@ -911,8 +921,9 @@ export function PatientForm({
                       size="sm"
                       onClick={() => removeMedication(index)}
                       className="text-danger"
+                      aria-label="Remove medication"
                     >
-                      <i className="ti ti-trash"></i>
+                      <i className="ti ti-trash" aria-hidden="true"></i>
                     </Button>
                   </div>
                 </div>
@@ -1020,7 +1031,7 @@ export function PatientForm({
               />
               <label className="form-check-label" htmlFor="gdprConsent">
                 <strong>Consimțământ Procesare Date (OBLIGATORIU)</strong>
-                <p className="text-muted small mb-0">
+                <p className="small mb-0" style={{ color: 'var(--bs-secondary, #6c757d)' }}>
                   Accept procesarea datelor mele personale conform GDPR și reglementărilor locale
                 </p>
               </label>
@@ -1038,7 +1049,7 @@ export function PatientForm({
               />
               <label className="form-check-label" htmlFor="marketingConsent">
                 Consimțământ Marketing
-                <p className="text-muted small mb-0">
+                <p className="small mb-0" style={{ color: 'var(--bs-secondary, #6c757d)' }}>
                   Accept să primesc comunicări promoționale
                 </p>
               </label>
@@ -1053,7 +1064,7 @@ export function PatientForm({
               />
               <label className="form-check-label" htmlFor="smsReminders">
                 Consimțământ Reminder SMS
-                <p className="text-muted small mb-0">
+                <p className="small mb-0" style={{ color: 'var(--bs-secondary, #6c757d)' }}>
                   Accept să primesc memento-uri prin SMS
                 </p>
               </label>
@@ -1068,7 +1079,7 @@ export function PatientForm({
               />
               <label className="form-check-label" htmlFor="emailReminders">
                 Consimțământ Reminder Email
-                <p className="text-muted small mb-0">
+                <p className="small mb-0" style={{ color: 'var(--bs-secondary, #6c757d)' }}>
                   Accept să primesc memento-uri prin email
                 </p>
               </label>

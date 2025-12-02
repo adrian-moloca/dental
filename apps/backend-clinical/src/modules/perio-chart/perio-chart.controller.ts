@@ -8,7 +8,7 @@ import { CurrentUser } from '@dentalos/shared-auth';
 
 @ApiTags('Clinical - Perio Charts')
 @ApiBearerAuth()
-@Controller('api/v1/clinical/patients/:patientId/perio-charts')
+@Controller('clinical/patients/:patientId/perio-charts')
 @UseGuards(JwtAuthGuard, TenantIsolationGuard, PermissionsGuard)
 export class PerioChartController {
   constructor(private readonly service: PerioChartService) {}

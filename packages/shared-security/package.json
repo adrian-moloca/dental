@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts"
+    "lint": "pnpm exec eslint src --ext .ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.0",

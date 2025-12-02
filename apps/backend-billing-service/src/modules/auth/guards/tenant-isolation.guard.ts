@@ -11,10 +11,19 @@ export class TenantIsolationGuard implements CanActivate {
     }
 
     // Extract tenant context from JWT payload
+    // tenantId may be stored as organizationId in JWT
+    // clinicId may be null for org-level admins - use 'default' as fallback
+    const tenantId = user.tenantId || user.organizationId;
+    const clinicId = user.clinicId || 'default';
+
+    if (!tenantId) {
+      return false;
+    }
+
     request.tenantContext = {
-      tenantId: user.tenantId,
-      organizationId: user.organizationId,
-      clinicId: user.clinicId,
+      tenantId,
+      organizationId: user.organizationId || tenantId,
+      clinicId,
       userId: user.sub || user.userId,
     };
 

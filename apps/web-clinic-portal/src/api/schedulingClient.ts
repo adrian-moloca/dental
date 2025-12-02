@@ -123,8 +123,11 @@ export const schedulingClient = {
    * POST /appointments/:id/confirm
    * Confirm an appointment
    */
-  async confirm(id: string, method: 'phone' | 'sms' | 'email' | 'portal'): Promise<AppointmentDto> {
-    const response = await schedulingApi.post(`/appointments/${id}/confirm`, { method });
+  async confirm(
+    id: string,
+    confirmationMethod: 'phone' | 'sms' | 'email' | 'patient_portal'
+  ): Promise<AppointmentDto> {
+    const response = await schedulingApi.post(`/appointments/${id}/confirm`, { confirmationMethod });
     return response.data;
   },
 
@@ -134,9 +137,9 @@ export const schedulingClient = {
    */
   async bulkConfirm(
     ids: string[],
-    method: 'phone' | 'sms' | 'email' | 'portal'
+    confirmationMethod: 'phone' | 'sms' | 'email' | 'patient_portal'
   ): Promise<{ confirmed: string[]; failed: string[] }> {
-    const response = await schedulingApi.post('/appointments/bulk-confirm', { ids, method });
+    const response = await schedulingApi.post('/appointments/bulk-confirm', { ids, confirmationMethod });
     return response.data;
   },
 

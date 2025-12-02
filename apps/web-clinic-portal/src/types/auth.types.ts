@@ -38,6 +38,7 @@ export interface AuthResponseDto {
   tokenType: string;
   expiresIn: number;
   user: UserDto;
+  csrfToken: string;
 }
 
 export interface RefreshTokenDto {
@@ -102,6 +103,7 @@ export interface LoginSmartResponseDto {
   expiresIn?: number;
   user?: UserDto;
   organizations?: OrganizationSummaryDto[];
+  csrfToken?: string;
 }
 
 /**
@@ -119,6 +121,7 @@ export interface SelectOrgDto {
 export interface MfaStatusDto {
   enabled: boolean;
   enrolledAt?: Date;
+  factorId?: string;
 }
 
 /**
@@ -126,6 +129,7 @@ export interface MfaStatusDto {
  * Contains TOTP secret and QR code data URL
  */
 export interface MfaEnrollResponseDto {
+  factorId: string;
   secret: string;
   qrCodeDataUrl: string;
   backupCodes: string[];

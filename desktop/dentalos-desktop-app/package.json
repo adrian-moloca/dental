@@ -9,7 +9,7 @@
     "build:dir": "tsc && vite build && electron-builder --dir",
     "start": "electron .",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx",
+    "lint": "pnpm exec eslint src --ext .ts,.tsx",
     "test": "jest",
     "test:unit": "jest --testPathPattern=unit",
     "test:integration": "jest --testPathPattern=integration"

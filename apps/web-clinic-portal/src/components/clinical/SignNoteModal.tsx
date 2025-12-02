@@ -144,6 +144,7 @@ export function SignNoteModal({
       try {
         await signNote.mutateAsync({
           noteId: note.id,
+          patientId: note.patientId,
           data: { password },
         });
         setPassword('');

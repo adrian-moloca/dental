@@ -69,6 +69,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         tokenStorage.setAccessToken(response.accessToken, rememberMe);
         tokenStorage.setRefreshToken(response.refreshToken!, rememberMe);
         tokenStorage.setUser(response.user, rememberMe);
+        // Store CSRF token for state-changing requests
+        if (response.csrfToken) {
+          tokenStorage.setCsrfToken(response.csrfToken, rememberMe);
+        }
 
         set({
           user: response.user,
@@ -113,6 +117,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       tokenStorage.setAccessToken(response.accessToken, rememberMe);
       tokenStorage.setRefreshToken(response.refreshToken, rememberMe);
       tokenStorage.setUser(response.user, rememberMe);
+      // Store CSRF token for state-changing requests
+      if (response.csrfToken) {
+        tokenStorage.setCsrfToken(response.csrfToken, rememberMe);
+      }
 
       set({
         user: response.user,
@@ -181,6 +189,10 @@ export const useAuthStore = create<AuthState>((set) => ({
           tokenStorage.setAccessToken(response.accessToken, wasRemembered);
           tokenStorage.setRefreshToken(response.refreshToken, wasRemembered);
           tokenStorage.setUser(response.user, wasRemembered);
+          // Store new CSRF token if provided
+          if (response.csrfToken) {
+            tokenStorage.setCsrfToken(response.csrfToken, wasRemembered);
+          }
 
           set({
             user: response.user,

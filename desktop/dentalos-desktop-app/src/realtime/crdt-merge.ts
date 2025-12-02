@@ -60,7 +60,7 @@ export class CRDTMergeEngine extends EventEmitter {
   ): Promise<CRDTMergeResult> {
     const resolutionStrategy = strategy || this.defaultStrategy;
     const conflicts: CRDTConflict[] = [];
-    let merged: Record<string, any> = { ...localData };
+    const merged: Record<string, any> = { ...localData };
     let needsManualResolution = false;
 
     // Extract all fields from both local and remote
@@ -135,7 +135,7 @@ export class CRDTMergeEngine extends EventEmitter {
 
     let currentData = { ...localData };
     let currentMetadata = { ...localMetadata };
-    let allConflicts: CRDTConflict[] = [];
+    const allConflicts: CRDTConflict[] = [];
     let needsManualResolution = false;
 
     for (const patch of sorted) {

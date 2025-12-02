@@ -143,7 +143,7 @@ export function RequiresModule(moduleCode: ModuleCode): MethodDecorator & ClassD
  * ```
  */
 export function getModuleMetadata(
-  target: object | Function,
+  target: object | ((...args: unknown[]) => unknown),
 ): ModuleMetadata | undefined {
   return Reflect.getMetadata(MODULE_METADATA_KEY, target);
 }

@@ -85,7 +85,7 @@ export function useIssueInvoice() {
 export function usePayments(invoiceId: string) {
   return useQuery({
     queryKey: billingKeys.payments(invoiceId),
-    queryFn: () => billingClient.getPayments(invoiceId),
+    queryFn: () => billingClient.getPayments({ invoiceId }),
     enabled: !!invoiceId,
   });
 }
@@ -94,7 +94,7 @@ export function useRecordPayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ invoiceId, data }: { invoiceId: string; data: Partial<PaymentDto> }) =>
+    mutationFn: ({ invoiceId, data }: { invoiceId: string; data: any }) =>
       billingClient.recordPayment(invoiceId, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: billingKeys.payments(variables.invoiceId) });
@@ -112,7 +112,7 @@ export function useRecordPaymentBatch() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: RecordPaymentRequest) => billingClient.recordPaymentBatch(data),
+    mutationFn: (data: RecordPaymentRequest) => billingClient.recordPaymentBatch(data as any),
     onMutate: async (variables) => {
       // Optimistic update: reduce balance immediately
       if (variables.invoiceId) {
@@ -187,7 +187,7 @@ export function useRefundPayment() {
 
   return useMutation({
     mutationFn: ({ paymentId, amount, reason }: { paymentId: string; amount: number; reason: string }) =>
-      billingClient.refundPayment(paymentId, amount, reason),
+      billingClient.refundPayment({ paymentId, amount, reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: billingKeys.all });
       toast.success('Payment refunded successfully');

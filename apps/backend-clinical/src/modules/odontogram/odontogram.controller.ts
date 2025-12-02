@@ -53,7 +53,7 @@ import { ALL_TEETH } from './entities/odontogram.schema';
 
 @ApiTags('Clinical - Odontogram')
 @ApiBearerAuth()
-@Controller('api/v1/clinical/patients/:patientId/odontogram')
+@Controller('clinical/patients/:patientId/odontogram')
 @UseGuards(JwtAuthGuard, TenantIsolationGuard, PermissionsGuard)
 export class OdontogramController {
   constructor(private readonly odontogramService: OdontogramService) {}

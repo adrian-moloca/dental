@@ -169,11 +169,20 @@ export const FilterDropdown = forwardRef<HTMLDivElement, FilterDropdownProps>(
             { disabled }
           )}
           onClick={() => !disabled && setIsOpen(!isOpen)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (!disabled) setIsOpen(!isOpen);
+            } else if (e.key === 'Escape' && isOpen) {
+              setIsOpen(false);
+            }
+          }}
           aria-expanded={isOpen}
+          aria-haspopup="listbox"
           disabled={disabled}
         >
           {getDisplayText()}
-          <i className="ti ti-chevron-down ms-auto" />
+          <i className="ti ti-chevron-down ms-auto" aria-hidden="true" />
         </button>
 
         <div
@@ -203,20 +212,28 @@ export const FilterDropdown = forwardRef<HTMLDivElement, FilterDropdownProps>(
           )}
 
           {/* Options List */}
-          <ul className="mb-3 list-unstyled" style={{ maxHeight: 200, overflowY: 'auto' }}>
+          <ul className="mb-3 list-unstyled" style={{ maxHeight: 200, overflowY: 'auto' }} role="listbox" aria-multiselectable={multiple}>
             {filteredOptions.length === 0 ? (
-              <li className="text-muted text-center py-2">
+              <li className="text-center py-2" style={{ color: 'var(--gray-500, #6c757d)' }}>
                 Niciun rezultat gasit
               </li>
             ) : (
               filteredOptions.map((option) => (
                 <li key={option.value} className="mb-1">
-                  <label className="dropdown-item px-2 d-flex align-items-center text-dark">
+                  <label
+                    className="dropdown-item px-2 d-flex align-items-center"
+                    style={{
+                      color: 'var(--gray-900, #111827)',
+                      cursor: 'pointer'
+                    }}
+                  >
                     <input
                       className="form-check-input m-0 me-2"
                       type={multiple ? 'checkbox' : 'radio'}
                       checked={tempSelectedValues.includes(option.value)}
                       onChange={() => handleOptionToggle(option.value)}
+                      role="option"
+                      aria-selected={tempSelectedValues.includes(option.value)}
                     />
                     {renderOption ? renderOption(option) : defaultRenderOption(option)}
                   </label>
@@ -393,7 +410,7 @@ export interface QuickFilter {
   count?: number;
 }
 
-export interface QuickFiltersProps extends HTMLAttributes<HTMLDivElement> {
+export interface QuickFiltersProps extends Omit<HTMLAttributes<HTMLDivElement>, 'onChange'> {
   /** Filter options */
   filters: QuickFilter[];
   /** Active filter value */

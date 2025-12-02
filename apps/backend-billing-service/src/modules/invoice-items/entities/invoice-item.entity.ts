@@ -14,7 +14,7 @@ export class InvoiceItem extends Document {
   })
   itemType!: InvoiceItemType;
 
-  @Prop({ type: String, index: true })
+  @Prop({ type: String })
   referenceId?: string;
 
   @Prop({ type: String, index: true })

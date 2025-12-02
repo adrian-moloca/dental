@@ -6,7 +6,7 @@
  */
 
 import { Badge } from '../ui-new';
-import type { StaffMember } from '../../routes/StaffPage';
+import type { StaffMember } from '../../types/staff.types';
 
 interface RoleConfig {
   label: string;
@@ -117,7 +117,7 @@ export function StaffCard({
         {/* Specializations */}
         {staff.specializations.length > 0 && (
           <div className="d-flex gap-1 flex-wrap justify-content-center mb-3">
-            {staff.specializations.slice(0, 2).map((spec, idx) => (
+            {staff.specializations.slice(0, 2).map((spec: string, idx: number) => (
               <Badge key={idx} variant="soft-secondary" size="sm">
                 {spec}
               </Badge>

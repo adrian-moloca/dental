@@ -32,7 +32,7 @@ const methods: Array<{
     description: 'Sent email confirmation',
   },
   {
-    value: 'portal',
+    value: 'patient_portal',
     label: 'Patient Portal',
     icon: 'users',
     description: 'Confirmed via portal',

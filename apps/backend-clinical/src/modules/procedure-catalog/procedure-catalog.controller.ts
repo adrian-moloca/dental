@@ -49,7 +49,7 @@ import { GetCurrentUser, RequirePermissions } from '../auth/decorators';
 import { CurrentUser } from '@dentalos/shared-auth';
 import { ProcedureCategory } from './entities/procedure-catalog.schema';
 
-@Controller('api/v1/clinical/procedure-catalog')
+@Controller('clinical/procedure-catalog')
 @ApiTags('Clinical - Procedure Catalog')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantIsolationGuard, PermissionsGuard)

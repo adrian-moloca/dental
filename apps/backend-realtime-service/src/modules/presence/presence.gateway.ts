@@ -64,10 +64,7 @@ export class PresenceGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @UseGuards(WsJwtAuthGuard, WsTenantGuard)
   @SubscribeMessage('presence:update')
-  async handlePresenceUpdate(
-    @MessageBody() data: unknown,
-    @WsCurrentUser() user: WsUser,
-  ) {
+  async handlePresenceUpdate(@MessageBody() data: unknown, @WsCurrentUser() user: WsUser) {
     const dto = PresenceUpdateDtoSchema.parse(data) as PresenceUpdateDto;
 
     await this.presenceService.updatePresence(user.tenantId, user.actorId, {

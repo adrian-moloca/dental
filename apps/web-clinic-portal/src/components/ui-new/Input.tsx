@@ -108,7 +108,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           </div>
         )}
         {helperText && !error && (
-          <small id={`${inputId}-helper`} className="form-text text-muted">
+          <small id={`${inputId}-helper`} className="form-text text-muted" style={{ color: 'var(--bs-secondary, #6c757d)' }}>
             {helperText}
           </small>
         )}
@@ -141,6 +141,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         id={inputId}
         className={clsx('form-control', { 'is-invalid': error }, className)}
         aria-invalid={error ? 'true' : undefined}
+        aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
         required={required}
         {...props}
       />
@@ -160,12 +161,12 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
         {textareaElement}
         {error && (
-          <div className="invalid-feedback d-flex align-items-center gap-1" style={{ display: 'block' }}>
+          <div id={`${inputId}-error`} className="invalid-feedback d-flex align-items-center gap-1" style={{ display: 'block' }}>
             <i className="ti ti-alert-circle"></i>
             <span>{error}</span>
           </div>
         )}
-        {helperText && !error && <small className="form-text text-muted">{helperText}</small>}
+        {helperText && !error && <small id={`${inputId}-helper`} className="form-text text-muted" style={{ color: 'var(--bs-secondary, #6c757d)' }}>{helperText}</small>}
       </div>
     );
   }
@@ -246,7 +247,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           </div>
         )}
         {helperText && !error && (
-          <small id={`${inputId}-helper`} className="form-text text-muted">
+          <small id={`${inputId}-helper`} className="form-text text-muted" style={{ color: 'var(--bs-secondary, #6c757d)' }}>
             {helperText}
           </small>
         )}
@@ -276,7 +277,7 @@ export const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>(
           {...props}
         />
         {value && onClear && (
-          <button type="button" className="clear-btn" onClick={onClear}>
+          <button type="button" className="clear-btn" onClick={onClear} aria-label="Clear search">
             <i className="ti ti-x"></i>
           </button>
         )}

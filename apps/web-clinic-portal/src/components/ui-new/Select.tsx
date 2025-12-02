@@ -215,7 +215,9 @@ export const SearchableSelect = forwardRef<HTMLDivElement, SearchableSelectProps
         <div>
           <span className="fw-medium">{option.label}</span>
           {option.subtitle && (
-            <small className="d-block text-muted">{option.subtitle}</small>
+            <small className="d-block" style={{ color: 'var(--gray-600, #6b7280)', opacity: 0.9 }}>
+              {option.subtitle}
+            </small>
           )}
         </div>
       </div>
@@ -230,7 +232,16 @@ export const SearchableSelect = forwardRef<HTMLDivElement, SearchableSelectProps
             { 'is-invalid': error }
           )}
           onClick={() => !disabled && setIsOpen(!isOpen)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (!disabled) setIsOpen(!isOpen);
+            } else if (e.key === 'Escape' && isOpen) {
+              setIsOpen(false);
+            }
+          }}
           aria-expanded={isOpen}
+          aria-haspopup="listbox"
           disabled={disabled}
           id={inputId}
         >
@@ -242,6 +253,8 @@ export const SearchableSelect = forwardRef<HTMLDivElement, SearchableSelectProps
               className="ti ti-x text-muted me-2"
               onClick={handleClear}
               style={{ cursor: 'pointer' }}
+              role="button"
+              aria-label="Clear selection"
             />
           )}
         </button>
@@ -249,12 +262,14 @@ export const SearchableSelect = forwardRef<HTMLDivElement, SearchableSelectProps
         <div
           className={clsx('dropdown-menu shadow-lg w-100 p-0', { show: isOpen })}
           style={{ minWidth: 200 }}
+          role="listbox"
+          aria-label={label || 'Select options'}
         >
           {/* Search Input */}
           <div className="p-2 border-bottom">
             <div className="input-icon-start input-icon position-relative">
               <span className="input-icon-addon fs-12">
-                <i className="ti ti-search" />
+                <i className="ti ti-search" aria-hidden="true" />
               </span>
               <input
                 type="text"
@@ -263,6 +278,7 @@ export const SearchableSelect = forwardRef<HTMLDivElement, SearchableSelectProps
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 autoFocus
+                aria-label="Search options"
               />
             </div>
           </div>
@@ -270,7 +286,7 @@ export const SearchableSelect = forwardRef<HTMLDivElement, SearchableSelectProps
           {/* Options List */}
           <ul className="list-unstyled m-0" style={{ maxHeight: 200, overflowY: 'auto' }}>
             {filteredOptions.length === 0 ? (
-              <li className="px-3 py-2 text-muted text-center">
+              <li className="px-3 py-2 text-center" style={{ color: 'var(--gray-500, #6c757d)' }}>
                 Niciun rezultat gasit
               </li>
             ) : (
@@ -278,6 +294,8 @@ export const SearchableSelect = forwardRef<HTMLDivElement, SearchableSelectProps
                 <li key={option.value}>
                   <button
                     type="button"
+                    role="option"
+                    aria-selected={value === option.value}
                     className={clsx(
                       'dropdown-item py-2 px-3',
                       { active: value === option.value },
@@ -285,6 +303,14 @@ export const SearchableSelect = forwardRef<HTMLDivElement, SearchableSelectProps
                     )}
                     onClick={() => !option.disabled && handleSelect(option.value)}
                     disabled={option.disabled}
+                    style={{
+                      color: option.disabled
+                        ? 'var(--gray-400, #9ca3af)'
+                        : value === option.value
+                        ? 'var(--white, #fff)'
+                        : 'var(--gray-900, #111827)',
+                      backgroundColor: value === option.value ? 'var(--primary, #2E37A4)' : 'transparent'
+                    }}
                   >
                     {renderOption ? renderOption(option) : defaultRenderOption(option)}
                   </button>
@@ -457,12 +483,15 @@ export const MultiSelect = forwardRef<HTMLDivElement, MultiSelectProps>(
         <div
           className={clsx('dropdown-menu shadow-lg w-100 p-0', { show: isOpen })}
           style={{ minWidth: 200 }}
+          role="listbox"
+          aria-label={label || 'Multi-select options'}
+          aria-multiselectable="true"
         >
           {/* Search Input */}
           <div className="p-2 border-bottom">
             <div className="input-icon-start input-icon position-relative">
               <span className="input-icon-addon fs-12">
-                <i className="ti ti-search" />
+                <i className="ti ti-search" aria-hidden="true" />
               </span>
               <input
                 type="text"
@@ -471,6 +500,7 @@ export const MultiSelect = forwardRef<HTMLDivElement, MultiSelectProps>(
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 autoFocus
+                aria-label="Search options"
               />
             </div>
           </div>
@@ -478,7 +508,7 @@ export const MultiSelect = forwardRef<HTMLDivElement, MultiSelectProps>(
           {/* Options List */}
           <ul className="list-unstyled m-0" style={{ maxHeight: 200, overflowY: 'auto' }}>
             {filteredOptions.length === 0 ? (
-              <li className="px-3 py-2 text-muted text-center">
+              <li className="px-3 py-2 text-center" style={{ color: 'var(--gray-500, #6c757d)' }}>
                 Niciun rezultat gasit
               </li>
             ) : (
@@ -489,6 +519,12 @@ export const MultiSelect = forwardRef<HTMLDivElement, MultiSelectProps>(
                       'dropdown-item py-2 px-3 d-flex align-items-center',
                       { disabled: option.disabled }
                     )}
+                    style={{
+                      color: option.disabled
+                        ? 'var(--gray-400, #9ca3af)'
+                        : 'var(--gray-900, #111827)',
+                      cursor: option.disabled ? 'not-allowed' : 'pointer'
+                    }}
                   >
                     <input
                       type="checkbox"
@@ -496,6 +532,8 @@ export const MultiSelect = forwardRef<HTMLDivElement, MultiSelectProps>(
                       checked={value.includes(option.value)}
                       onChange={() => !option.disabled && handleToggle(option.value)}
                       disabled={option.disabled}
+                      role="option"
+                      aria-selected={value.includes(option.value)}
                     />
                     {option.avatar && (
                       <span className="avatar avatar-xs rounded-circle me-2">

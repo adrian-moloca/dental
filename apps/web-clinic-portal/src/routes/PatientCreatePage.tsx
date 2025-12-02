@@ -10,7 +10,7 @@
  * - Romanian labels and messages
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCreatePatient } from '../hooks/usePatients';
 import { AppShell } from '../components/layout/AppShell';
@@ -187,20 +187,25 @@ export default function PatientCreatePage() {
   const [newAllergyInput, setNewAllergyInput] = useState('');
   const [newConditionInput, setNewConditionInput] = useState('');
 
-  // CNP auto-extraction effect
-  useEffect(() => {
-    if (formData.cnp.length === 13 && validateCNP(formData.cnp)) {
-      const { dateOfBirth, gender } = extractDataFromCNP(formData.cnp);
-      if (dateOfBirth && gender) {
-        setFormData(prev => ({
-          ...prev,
-          dateOfBirth: dateOfBirth.toISOString().split('T')[0],
-          gender,
-        }));
-        toast.success('Data nasterii si genul au fost extrase automat din CNP');
+  // CNP auto-extraction - handled in updateField for cnp changes
+  const handleCnpChange = useCallback((cnp: string) => {
+    setFormData(prev => {
+      const newData = { ...prev, cnp };
+      if (cnp.length === 13 && validateCNP(cnp)) {
+        const { dateOfBirth, gender } = extractDataFromCNP(cnp);
+        if (dateOfBirth && gender) {
+          newData.dateOfBirth = dateOfBirth.toISOString().split('T')[0];
+          newData.gender = gender;
+          // Use setTimeout to show toast after state update
+          setTimeout(() => toast.success('Data nasterii si genul au fost extrase automat din CNP'), 0);
+        }
       }
+      return newData;
+    });
+    if (errors.cnp) {
+      setErrors(prev => ({ ...prev, cnp: '' }));
     }
-  }, [formData.cnp]);
+  }, [errors.cnp]);
 
   const updateField = <K extends keyof WizardFormData>(field: K, value: WizardFormData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -492,7 +497,7 @@ export default function PatientCreatePage() {
         <Input
           label="CNP"
           value={formData.cnp}
-          onChange={(e) => updateField('cnp', e.target.value)}
+          onChange={(e) => handleCnpChange(e.target.value)}
           error={errors.cnp}
           helperText="Optional - data nasterii si genul vor fi extrase automat"
           placeholder="1234567890123"

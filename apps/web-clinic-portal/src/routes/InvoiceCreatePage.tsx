@@ -207,7 +207,7 @@ export function InvoiceCreatePage() {
 
   // API Hooks
   const { data: patientsData, isLoading: patientsLoading } = usePatients({
-    query: debouncedPatientQuery,
+    search: debouncedPatientQuery,
     limit: 10,
   });
   const patients = patientsData?.data || [];

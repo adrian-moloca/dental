@@ -15,12 +15,14 @@ import { AppShell } from '../components/layout/AppShell';
 import { Button } from '../components/ui-new';
 import { AppointmentBookingWizard } from '../components/appointments/AppointmentBookingWizard';
 import toast from 'react-hot-toast';
+import { useAuth } from '../hooks/useAuth';
 
 export default function AppointmentCreatePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const createAppointment = useCreateAppointment();
+  const { user } = useAuth();
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -33,8 +35,8 @@ export default function AppointmentCreatePage() {
   // Get patientId from URL params or state
   const initialPatientId = searchParams.get('patientId') || location.state?.patientId || '';
 
-  // TODO: Get clinicId from user context
-  const clinicId = 'temp-clinic-id';
+  // Get clinicId from user context
+  const clinicId = user?.clinicId || '';
 
   const handleSubmit = async (data: CreateAppointmentDto) => {
     try {

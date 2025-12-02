@@ -66,7 +66,7 @@ function NotificationIcon({ type }: { type: Notification['type'] }) {
 
   return (
     <div className={`notification-icon bg-${color}-transparent`}>
-      <i className={icon}></i>
+      <i className={icon} aria-hidden="true"></i>
     </div>
   );
 }
@@ -129,8 +129,9 @@ export function Header() {
         type="button"
         className="mobile-menu-toggle"
         onClick={openMobileSidebar}
+        aria-label="Deschide meniul"
       >
-        <i className="ti ti-menu-2"></i>
+        <i className="ti ti-menu-2" aria-hidden="true"></i>
       </button>
 
       {/* Left Section */}
@@ -140,26 +141,28 @@ export function Header() {
           type="button"
           className="header-icon-btn d-none d-lg-flex"
           onClick={toggleMiniSidebar}
+          aria-label="Comuta laterala"
         >
-          <i className="ti ti-layout-sidebar-left-collapse"></i>
+          <i className="ti ti-layout-sidebar-left-collapse" aria-hidden="true"></i>
         </button>
 
         {/* Global Search */}
         <div className="header-search">
-          <i className="ti ti-search search-icon"></i>
+          <i className="ti ti-search search-icon" aria-hidden="true"></i>
           <input
             type="text"
             className="search-input"
             placeholder="Cauta pacienti, programari..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Cautare globala"
           />
-          <span className="search-shortcut">⌘K</span>
+          <span className="search-shortcut" aria-label="Scurtatura Comanda+K">⌘K</span>
         </div>
 
         {/* Mobile Search Button */}
-        <button type="button" className="mobile-search-btn">
-          <i className="ti ti-search"></i>
+        <button type="button" className="mobile-search-btn" aria-label="Deschide cautarea">
+          <i className="ti ti-search" aria-hidden="true"></i>
         </button>
       </div>
 
@@ -170,10 +173,11 @@ export function Header() {
           type="button"
           className="header-icon-btn theme-toggle"
           onClick={toggleTheme}
+          aria-label={`Comuta la modul ${theme === 'light' ? 'inchis' : 'luminos'}`}
           title={`Comuta la modul ${theme === 'light' ? 'inchis' : 'luminos'}`}
         >
-          <i className="ti ti-sun light-icon"></i>
-          <i className="ti ti-moon dark-icon"></i>
+          <i className="ti ti-sun light-icon" aria-hidden="true"></i>
+          <i className="ti ti-moon dark-icon" aria-hidden="true"></i>
         </button>
 
         {/* Fullscreen Toggle */}
@@ -181,9 +185,10 @@ export function Header() {
           type="button"
           className="header-icon-btn fullscreen-toggle"
           onClick={toggleFullscreen}
+          aria-label={isFullscreen ? 'Iesire ecran complet' : 'Intrare ecran complet'}
           title={isFullscreen ? 'Iesire ecran complet' : 'Intrare ecran complet'}
         >
-          <i className={`ti ti-${isFullscreen ? 'arrows-minimize' : 'arrows-maximize'}`}></i>
+          <i className={`ti ti-${isFullscreen ? 'arrows-minimize' : 'arrows-maximize'}`} aria-hidden="true"></i>
         </button>
 
         {/* Notifications */}
@@ -192,10 +197,12 @@ export function Header() {
             type="button"
             className={clsx('header-icon-btn', { active: showNotifications })}
             onClick={() => setShowNotifications(!showNotifications)}
+            aria-label={`Notificari${unreadCount > 0 ? ` (${unreadCount} necitite)` : ''}`}
+            aria-expanded={showNotifications}
           >
-            <i className="ti ti-bell"></i>
+            <i className="ti ti-bell" aria-hidden="true"></i>
             {unreadCount > 0 && (
-              <span className="badge-indicator">{unreadCount}</span>
+              <span className="badge-indicator" aria-label={`${unreadCount} notificari necitite`}>{unreadCount}</span>
             )}
           </button>
 
@@ -241,26 +248,26 @@ export function Header() {
               <h6>{user?.email?.split('@')[0] || 'Utilizator'}</h6>
               <span>{user?.roles?.[0] || 'Personal'}</span>
             </div>
-            <i className="ti ti-chevron-down dropdown-icon"></i>
+            <i className="ti ti-chevron-down dropdown-icon" aria-hidden="true"></i>
           </button>
 
           {showUserMenu && (
             <div className="dropdown-menu show">
               <Link to="/profile" className="dropdown-item">
-                <i className="ti ti-user"></i>
+                <i className="ti ti-user" aria-hidden="true"></i>
                 Profilul Meu
               </Link>
               <Link to="/settings/security" className="dropdown-item">
-                <i className="ti ti-settings"></i>
+                <i className="ti ti-settings" aria-hidden="true"></i>
                 Setari
               </Link>
               <Link to="/settings/sessions" className="dropdown-item">
-                <i className="ti ti-device-laptop"></i>
+                <i className="ti ti-device-laptop" aria-hidden="true"></i>
                 Sesiuni Active
               </Link>
               <div className="dropdown-divider"></div>
-              <button className="dropdown-item text-danger" onClick={handleLogout}>
-                <i className="ti ti-logout"></i>
+              <button type="button" className="dropdown-item text-danger" onClick={handleLogout}>
+                <i className="ti ti-logout" aria-hidden="true"></i>
                 Deconectare
               </button>
             </div>

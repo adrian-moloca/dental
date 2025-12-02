@@ -1,6 +1,7 @@
 import { app } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 import * as crypto from 'crypto';
 import axios from 'axios';
 import { getDeviceId } from '../device/device-manager';
@@ -296,11 +297,11 @@ export class UpdateManager {
       },
     });
 
-    const writer = require('fs').createWriteStream(downloadPath);
+    const writer = fsSync.createWriteStream(downloadPath);
     response.data.pipe(writer);
 
-    await new Promise((resolve, reject) => {
-      writer.on('finish', resolve);
+    await new Promise<void>((resolve, reject) => {
+      writer.on('finish', () => resolve());
       writer.on('error', reject);
     });
 
@@ -333,11 +334,11 @@ export class UpdateManager {
       },
     });
 
-    const writer = require('fs').createWriteStream(downloadPath);
+    const writer = fsSync.createWriteStream(downloadPath);
     response.data.pipe(writer);
 
-    await new Promise((resolve, reject) => {
-      writer.on('finish', resolve);
+    await new Promise<void>((resolve, reject) => {
+      writer.on('finish', () => resolve());
       writer.on('error', reject);
     });
 

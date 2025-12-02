@@ -20,7 +20,6 @@ import type {
   MfaStatusDto,
   MfaEnrollResponseDto,
   MfaVerifyDto,
-  MfaDisableDto,
   BackupCodesDto,
 } from '../types/auth.types';
 
@@ -51,19 +50,10 @@ export const authClient = {
    * Automatically discovers user's organizations
    */
   async loginSmart(data: LoginSmartDto): Promise<LoginSmartResponseDto> {
-    console.log('=== AUTH CLIENT - loginSmart CALLED ===');
-    console.log('Request data:', JSON.stringify(data, null, 2));
-
     const response = await authApi.post<LoginSmartResponseDto>(
       '/auth/login-smart',
       data
     );
-
-    console.log('=== AUTH CLIENT - loginSmart RESPONSE ===');
-    console.log('Full response object keys:', Object.keys(response));
-    console.log('response.data:', JSON.stringify(response.data, null, 2));
-    console.log('response.data type:', typeof response.data);
-    console.log('response.data keys:', response.data && typeof response.data === 'object' ? Object.keys(response.data) : 'N/A');
 
     return response.data;
   },
@@ -100,11 +90,12 @@ export const authClient = {
   },
 
   /**
-   * POST /auth/logout
-   * Logout current session
+   * POST /auth/logout-silent
+   * Graceful logout that doesn't require valid session
+   * Always succeeds - frontend should clear local tokens regardless
    */
   async logout(): Promise<void> {
-    await authApi.post('/auth/logout');
+    await authApi.post('/auth/logout-silent');
   },
 
   /**
@@ -133,56 +124,61 @@ export const authClient = {
   },
 
   /**
-   * GET /auth/mfa/status
+   * GET /mfa/factors
    * Check if MFA is enabled for the current user
+   * Returns list of MFA factors (empty if none enabled)
    */
   async getMfaStatus(): Promise<MfaStatusDto> {
-    const response = await authApi.get<MfaStatusDto>('/auth/mfa/status');
+    const response = await authApi.get<MfaStatusDto>('/mfa/factors');
     return response.data;
   },
 
   /**
-   * POST /auth/mfa/enroll
+   * POST /mfa/totp/enroll
    * Generate TOTP secret and QR code for MFA enrollment
+   * Requires organizationId in request body
    */
-  async enrollMfa(): Promise<MfaEnrollResponseDto> {
-    const response = await authApi.post<MfaEnrollResponseDto>('/auth/mfa/enroll');
+  async enrollMfa(data: { organizationId: string; factorName?: string }): Promise<MfaEnrollResponseDto> {
+    const response = await authApi.post<MfaEnrollResponseDto>('/mfa/totp/enroll', data);
     return response.data;
   },
 
   /**
-   * POST /auth/mfa/verify
+   * POST /mfa/totp/verify
    * Verify TOTP code and enable MFA
+   * Requires organizationId, factorId, and token in request body
    */
-  async verifyMfa(data: MfaVerifyDto): Promise<{ success: boolean }> {
-    const response = await authApi.post<{ success: boolean }>('/auth/mfa/verify', data);
+  async verifyMfa(data: MfaVerifyDto & { organizationId: string; factorId: string }): Promise<{ verified: boolean }> {
+    const response = await authApi.post<{ verified: boolean }>('/mfa/totp/verify', data);
     return response.data;
   },
 
   /**
-   * POST /auth/mfa/disable
-   * Disable MFA (requires password confirmation)
+   * DELETE /mfa/factors/:factorId
+   * Disable MFA (delete specific factor)
    */
-  async disableMfa(data: MfaDisableDto): Promise<{ success: boolean }> {
-    const response = await authApi.post<{ success: boolean }>('/auth/mfa/disable', data);
+  async disableMfa(factorId: string, organizationId: string): Promise<{ deleted: boolean }> {
+    const response = await authApi.delete<{ deleted: boolean }>(`/mfa/factors/${factorId}?organizationId=${organizationId}`);
     return response.data;
   },
 
   /**
-   * GET /auth/mfa/backup-codes
-   * Get current backup codes
+   * POST /mfa/backup-codes/generate
+   * Generate backup codes
+   * Requires organizationId in request body
    */
-  async getBackupCodes(): Promise<BackupCodesDto> {
-    const response = await authApi.get<BackupCodesDto>('/auth/mfa/backup-codes');
+  async getBackupCodes(organizationId: string): Promise<BackupCodesDto> {
+    const response = await authApi.post<BackupCodesDto>('/mfa/backup-codes/generate', { organizationId });
     return response.data;
   },
 
   /**
-   * POST /auth/mfa/backup-codes/regenerate
+   * POST /mfa/backup-codes/generate
    * Regenerate backup codes (invalidates old ones)
+   * Same endpoint as getBackupCodes - generates fresh codes
    */
-  async regenerateBackupCodes(): Promise<BackupCodesDto> {
-    const response = await authApi.post<BackupCodesDto>('/auth/mfa/backup-codes/regenerate');
+  async regenerateBackupCodes(organizationId: string): Promise<BackupCodesDto> {
+    const response = await authApi.post<BackupCodesDto>('/mfa/backup-codes/generate', { organizationId });
     return response.data;
   },
 

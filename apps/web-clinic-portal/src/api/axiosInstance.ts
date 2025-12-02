@@ -2,12 +2,30 @@
  * Axios Instance Configuration
  *
  * Shared axios instance with interceptors for authentication and tenant context.
+ * Implements a shared token refresh mechanism to prevent race conditions when
+ * multiple requests fail with 401 simultaneously.
  */
 
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
+import type { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import toast from 'react-hot-toast';
 import { tokenStorage } from '../utils/tokenStorage';
 import { env } from '../config/env';
+
+// Shared state for token refresh to prevent race conditions
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+// Subscribe to token refresh completion
+const subscribeTokenRefresh = (callback: (token: string) => void) => {
+  refreshSubscribers.push(callback);
+};
+
+// Notify all subscribers when token is refreshed
+const onTokenRefreshed = (newToken: string) => {
+  refreshSubscribers.forEach((callback) => callback(newToken));
+  refreshSubscribers = [];
+};
 
 export const createApiClient = (baseURL: string) => {
   const instance = axios.create({
@@ -18,15 +36,22 @@ export const createApiClient = (baseURL: string) => {
     },
   });
 
-  // Request interceptor - attach access token and tenant context headers
+  // Request interceptor - attach access token, CSRF token, and tenant context headers
   instance.interceptors.request.use(
     (config) => {
       const token = tokenStorage.getAccessToken();
       const user = tokenStorage.getUser();
+      const csrfToken = tokenStorage.getCsrfToken();
 
       // Add authorization header
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      }
+
+      // Add CSRF token for state-changing requests (POST, PUT, PATCH, DELETE)
+      const method = config.method?.toUpperCase();
+      if (csrfToken && method && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+        config.headers['X-CSRF-Token'] = csrfToken;
       }
 
       // Add tenant context headers for multi-tenant isolation
@@ -75,35 +100,74 @@ export const createApiClient = (baseURL: string) => {
       return response;
     },
     async (error: AxiosError<any>) => {
-      const originalRequest = error.config;
+      const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
       // Handle 401 Unauthorized - attempt token refresh
-      if (error.response?.status === 401 && originalRequest && !(originalRequest as any)._retry) {
-        (originalRequest as any)._retry = true;
+      if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+        // Check if we have tokens to refresh
+        const refreshToken = tokenStorage.getRefreshToken();
+        const user = tokenStorage.getUser();
+
+        if (!refreshToken || !user?.organizationId) {
+          tokenStorage.clear();
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
+        // If a refresh is already in progress, queue this request
+        if (isRefreshing) {
+          return new Promise((resolve) => {
+            subscribeTokenRefresh((newToken: string) => {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              resolve(instance(originalRequest));
+            });
+          });
+        }
+
+        // Mark this request as retried and start refresh
+        originalRequest._retry = true;
+        isRefreshing = true;
 
         try {
-          const refreshToken = tokenStorage.getRefreshToken();
-          const user = tokenStorage.getUser();
-
-          if (!refreshToken || !user?.organizationId) {
-            tokenStorage.clear();
-            window.location.href = '/login';
-            return Promise.reject(error);
-          }
-
           // Attempt token refresh using auth API URL
+          // Note: Use plain axios (not instance) to avoid infinite loop on 401
           const response = await axios.post(`${env.AUTH_API_URL}/auth/refresh`, {
             refreshToken,
             organizationId: user.organizationId,
           });
 
-          const { accessToken, refreshToken: newRefreshToken } = response.data;
+          // Backend wraps responses in {success, data, timestamp} format - unwrap if needed
+          let responseData = response.data;
+          if (
+            responseData &&
+            typeof responseData === 'object' &&
+            'success' in responseData &&
+            'data' in responseData &&
+            'timestamp' in responseData
+          ) {
+            responseData = responseData.data;
+          }
+
+          const { accessToken, refreshToken: newRefreshToken, csrfToken } = responseData;
           tokenStorage.setAccessToken(accessToken);
           tokenStorage.setRefreshToken(newRefreshToken);
+          if (csrfToken) {
+            tokenStorage.setCsrfToken(csrfToken);
+          }
 
-          originalRequest.headers!.Authorization = `Bearer ${accessToken}`;
+          // Notify all queued requests about the new token
+          onTokenRefreshed(accessToken);
+          isRefreshing = false;
+
+          // Retry the original request with the new token
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          if (csrfToken) {
+            originalRequest.headers['X-CSRF-Token'] = csrfToken;
+          }
           return instance(originalRequest);
         } catch (refreshError) {
+          isRefreshing = false;
+          refreshSubscribers = []; // Clear any pending subscribers
           tokenStorage.clear();
           window.location.href = '/login';
           return Promise.reject(refreshError);

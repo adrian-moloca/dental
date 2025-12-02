@@ -16,13 +16,16 @@ export class TenantIsolationGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated');
     }
 
-    if (!user.tenantId) {
+    // tenantId may be stored as organizationId in JWT
+    const tenantId = user.tenantId || user.organizationId;
+
+    if (!tenantId) {
       throw new ForbiddenException('User has no tenant association');
     }
 
     // Attach tenantId and organizationId to request for easy access
-    request.tenantId = user.tenantId;
-    request.organizationId = user.organizationId;
+    request.tenantId = tenantId;
+    request.organizationId = user.organizationId || tenantId;
 
     return true;
   }

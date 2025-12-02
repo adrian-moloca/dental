@@ -32,6 +32,7 @@ import { MfaModule } from './modules/mfa/mfa.module';
 import { DeviceModule } from './modules/device/device.module';
 import { PasswordResetModule } from './modules/password-reset/password-reset.module';
 import { EmailVerificationModule } from './modules/email-verification/email-verification.module';
+import { UserPreferencesModule } from './modules/user-preferences/user-preferences.module';
 import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { Reflector } from '@nestjs/core';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -166,6 +167,7 @@ import { CsrfModule, CsrfGuard } from './modules/csrf';
     PasswordResetModule, // Password reset flow
     EmailVerificationModule, // Email verification flow
     CsrfModule, // CSRF protection (double-submit cookie pattern)
+    UserPreferencesModule, // User preferences and settings
   ],
   providers: [
     // Tenant context service for AsyncLocalStorage

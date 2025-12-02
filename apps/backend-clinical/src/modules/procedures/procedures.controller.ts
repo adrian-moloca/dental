@@ -13,7 +13,7 @@ import { CurrentUser } from '@dentalos/shared-auth';
 export class ProceduresController {
   constructor(private readonly service: ProceduresService) {}
 
-  @Post('api/v1/clinical/patients/:patientId/procedures')
+  @Post('clinical/patients/:patientId/procedures')
   @RequirePermissions('clinical:procedures')
   create(
     @Param('patientId') pid: string,
@@ -28,7 +28,7 @@ export class ProceduresController {
     );
   }
 
-  @Get('api/v1/clinical/patients/:patientId/procedures')
+  @Get('clinical/patients/:patientId/procedures')
   @RequirePermissions('clinical:read')
   findAll(
     @Param('patientId') pid: string,
@@ -38,7 +38,7 @@ export class ProceduresController {
     return this.service.findByPatient(pid, { tenantId: user.tenantId }, query);
   }
 
-  @Post('api/v1/clinical/procedures/:procedureId/complete')
+  @Post('clinical/procedures/:procedureId/complete')
   @RequirePermissions('clinical:procedures')
   complete(
     @Param('procedureId') id: string,

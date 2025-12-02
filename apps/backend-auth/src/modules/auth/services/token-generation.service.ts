@@ -43,6 +43,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { plainToInstance } from 'class-transformer';
+import { randomUUID } from 'crypto';
 import { AuthResponseDto, UserDto, buildRefreshTokenPayload } from '../dto';
 import { User } from '../../users/entities/user.entity';
 import { Session } from '../../sessions/entities/session.entity';
@@ -95,6 +96,7 @@ export class TokenGenerationService {
     const jwtConfig = this.configService.get('jwt', { infer: true });
 
     // Build JWT payload with user claims for access token
+    // SECURITY: Include sessionId and jti for session validation and token revocation
     const payload: any = {
       sub: user.id, // Subject: user ID
       email: user.email,
@@ -102,6 +104,8 @@ export class TokenGenerationService {
       permissions: user.permissions,
       organizationId: user.organizationId,
       clinicId: user.clinicId,
+      sessionId: session.id, // Required for session validation
+      jti: randomUUID(), // JWT ID for token revocation/blacklisting
     };
 
     // Include cabinet and subscription context if available
@@ -116,7 +120,7 @@ export class TokenGenerationService {
       }
     }
 
-    // Generate access token (short-lived)
+    // Generate access token (short-lived, WITH sessionId and jti)
     // SECURITY: Uses RS256 (configured in JwtModule) with private key
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: jwtConfig.accessExpiration as any,
@@ -182,7 +186,11 @@ export class TokenGenerationService {
    * @returns AuthResponseDto with new tokens (including CSRF) and user data
    */
   async generateTokensForRefresh(user: User, session: Session): Promise<AuthResponseDto> {
+    // Get JWT configuration
+    const jwtConfig = this.configService.get('jwt', { infer: true });
+
     // Build JWT payload with user claims
+    // SECURITY: Include sessionId and jti for session validation and token revocation
     const payload = {
       sub: user.id,
       email: user.email,
@@ -190,12 +198,11 @@ export class TokenGenerationService {
       permissions: user.permissions,
       organizationId: user.organizationId,
       clinicId: user.clinicId,
+      sessionId: session.id, // Required for session validation
+      jti: randomUUID(), // JWT ID for token revocation/blacklisting
     };
 
-    // Get JWT configuration
-    const jwtConfig = this.configService.get('jwt', { infer: true });
-
-    // Generate access token (short-lived, no sessionId)
+    // Generate access token (short-lived, WITH sessionId and jti)
     // SECURITY: Uses RS256 (configured in JwtModule) with private key
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: jwtConfig.accessExpiration as any,
@@ -321,7 +328,11 @@ export class TokenGenerationService {
     session: Session,
     refreshToken: string
   ): Promise<AuthResponseDto> {
+    // Get JWT configuration
+    const jwtConfig = this.configService.get('jwt', { infer: true });
+
     // Build JWT payload with user claims
+    // SECURITY: Include sessionId and jti for session validation and token revocation
     const payload = {
       sub: user.id,
       email: user.email,
@@ -329,12 +340,11 @@ export class TokenGenerationService {
       permissions: user.permissions,
       organizationId: user.organizationId,
       clinicId: user.clinicId,
+      sessionId: session.id, // Required for session validation
+      jti: randomUUID(), // JWT ID for token revocation/blacklisting
     };
 
-    // Get JWT configuration
-    const jwtConfig = this.configService.get('jwt', { infer: true });
-
-    // Generate access token (short-lived, no sessionId)
+    // Generate access token (short-lived, WITH sessionId and jti)
     // SECURITY: Uses RS256 (configured in JwtModule) with private key
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: jwtConfig.accessExpiration as any,
@@ -398,6 +408,7 @@ export class TokenGenerationService {
     const jwtConfig = this.configService.get('jwt', { infer: true });
 
     // Build JWT payload with user claims for access token
+    // SECURITY: Include sessionId and jti for session validation and token revocation
     const payload: any = {
       sub: user.id,
       email: user.email,
@@ -405,6 +416,8 @@ export class TokenGenerationService {
       permissions: user.permissions,
       organizationId: user.organizationId,
       clinicId: user.clinicId,
+      sessionId: session.id, // Required for session validation
+      jti: randomUUID(), // JWT ID for token revocation/blacklisting
     };
 
     // Include cabinet and subscription context if available
@@ -419,7 +432,7 @@ export class TokenGenerationService {
       }
     }
 
-    // Generate access token (short-lived)
+    // Generate access token (short-lived, WITH sessionId and jti)
     // SECURITY: Uses RS256 (configured in JwtModule) with private key
     const accessToken = this.jwtService.sign(payload, {
       expiresIn: jwtConfig.accessExpiration as any,

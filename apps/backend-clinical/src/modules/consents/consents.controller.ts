@@ -6,14 +6,14 @@ import { JwtAuthGuard, PermissionsGuard, TenantIsolationGuard } from '../auth/gu
 import { GetCurrentUser, RequirePermissions } from '../auth/decorators';
 import { CurrentUser } from '@dentalos/shared-auth';
 
-@Controller()
+@Controller('clinical')
 @ApiTags('Clinical - Consents')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, TenantIsolationGuard, PermissionsGuard)
 export class ConsentsController {
   constructor(private readonly service: ConsentsService) {}
 
-  @Post('api/v1/clinical/patients/:patientId/consents')
+  @Post('patients/:patientId/consents')
   @RequirePermissions('clinical:consents')
   create(
     @Param('patientId') pid: string,
@@ -28,13 +28,13 @@ export class ConsentsController {
     );
   }
 
-  @Get('api/v1/clinical/patients/:patientId/consents')
+  @Get('patients/:patientId/consents')
   @RequirePermissions('clinical:read')
   findAll(@Param('patientId') pid: string, @GetCurrentUser() user: CurrentUser) {
     return this.service.findByPatient(pid, { tenantId: user.tenantId });
   }
 
-  @Post('api/v1/clinical/consents/:consentId/sign')
+  @Post('consents/:consentId/sign')
   @RequirePermissions('clinical:consents')
   sign(
     @Param('consentId') id: string,
@@ -44,7 +44,7 @@ export class ConsentsController {
     return this.service.sign(id, dto, { tenantId: user.tenantId }, user.userId);
   }
 
-  @Get('api/v1/clinical/consents/:consentId/pdf')
+  @Get('consents/:consentId/pdf')
   @RequirePermissions('clinical:read')
   getPdf(@Param('consentId') id: string, @GetCurrentUser() user: CurrentUser) {
     return this.service.generatePdf(id, { tenantId: user.tenantId });

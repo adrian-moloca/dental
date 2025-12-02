@@ -384,14 +384,13 @@ interface DonutChartProps {
 
 function DonutChart({ data, centerLabel, centerValue, size = 160 }: DonutChartProps) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  let currentAngle = 0;
 
-  const segments = data.map((item) => {
+  const segments = data.reduce<Array<typeof data[0] & { percentage: number; startAngle: number; endAngle: number }>>((acc, item) => {
     const percentage = (item.value / total) * 100;
-    const startAngle = currentAngle;
-    currentAngle += (percentage / 100) * 360;
-    return { ...item, percentage, startAngle, endAngle: currentAngle };
-  });
+    const startAngle = acc.length > 0 ? acc[acc.length - 1].endAngle : 0;
+    const endAngle = startAngle + (percentage / 100) * 360;
+    return [...acc, { ...item, percentage, startAngle, endAngle }];
+  }, []);
 
   const gradientStops = segments.map((seg) => `${seg.color} ${seg.startAngle}deg ${seg.endAngle}deg`).join(', ');
 
@@ -525,9 +524,13 @@ function InsightCard({ icon, iconColor, title, value, subtitle }: InsightCardPro
 export function ReportsPage() {
   // State
   const [selectedRange, setSelectedRange] = useState<DateRangePreset>('month');
-  const [customDateRange, setCustomDateRange] = useState<CustomDateRange>({
-    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    to: new Date().toISOString().split('T')[0],
+  const [customDateRange, setCustomDateRange] = useState<CustomDateRange>(() => {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    return {
+      from: thirtyDaysAgo.toISOString().split('T')[0],
+      to: now.toISOString().split('T')[0],
+    };
   });
   const [showComparison, setShowComparison] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);

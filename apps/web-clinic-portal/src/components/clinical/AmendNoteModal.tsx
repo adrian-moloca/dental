@@ -176,6 +176,7 @@ export function AmendNoteModal({
       try {
         await amendNote.mutateAsync({
           noteId: note.id,
+          patientId: note.patientId,
           data: {
             password,
             reason: formData.reason,

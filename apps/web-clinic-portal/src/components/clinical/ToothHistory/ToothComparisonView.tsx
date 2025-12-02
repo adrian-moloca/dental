@@ -160,22 +160,28 @@ export function ToothComparisonView({
 
                   <div className="d-flex justify-content-center mb-3">
                     <ToothSVG
-                      toothNumber={selectedTooth}
+                      toothNumber={parseInt(selectedTooth, 10)}
                       toothData={{
                         toothNumber: selectedTooth,
                         isPresent: fromToothData?.condition !== 'missing',
+                        isPrimary: false,
+                        isSupernumerary: false,
+                        isImplant: false,
+                        updatedAt: dateFrom,
                         conditions: fromToothData
                           ? [
                               {
                                 id: `${selectedTooth}-from-${dateFrom}`,
-                                condition: fromToothData.condition,
-                                surfaces: fromToothData.surfaces || [],
+                                condition: fromToothData.condition as any,
+                                surfaces: (fromToothData.surfaces || []) as any,
                                 recordedAt: dateFrom,
                                 recordedBy: 'system',
                               },
                             ]
                           : [],
-                      }}
+                      } as any}
+                      selected={false}
+                      hovered={false}
                       size="lg"
                       readOnly
                     />
@@ -232,22 +238,28 @@ export function ToothComparisonView({
 
                   <div className="d-flex justify-content-center mb-3">
                     <ToothSVG
-                      toothNumber={selectedTooth}
+                      toothNumber={parseInt(selectedTooth, 10)}
                       toothData={{
                         toothNumber: selectedTooth,
                         isPresent: toToothData?.condition !== 'missing',
+                        isPrimary: false,
+                        isSupernumerary: false,
+                        isImplant: false,
+                        updatedAt: dateTo,
                         conditions: toToothData
                           ? [
                               {
                                 id: `${selectedTooth}-to-${dateTo}`,
-                                condition: toToothData.condition,
-                                surfaces: toToothData.surfaces || [],
+                                condition: toToothData.condition as any,
+                                surfaces: (toToothData.surfaces || []) as any,
                                 recordedAt: dateTo,
                                 recordedBy: 'system',
                               },
                             ]
                           : [],
-                      }}
+                      } as any}
+                      selected={false}
+                      hovered={false}
                       size="lg"
                       readOnly
                     />

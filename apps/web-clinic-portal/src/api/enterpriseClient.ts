@@ -85,33 +85,32 @@ export const enterpriseClient = {
   },
 
   /**
-   * GET /enterprise/organizations/:orgId/providers
-   * List all providers for organization
-   * Note: This endpoint may need to be implemented in the backend
+   * GET /enterprise/providers/:staffId/clinics
+   * Get clinics assigned to a provider
    */
-  async getProviders(orgId: string): Promise<Provider[]> {
-    try {
-      const response = await enterpriseApi.get(`/enterprise/organizations/${orgId}/providers`);
-      return response.data;
-    } catch {
-      // Fallback to mock data for development
-      console.warn('Provider endpoint not available, using fallback');
-      return [];
-    }
+  async getProviderClinics(staffId: string): Promise<ProviderAssignment[]> {
+    const response = await enterpriseApi.get(`/enterprise/providers/${staffId}/clinics`);
+    return response.data;
   },
 
   /**
-   * GET /enterprise/clinics/:clinicId/providers
-   * List all providers assigned to a clinic
+   * GET /enterprise/clinics/:clinicId/staff
+   * List all staff (providers) assigned to a clinic
    */
-  async getClinicProviders(clinicId: string): Promise<Provider[]> {
-    try {
-      const response = await enterpriseApi.get(`/enterprise/clinics/${clinicId}/providers`);
-      return response.data;
-    } catch {
-      // Fallback to mock data for development
-      console.warn('Clinic providers endpoint not available, using fallback');
-      return [];
-    }
+  async getClinicStaff(clinicId: string): Promise<ProviderAssignment[]> {
+    const response = await enterpriseApi.get(`/enterprise/clinics/${clinicId}/staff`);
+    return response.data;
+  },
+
+  /**
+   * POST /enterprise/providers/:staffId/assign
+   * Assign a provider to a clinic
+   */
+  async assignProvider(
+    staffId: string,
+    data: { clinicId: string; role?: 'primary' | 'secondary' | 'visiting' }
+  ): Promise<ProviderAssignment> {
+    const response = await enterpriseApi.post(`/enterprise/providers/${staffId}/assign`, data);
+    return response.data;
   },
 };

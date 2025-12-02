@@ -89,16 +89,18 @@ const OdontogramToolbar = memo(function OdontogramToolbar({
             type="button"
             className={`btn btn-sm ${!showPediatric ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={() => showPediatric && onTogglePediatric()}
+            aria-pressed={!showPediatric}
           >
-            <i className="ti ti-user me-1" />
+            <i className="ti ti-user me-1" aria-hidden="true" />
             Adult (32)
           </button>
           <button
             type="button"
             className={`btn btn-sm ${showPediatric ? 'btn-primary' : 'btn-outline-secondary'}`}
             onClick={() => !showPediatric && onTogglePediatric()}
+            aria-pressed={showPediatric}
           >
-            <i className="ti ti-baby-carriage me-1" />
+            <i className="ti ti-baby-carriage me-1" aria-hidden="true" />
             Copil (20)
           </button>
         </div>
@@ -110,8 +112,9 @@ const OdontogramToolbar = memo(function OdontogramToolbar({
             className={`btn btn-sm ${isQuickMode ? 'btn-success' : 'btn-outline-success'}`}
             onClick={onToggleQuickMode}
             title="Mod Examen Rapid (Q) - Selecteaza mai multi dinti simultan"
+            aria-pressed={isQuickMode}
           >
-            <i className={`ti ${isQuickMode ? 'ti-checks' : 'ti-hand-click'} me-1`} />
+            <i className={`ti ${isQuickMode ? 'ti-checks' : 'ti-hand-click'} me-1`} aria-hidden="true" />
             {isQuickMode ? 'Examen Rapid: ON' : 'Examen Rapid'}
             {isQuickMode && quickModeCount > 0 && (
               <Badge variant="light" className="ms-2">{quickModeCount}</Badge>
@@ -126,11 +129,12 @@ const OdontogramToolbar = memo(function OdontogramToolbar({
           type="button"
           className="btn btn-sm btn-outline-secondary"
           title="Comenzi rapide de tastatura"
+          aria-label="Comenzi rapide de tastatura"
           onClick={() => {
             // Could open a modal with keyboard shortcuts
           }}
         >
-          <i className="ti ti-keyboard" />
+          <i className="ti ti-keyboard" aria-hidden="true" />
         </button>
 
         {/* Print */}
@@ -139,8 +143,9 @@ const OdontogramToolbar = memo(function OdontogramToolbar({
           className="btn btn-sm btn-outline-secondary"
           onClick={onPrint}
           title="Printeaza odontograma"
+          aria-label="Printeaza odontograma"
         >
-          <i className="ti ti-printer" />
+          <i className="ti ti-printer" aria-hidden="true" />
         </button>
       </div>
     </div>

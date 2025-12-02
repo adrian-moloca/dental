@@ -118,7 +118,7 @@ export function QuickActionsToolbar({
         <div className="card-body p-3">
           <div className="d-flex justify-content-between align-items-center mb-3">
             <div className="d-flex align-items-center gap-2">
-              <i className="ti ti-bolt text-warning fs-5"></i>
+              <i className="ti ti-bolt text-warning fs-5" aria-hidden="true"></i>
               <h6 className="mb-0 fw-semibold">Actiuni Rapide</h6>
             </div>
             <button
@@ -126,8 +126,9 @@ export function QuickActionsToolbar({
               className="btn btn-sm btn-ghost-secondary"
               onClick={() => setShowCustomize(!showCustomize)}
               title="Personalizeaza toolbar"
+              aria-label="Personalizeaza toolbar"
             >
-              <i className="ti ti-settings"></i>
+              <i className="ti ti-settings" aria-hidden="true"></i>
             </button>
           </div>
 
@@ -140,9 +141,10 @@ export function QuickActionsToolbar({
                   className={`btn btn-outline-${action.color || 'primary'} w-100 d-flex flex-column align-items-center gap-1 py-2`}
                   onClick={action.onClick}
                   title={action.shortcut ? `${action.label} (${action.shortcut})` : action.label}
+                  aria-label={action.shortcut ? `${action.label} (Scurtatura ${action.shortcut})` : action.label}
                   style={{ minHeight: compact ? '60px' : '70px' }}
                 >
-                  <i className={`ti ${action.icon} fs-4`}></i>
+                  <i className={`ti ${action.icon} fs-4`} aria-hidden="true"></i>
                   <span className="small fw-medium text-truncate w-100">{action.label}</span>
                   {action.shortcut && !compact && (
                     <kbd className="small opacity-75">{action.shortcut}</kbd>
@@ -156,16 +158,16 @@ export function QuickActionsToolbar({
           {showCustomize && (
             <div className="mt-3 pt-3 border-top">
               <div className="small text-muted mb-2">
-                <i className="ti ti-info-circle me-1"></i>
+                <i className="ti ti-info-circle me-1" aria-hidden="true"></i>
                 Drag and drop pentru a reordona actiunile (coming soon)
               </div>
               <div className="d-flex gap-2 flex-wrap">
-                <button className="btn btn-sm btn-outline-secondary">
-                  <i className="ti ti-plus me-1"></i>
+                <button type="button" className="btn btn-sm btn-outline-secondary">
+                  <i className="ti ti-plus me-1" aria-hidden="true"></i>
                   Adauga Actiune
                 </button>
-                <button className="btn btn-sm btn-outline-secondary">
-                  <i className="ti ti-refresh me-1"></i>
+                <button type="button" className="btn btn-sm btn-outline-secondary">
+                  <i className="ti ti-refresh me-1" aria-hidden="true"></i>
                   Reseteaza la Default
                 </button>
               </div>
@@ -181,8 +183,9 @@ export function QuickActionsToolbar({
           className="btn btn-link btn-sm text-muted text-decoration-none"
           data-bs-toggle="modal"
           data-bs-target="#keyboardShortcutsModal"
+          aria-label="Vezi toate comenzile rapide de tastatura"
         >
-          <i className="ti ti-keyboard me-1"></i>
+          <i className="ti ti-keyboard me-1" aria-hidden="true"></i>
           Vezi toate comenzile rapide
         </button>
       </div>

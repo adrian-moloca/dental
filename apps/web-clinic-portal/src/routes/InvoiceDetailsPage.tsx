@@ -456,7 +456,7 @@ export function InvoiceDetailsPage() {
                         <div className="d-flex align-items-center gap-2 text-muted small">
                           <i className="ti ti-calendar"></i>
                           <span>
-                            {format(new Date(payment.recordedAt), 'dd MMM yyyy, HH:mm', { locale: ro })}
+                            {payment.recordedAt ? format(new Date(payment.recordedAt), 'dd MMM yyyy, HH:mm', { locale: ro }) : 'N/A'}
                           </span>
                         </div>
                         {payment.reference && (

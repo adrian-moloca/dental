@@ -712,4 +712,41 @@ export class AuthenticationController {
   async logout(@Body() dto: LogoutDto, @CurrentUser() user: CurrentUserType): Promise<void> {
     await this.authService.logout(dto.sessionId, user.userId, user.tenantContext.organizationId);
   }
+
+  /**
+   * Graceful logout - doesn't require valid session
+   *
+   * Public endpoint that attempts to invalidate session but doesn't fail
+   * if the token is invalid or session doesn't exist.
+   *
+   * Use cases:
+   * - Token expired before logout
+   * - Token missing sessionId claim
+   * - Session already invalidated
+   *
+   * Frontend should always clear local tokens regardless of this response.
+   */
+  @Public()
+  @Post('logout-silent')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Silent logout (graceful)',
+    description:
+      'Attempts to invalidate session but always returns success. Use when token may be invalid.',
+  })
+  @ApiResponse({
+    status: HttpStatus.NO_CONTENT,
+    description: 'Logout acknowledged (session may or may not have been invalidated)',
+  })
+  async logoutSilent(): Promise<void> {
+    // This endpoint is intentionally empty
+    // The purpose is to provide a fallback logout endpoint that:
+    // 1. Doesn't require valid JWT authentication
+    // 2. Always returns success
+    // 3. Allows frontend to call logout without CORS errors
+    //
+    // The frontend should always clear local tokens regardless of this response.
+    // If there was a valid session, the user should use the protected /logout endpoint.
+    return;
+  }
 }

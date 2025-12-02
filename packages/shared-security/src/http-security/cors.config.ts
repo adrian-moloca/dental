@@ -13,7 +13,7 @@ export function createCorsConfig(config?: CorsConfig): CorsOptions {
   const {
     allowedOrigins = [],
     allowedMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders = ['Content-Type', 'Authorization', 'X-Correlation-Id', 'X-Tenant-Id'],
+    allowedHeaders = ['Content-Type', 'Authorization', 'X-Correlation-Id', 'X-Tenant-Id', 'X-Organization-Id', 'X-Clinic-Id', 'X-Expected-Version', 'X-CSRF-Token'],
     exposedHeaders = ['X-Correlation-Id', 'X-Request-Id'],
     allowCredentials = true,
     maxAge = 86400,
@@ -52,7 +52,7 @@ export function createCorsConfigFromEnv(envVars: {
 }): CorsOptions {
   const allowedOrigins = envVars.CORS_ALLOWED_ORIGINS
     ? envVars.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim())
-    : ['http://localhost:3000', 'http://localhost:4200'];
+    : ['http://localhost:3000', 'http://localhost:4200', 'http://localhost:5173'];
 
   const allowedMethods = envVars.CORS_ALLOWED_METHODS
     ? envVars.CORS_ALLOWED_METHODS.split(',').map(m => m.trim())

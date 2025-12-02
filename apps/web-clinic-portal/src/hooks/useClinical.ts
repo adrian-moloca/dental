@@ -57,11 +57,11 @@ export function useClinicalNotes(patientId: string) {
   });
 }
 
-export function useClinicalNote(id: string) {
+export function useClinicalNote(id: string | undefined, patientId?: string) {
   return useQuery({
-    queryKey: clinicalKeys.note(id),
-    queryFn: () => clinicalClient.getNote(id),
-    enabled: !!id,
+    queryKey: clinicalKeys.note(id!),
+    queryFn: () => clinicalClient.getNote(patientId || '', id!),
+    enabled: !!id && !!patientId,
   });
 }
 
@@ -86,8 +86,8 @@ export function useSignNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ noteId, data }: { noteId: string; data: SignNoteRequest }) =>
-      clinicalClient.signNote(noteId, data),
+    mutationFn: ({ noteId, patientId, data }: { noteId: string; patientId: string; data: any }) =>
+      clinicalClient.signNote(patientId, noteId, data),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: clinicalKeys.all });
       if (response.data?.note?.id) {
@@ -110,8 +110,8 @@ export function useAmendNote() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ noteId, data }: { noteId: string; data: AmendNoteRequest }) =>
-      clinicalClient.amendNote(noteId, data),
+    mutationFn: ({ noteId, patientId, data }: { noteId: string; patientId: string; data: any }) =>
+      clinicalClient.amendNote(patientId, noteId, data),
     onSuccess: (response) => {
       queryClient.invalidateQueries({ queryKey: clinicalKeys.all });
       if (response.data?.note?.id) {

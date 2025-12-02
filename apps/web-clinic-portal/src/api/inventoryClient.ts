@@ -67,14 +67,30 @@ export const inventoryClient = {
     client.patch<ProductDto>(`/products/${id}`, data),
 
   // Stock
-  getStock: (params?: { locationId?: string; lowStock?: boolean }) =>
-    client.get('/stock', { params }),
+  getStockByLocation: (
+    locationId: string,
+    params?: { productId?: string; lowStock?: boolean; expiringSoon?: boolean }
+  ) => client.get(`/stock/locations/${locationId}`, { params }),
 
-  deductStock: (productId: string, quantity: number, reference?: string) =>
-    client.post('/stock/deduct', { productId, quantity, reference }),
+  getExpiringItems: (days: number = 30) =>
+    client.get('/stock/expiring', { params: { days } }),
 
-  restockItem: (productId: string, quantity: number, reference?: string) =>
-    client.post('/stock/restock', { productId, quantity, reference }),
+  deductStock: (data: {
+    items: Array<{ productId: string; quantity: number; locationId?: string }>;
+    reference?: string;
+    referenceType?: string;
+    referenceId?: string;
+  }) => client.post('/stock/deduct', data),
+
+  restockItem: (data: {
+    productId: string;
+    quantity: number;
+    locationId: string;
+    lotNumber?: string;
+    expirationDate?: string;
+    unitCost?: number;
+    reason?: string;
+  }) => client.post('/stock/restock', data),
 
   // Purchase Orders
   createPurchaseOrder: (data: Partial<PurchaseOrderDto>) =>
@@ -83,9 +99,29 @@ export const inventoryClient = {
   getPurchaseOrders: (params?: { status?: string }) =>
     client.get<{ data: PurchaseOrderDto[]; total: number }>('/purchase-orders', { params }),
 
-  updatePOStatus: (id: string, status: string) =>
-    client.patch(`/purchase-orders/${id}/status`, { status }),
+  getPurchaseOrder: (id: string) =>
+    client.get<PurchaseOrderDto>(`/purchase-orders/${id}`),
 
-  receiveGoods: (id: string, items: Array<{ productId: string; quantityReceived: number }>) =>
-    client.post(`/purchase-orders/${id}/receive`, { items }),
+  approvePurchaseOrder: (id: string) =>
+    client.put(`/purchase-orders/${id}/approve`),
+
+  // Goods Receipt (receiving PO items)
+  createGoodsReceipt: (data: {
+    purchaseOrderId?: string;
+    supplierId: string;
+    lines: Array<{
+      productId: string;
+      receivedQuantity: number;
+      unitCost: number;
+      lotNumber: string;
+      locationId: string;
+      expirationDate?: Date;
+      notes?: string;
+    }>;
+    deliveryNote?: string;
+    notes?: string;
+  }) => client.post('/goods-receipts', data),
+
+  getGoodsReceipts: (params?: { purchaseOrderId?: string; supplierId?: string }) =>
+    client.get('/goods-receipts', { params }),
 };

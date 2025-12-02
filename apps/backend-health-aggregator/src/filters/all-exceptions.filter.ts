@@ -228,7 +228,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
   }
 
-
   /**
    * Converts HTTP status code to error code
    *

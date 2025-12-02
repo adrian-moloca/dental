@@ -1,0 +1,237 @@
+/**
+ * Dashboard Styles
+ *
+ * Custom styles for the dashboard grid and widgets
+ */
+
+// Dashboard Grid Layout
+.dashboard-grid {
+  min-height: 400px;
+
+  // Grid item wrapper
+  .react-grid-item {
+    transition: all 200ms ease;
+    transition-property: left, top, width, height;
+
+    &.react-grid-placeholder {
+      background: rgba(59, 130, 246, 0.15);
+      opacity: 0.8;
+      border-radius: 8px;
+      border: 2px dashed rgba(59, 130, 246, 0.5);
+      transition-duration: 100ms;
+      z-index: 2;
+    }
+
+    &.resizing {
+      transition: none;
+      z-index: 100;
+      will-change: width, height;
+    }
+
+    &.dropping {
+      visibility: hidden;
+    }
+
+    &.react-grid-item.cssTransforms {
+      transition-property: transform, width, height;
+    }
+
+    // Resize handles
+    .react-resizable-handle {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      z-index: 10;
+
+      &::after {
+        content: '';
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        border-right: 2px solid rgba(59, 130, 246, 0.5);
+        border-bottom: 2px solid rgba(59, 130, 246, 0.5);
+      }
+
+      &.react-resizable-handle-se {
+        bottom: 0;
+        right: 0;
+        cursor: se-resize;
+
+        &::after {
+          right: 4px;
+          bottom: 4px;
+        }
+      }
+
+      &.react-resizable-handle-sw {
+        bottom: 0;
+        left: 0;
+        cursor: sw-resize;
+
+        &::after {
+          left: 4px;
+          bottom: 4px;
+          border-right: none;
+          border-left: 2px solid rgba(59, 130, 246, 0.5);
+        }
+      }
+
+      &.react-resizable-handle-ne {
+        top: 0;
+        right: 0;
+        cursor: ne-resize;
+
+        &::after {
+          right: 4px;
+          top: 4px;
+        }
+      }
+
+      &.react-resizable-handle-nw {
+        top: 0;
+        left: 0;
+        cursor: nw-resize;
+
+        &::after {
+          left: 4px;
+          top: 4px;
+          border-right: none;
+          border-left: 2px solid rgba(59, 130, 246, 0.5);
+        }
+      }
+    }
+  }
+}
+
+// Dashboard Widget
+.dashboard-widget {
+  height: 100%;
+
+  .card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+  }
+
+  .card-body {
+    flex: 1;
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+
+      &:hover {
+        background: rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+
+  // Drag handle
+  .widget-drag-handle {
+    cursor: move;
+    user-select: none;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+}
+
+// Widget specific styles
+.stats-item {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.upcoming-calendar {
+  .calendar-day {
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: translateX(2px);
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .dashboard-grid {
+    .react-grid-item {
+      .react-resizable-handle {
+        display: none !important;
+      }
+    }
+  }
+
+  .dashboard-widget {
+    .card-body {
+      max-height: none !important;
+    }
+  }
+}
+
+// Dark mode support - disabled for now, app uses light theme
+// When dark mode is implemented, use [data-theme="dark"] instead of prefers-color-scheme
+// @media (prefers-color-scheme: dark) {
+//   .dashboard-widget {
+//     .card {
+//       background-color: var(--bs-dark);
+//       border-color: rgba(255, 255, 255, 0.1);
+//     }
+//   }
+// }
+
+// Animation utilities
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-widget {
+  animation: fadeIn 0.3s ease-out;
+}
+
+// Print styles
+@media print {
+  .dashboard-grid {
+    display: block !important;
+
+    .react-grid-item {
+      position: relative !important;
+      transform: none !important;
+      page-break-inside: avoid;
+      margin-bottom: 1rem;
+    }
+  }
+
+  .widget-drag-handle,
+  .react-resizable-handle {
+    display: none !important;
+  }
+}

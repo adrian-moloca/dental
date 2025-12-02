@@ -26,7 +26,9 @@ import PatientEditPage from './routes/PatientEditPage';
 import CreateAppointmentPage from './routes/CreateAppointmentPage';
 import AppointmentsListPage from './routes/AppointmentsListPage';
 import ReceptionQueuePage from './routes/ReceptionQueuePage';
-import { DashboardPage } from './routes/DashboardPage';
+import { Dashboard } from './pages/Dashboard/Dashboard';
+// Uncomment below to use old dashboard
+// import { DashboardPage } from './routes/DashboardPage';
 import { BillingPage } from './routes/BillingPage';
 import { CreateInvoicePage } from './routes/CreateInvoicePage';
 import { InvoiceDetailsPage } from './routes/InvoiceDetailsPage';
@@ -95,7 +97,7 @@ function AppContent() {
                 path="/dashboard"
                 element={
                   <ProtectedRoute>
-                    <DashboardPage />
+                    <Dashboard />
                   </ProtectedRoute>
                 }
               />
